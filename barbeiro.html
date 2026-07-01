@@ -103,7 +103,6 @@
         #screen-dash{min-height:100vh;}
         .topbar{background:rgba(10,14,20,.96);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
         .topbar-logo-wrap{display:flex;align-items:center;gap:.6rem;}
-        .topbar-logo-wrap svg{width:32px;height:32px;}
         .topbar-logo{font-size:1.4rem;font-weight:900;letter-spacing:3px;color:var(--blue);text-shadow:0 0 12px rgba(0,212,255,.4);}
         .topbar-user{display:flex;align-items:center;gap:.75rem;}
         .user-avatar{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--blue);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--blue);}
@@ -471,6 +470,7 @@
 
     </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -695,12 +695,7 @@
     <div id="dash-content">
     <div class="topbar">
         <div class="topbar-logo-wrap">
-            <svg viewBox="0 0 80 80" fill="none">
-                <polygon points="40,4 74,22 74,58 40,76 6,58 6,22" fill="none" stroke="#00d4ff" stroke-width="2" opacity="0.5"/>
-                <text x="40" y="32" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="14" fill="#00d4ff">Pro'</text>
-                <text x="40" y="52" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="18" fill="#00d4ff">B</text>
-            </svg>
-            <div class="topbar-logo">PRO'B</div>
+            <div class="topbar-logo">PRO'<span style="color:#fff">B</span></div>
         </div>
         <div class="topbar-user">
             <div class="user-avatar" id="avatar-initials" title="">?</div>
@@ -1216,21 +1211,6 @@
             </div>
         </div>
 
-        <!-- LOGO UPLOAD -->
-        <div class="card">
-            <div class="section-title" style="font-size:.75rem">Logo da barbearia (opcional)</div>
-            <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Substitui o emoji. PNG ou JPG, tamanho ideal: 200×200px</p>
-            <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
-                <div id="logo-preview" style="width:60px;height:60px;border-radius:10px;border:1.5px solid var(--border);background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🖼️</div>
-                <div style="flex:1">
-                    <input type="file" id="vis-logo-file" accept="image/*" style="display:none">
-                    <button onclick="document.getElementById('vis-logo-file').click()" class="btn-add" style="font-size:.78rem;padding:.5rem 1rem;margin-bottom:.4rem">Escolher imagem</button>
-                    <button id="btn-remover-logo" onclick="removerLogo()" style="display:none;margin-left:.4rem;padding:.5rem .85rem;background:transparent;border:1px solid rgba(255,75,43,.4);border-radius:8px;color:var(--red);font-size:.78rem;cursor:pointer">Remover</button>
-                    <p style="font-size:.68rem;color:var(--muted)">Tamanho máx: 500KB</p>
-                </div>
-            </div>
-        </div>
-
         <!-- FONTE + TAMANHO -->
         <div class="card">
             <div class="section-title" style="font-size:.75rem">Tipo e tamanho de letra</div>
@@ -1393,6 +1373,14 @@
     <!-- TAB Gestão da Barbearia -->
 <!-- ════════ TAB CLIENTES ════════ -->
     <div class="tab-content" id="tab-clientes">
+        <div class="section-title" style="margin-bottom:.6rem">🔗 Link para Clientes</div>
+        <div class="card" style="margin-bottom:1.2rem">
+            <p style="font-size:.85rem;color:var(--muted);margin-bottom:.85rem">Envie este link para seus clientes fazerem agendamento:</p>
+            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+                <code style="background:var(--card2);padding:.5rem .85rem;border-radius:6px;font-size:.8rem;color:var(--blue);border:1px solid var(--border);flex:1;word-break:break-all;" id="link-cliente"></code>
+                <button class="btn-add" style="font-size:.8rem;padding:.5rem 1rem" id="btn-copy-link">Copiar</button>
+            </div>
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
             <div class="section-title" style="margin-bottom:0">👥 Base de Clientes</div>
             <input type="text" id="cli-busca" placeholder="🔍 Nome ou WhatsApp..."
@@ -1441,6 +1429,9 @@
             </div>
             <button id="btn-exportar-excel" style="width:100%;padding:.75rem;background:rgba(0,255,136,.08);border:1.5px solid rgba(0,255,136,.35);border-radius:10px;color:var(--green);font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem">
                 📊 Exportar Relatório (Excel)
+            </button>
+            <button id="btn-exportar-pdf" style="width:100%;padding:.75rem;background:rgba(0,212,255,.08);border:1.5px solid rgba(0,212,255,.35);border-radius:10px;color:var(--blue);font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:.6rem">
+                📄 Exportar Relatório (PDF)
             </button>
         </div>
 
@@ -1658,20 +1649,6 @@
                 <div class="input-group"><label>Chave PIX (para receber dos clientes)</label><input type="text" id="perf-pix" placeholder="CPF, e-mail, telefone ou chave aleatória"></div>
                 <button class="btn-save" id="btn-salvar-perfil">Salvar Informações</button>
             </div>
-        </div>
-        <div class="section-title" style="margin-top:1.5rem">Link para Clientes</div>
-        <div class="card">
-            <p style="font-size:.85rem;color:var(--muted);margin-bottom:.85rem">Envie este link para seus clientes fazerem agendamento:</p>
-            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-                <code style="background:var(--card2);padding:.5rem .85rem;border-radius:6px;font-size:.8rem;color:var(--blue);border:1px solid var(--border);flex:1;word-break:break-all;" id="link-cliente"></code>
-                <button class="btn-add" style="font-size:.8rem;padding:.5rem 1rem" id="btn-copy-link">Copiar</button>
-            </div>
-        </div>
-
-        <div class="section-title" style="margin-top:1.5rem">Links dos Funcionários</div>
-        <div class="card">
-            <p style="font-size:.82rem;color:var(--muted);margin-bottom:.85rem">Cada funcionário recebe um link único com sua porcentagem já configurada. Ele verá apenas seus agendamentos e ganhos.</p>
-            <div id="lista-links-func"><div class="empty-state" style="padding:1rem"><div class="icon">👥</div>Cadastre barbeiros na aba Equipe para gerar os links.</div></div>
         </div>
     </div>
     </div><!-- /dash-content -->
@@ -2313,6 +2290,12 @@ function initDash(){
         btnExp.dataset.bound='1';
         btnExp.addEventListener('click',exportarExcel);
         initPeriodoExport();
+    }
+
+    const btnExpPdf=document.getElementById('btn-exportar-pdf');
+    if(btnExpPdf && !btnExpPdf.dataset.bound){
+        btnExpPdf.dataset.bound='1';
+        btnExpPdf.addEventListener('click',exportarPDF);
     }
 }
 
@@ -3911,7 +3894,6 @@ function initPerfil(){
     const link = baseUrl + 'cliente.html?b=' + barbeiroData.uid;
     $('link-cliente').textContent=link;
     $('btn-copy-link').addEventListener('click',()=>{navigator.clipboard.writeText(link).then(()=>toast('Link copiado!'));});
-    renderLinksFunc(baseUrl);
 
     // Modo de atendimento
     const modoAtual=barbeiroData.modoAtendimento||'agendamento';
@@ -3975,24 +3957,6 @@ function aplicarVisibilidadeAbaFila(modo){
         document.querySelector('.tab[data-tab="agendamentos"]').classList.add('active');
         document.getElementById('tab-agendamentos').classList.add('active');
     }
-}
-
-function renderLinksFunc(baseUrl){
-    const equipe=barbeiroData.equipe||[];
-    const container=$('lista-links-func');
-    if(!equipe.length){container.innerHTML='<div class="empty-state" style="padding:1rem"><div class="icon">👥</div>Cadastre barbeiros na aba Equipe para gerar os links.</div>';return;}
-    container.innerHTML=equipe.map(b=>{
-        // Encode name and pct into URL so employee panel knows who they are
-        const funcLink=`${baseUrl}barbeiro.html?func=${encodeURIComponent(b.id)}&bId=${barbeiroData.uid}`;
-        return `<div class="func-link-item">
-            <div class="func-link-name">✂️ ${b.nome} — <span style="color:var(--green)">${b.pct||50}% comissão</span></div>
-            <div class="func-link-url">${funcLink}</div>
-            <div class="func-link-btns">
-                <button class="btn-add" style="font-size:.72rem;padding:.3rem .75rem" onclick="navigator.clipboard.writeText('${funcLink}').then(()=>window.showToast('Link de ${b.nome} copiado!'))">Copiar</button>
-                <a href="https://wa.me/?text=${encodeURIComponent('Seu link de acesso Pro\'B: '+funcLink)}" target="_blank" class="btn-wpp" style="padding:.3rem .75rem;font-size:.72rem">Enviar WPP</a>
-            </div>
-        </div>`;
-    }).join('');
 }
 
 // Global toast helper for inline onclick
@@ -4170,6 +4134,265 @@ async function exportarExcel(){
         toast('Erro ao gerar relatório: '+e.message,'var(--red)');
     }
     btn.disabled=false;btn.innerHTML='📊 Exportar Relatório (Excel)';
+}
+
+// ══ EXPORTAR PDF — layout "Contraste Bold" ══
+async function exportarPDF(){
+    const btn=$('btn-exportar-pdf');
+    btn.disabled=true;btn.innerHTML='Gerando...';
+
+    try{
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+        const W=210, H=297, M=15;
+
+        // Paleta
+        const NAVY=[7,11,18], BLUE_BRIGHT=[0,212,255], WHITE=[255,255,255];
+        const BLUE_DARK=[12,68,124], BLUE_MID=[133,183,235];
+        const GRAY_TXT=[90,90,88], GRAY_MUTED=[150,150,146], GRAY_LIGHT=[224,224,220];
+        const CARD_BG=[242,246,250];
+        const GREEN=[15,110,86], RED=[163,45,45], AMBER=[133,79,11];
+
+        const periodo=calcularPeriodo(periodoExportSelecionado);
+
+        // ── Dados ──
+        const q=query(collection(db,'agendamentos'),where('barbeiroId','==',barbeiroData.uid));
+        const snap=await getDocs(q);
+        let todos=[];snap.forEach(d=>todos.push(d.data()));
+
+        const todosPeriodo=todos.filter(a=>a.data>=periodo.inicioStr&&a.data<=periodo.fimStr);
+        const concP=todosPeriodo.filter(a=>a.status==='concluido');
+        const cancP=todosPeriodo.filter(a=>a.status==='cancelado');
+        const pendP=todosPeriodo.filter(a=>a.status!=='concluido'&&a.status!=='cancelado');
+        const totalFaturado=concP.reduce((s,a)=>s+Number(a.preco||0),0);
+        const ticketMedio=concP.length?totalFaturado/concP.length:0;
+        const pctCancel=todosPeriodo.length?Math.round((cancP.length/todosPeriodo.length)*100):0;
+
+        const equipe=barbeiroData.equipe||[];
+        const comissoesPeriodo=concP.reduce((s,a)=>{
+            const b=equipe.find(e=>e.nome===a.barbeiro);
+            return s+(Number(a.preco||0)*(b?.pct||0)/100);
+        },0);
+        const despesasFixas=totalGastosFixos();
+        const lucroLiquido=totalFaturado-comissoesPeriodo-despesasFixas;
+
+        // Últimos 7 dias (sempre relativo a hoje, igual ao painel)
+        const hoje=new Date();
+        const hojeStr=hoje.toISOString().split('T')[0];
+        const dias7=[];
+        for(let i=6;i>=0;i--){const d=new Date(hoje);d.setDate(hoje.getDate()-i);dias7.push(d.toISOString().split('T')[0]);}
+        const nomes7=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+        const concTodos=todos.filter(a=>a.status==='concluido');
+        const vals7=dias7.map(d=>concTodos.filter(a=>a.data===d).reduce((s,a)=>s+Number(a.preco||0),0));
+
+        // Últimos 6 meses — receita x despesas
+        const nomesM=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+        const meses6=[];
+        for(let i=5;i>=0;i--){const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);meses6.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
+        const mesAtual=hojeStr.slice(0,7);
+        const receitasM=meses6.map(m=>concTodos.filter(a=>a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0));
+        const despesasM=meses6.map(m=>totalGastosNoMes(m));
+
+        // Ranking de cortes
+        const porCorte={};
+        concP.forEach(a=>{
+            if(!a.corte)return;
+            if(!porCorte[a.corte])porCorte[a.corte]={qtd:0,total:0};
+            porCorte[a.corte].qtd++;porCorte[a.corte].total+=Number(a.preco||0);
+        });
+        const ranking=Object.entries(porCorte).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,6);
+
+        // Por barbeiro
+        const porBarbeiro={};
+        concP.forEach(a=>{
+            const nome=a.barbeiro||'(dono)';
+            if(!porBarbeiro[nome])porBarbeiro[nome]={cortes:0,total:0};
+            porBarbeiro[nome].cortes++;porBarbeiro[nome].total+=Number(a.preco||0);
+        });
+        const equipeRows=Object.entries(porBarbeiro).map(([nome,d])=>{
+            const membro=equipe.find(e=>e.nome===nome);
+            const pct=nome==='(dono)'?100:(membro?.pct||0);
+            const ganho=nome==='(dono)'?d.total:d.total*pct/100;
+            return {nome,cortes:d.cortes,total:d.total,pct,ganho};
+        }).sort((a,b)=>b.total-a.total);
+
+        // ── Helpers de desenho ──
+        const setCor=(c)=>doc.setTextColor(c[0],c[1],c[2]);
+        const setFill=(c)=>doc.setFillColor(c[0],c[1],c[2]);
+        const setDraw=(c)=>doc.setDrawColor(c[0],c[1],c[2]);
+
+        function addHeaderBand(){
+            setFill(NAVY);doc.rect(0,0,W,34,'F');
+            doc.setFont('helvetica','bold');doc.setFontSize(18);
+            setCor(BLUE_BRIGHT);doc.text("PRO",M,15);
+            const pw=doc.getTextWidth("PRO");
+            setCor(WHITE);doc.text("'B",M+pw,15);
+            doc.setFont('helvetica','normal');doc.setFontSize(8);
+            setCor([150,165,180]);
+            doc.text(periodo.label.toUpperCase(),W-M,10,{align:'right'});
+            doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`,W-M,15,{align:'right'});
+            doc.setFont('helvetica','bold');doc.setFontSize(12);
+            setCor(WHITE);doc.text('Relatório financeiro',M,24);
+            doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+            setCor([150,165,180]);
+            doc.text(`${barbeiroData.nome||'Barbearia'}  ·  ${periodo.inicioBR} a ${periodo.fimBR}`,M,29.5);
+        }
+
+        function addFooter(){
+            const total=doc.internal.getNumberOfPages();
+            for(let i=1;i<=total;i++){
+                doc.setPage(i);
+                setDraw(GRAY_LIGHT);doc.setLineWidth(.2);doc.line(M,H-14,W-M,H-14);
+                doc.setFont('helvetica','normal');doc.setFontSize(7);
+                setCor(GRAY_MUTED);
+                doc.text("Gerado pelo sistema Pro'B",M,H-10);
+                doc.text(`Página ${i}/${total}`,W-M,H-10,{align:'right'});
+            }
+        }
+
+        function sectionTitle(txt,y){
+            doc.setFont('helvetica','bold');doc.setFontSize(10.5);
+            setCor(NAVY);doc.text(txt,M,y);
+            setDraw(GRAY_LIGHT);doc.setLineWidth(.2);doc.line(M,y+2,W-M,y+2);
+            return y+9;
+        }
+
+        function kpiCard(x,y,w,h,label,valor,cor){
+            setFill(CARD_BG);doc.roundedRect(x,y,w,h,2,2,'F');
+            doc.setFont('helvetica','bold');doc.setFontSize(12);
+            setCor(cor);doc.text(valor,x+w/2,y+h/2+1,{align:'center'});
+            doc.setFont('helvetica','normal');doc.setFontSize(6.6);
+            setCor(GRAY_TXT);doc.text(label.toUpperCase(),x+w/2,y+h-3,{align:'center'});
+        }
+
+        function chartCard(x,y,w,h,titulo){
+            setFill(CARD_BG);doc.roundedRect(x,y,w,h,2,2,'F');
+            doc.setFont('helvetica','normal');doc.setFontSize(7);
+            setCor(GRAY_TXT);doc.text(titulo,x+4,y+6);
+        }
+
+        // ══ PÁGINA 1 ══
+        addHeaderBand();
+        let y=42;
+
+        y=sectionTitle('Resumo do período',y);
+        const kpiW=(W-2*M-3*4)/4;
+        kpiCard(M,y,kpiW,20,'Receita bruta','R$'+totalFaturado.toFixed(0),BLUE_DARK);
+        kpiCard(M+kpiW+4,y,kpiW,20,'Comissões','R$'+comissoesPeriodo.toFixed(0),AMBER);
+        kpiCard(M+2*(kpiW+4),y,kpiW,20,'Despesas fixas','R$'+despesasFixas.toFixed(0),RED);
+        kpiCard(M+3*(kpiW+4),y,kpiW,20,'Lucro líquido','R$'+lucroLiquido.toFixed(0),lucroLiquido>=0?GREEN:RED);
+        y+=26;
+
+        kpiCard(M,y,kpiW,18,'Cortes concluídos',String(concP.length),NAVY);
+        kpiCard(M+kpiW+4,y,kpiW,18,'Ticket médio','R$'+ticketMedio.toFixed(0),NAVY);
+        kpiCard(M+2*(kpiW+4),y,kpiW,18,'Cancelamentos',pctCancel+'%',pctCancel>15?RED:NAVY);
+        kpiCard(M+3*(kpiW+4),y,kpiW,18,'Pendentes',String(pendP.length),NAVY);
+        y+=26;
+
+        y=sectionTitle('Faturamento — últimos 7 dias',y);
+        const chH=42;
+        chartCard(M,y,W-2*M,chH,'');
+        {
+            const max7=Math.max(...vals7,1);
+            const barsX=M+8, barsW=W-2*M-16, gap=3;
+            const n=7, bw=(barsW-(n-1)*gap)/n;
+            const baseY=y+chH-8;
+            dias7.forEach((d,i)=>{
+                const bh=Math.max((vals7[i]/max7)*(chH-18),1.5);
+                const bx=barsX+i*(bw+gap);
+                const isHoje=d===hojeStr;
+                setFill(isHoje?NAVY:BLUE_MID);
+                doc.roundedRect(bx,baseY-bh,bw,bh,.6,.6,'F');
+                doc.setFont('helvetica','normal');doc.setFontSize(6);
+                setCor(GRAY_TXT);
+                doc.text(nomes7[new Date(d+'T12:00:00').getDay()],bx+bw/2,baseY+4,{align:'center'});
+                if(vals7[i]>0){
+                    setCor(GRAY_MUTED);doc.setFontSize(5.2);
+                    doc.text('R$'+vals7[i].toFixed(0),bx+bw/2,baseY-bh-1.5,{align:'center'});
+                }
+            });
+        }
+        y+=chH+10;
+
+        y=sectionTitle('Faturamento x Despesas — últimos 6 meses',y);
+        const chH2=48;
+        chartCard(M,y,W-2*M,chH2,'');
+        {
+            const maxM=Math.max(...receitasM,...despesasM,1);
+            const barsX=M+8, barsW=W-2*M-16, gap=5;
+            const n=6, groupW=(barsW-(n-1)*gap)/n, barW=(groupW-2)/2;
+            const baseY=y+chH2-8;
+            meses6.forEach((m,i)=>{
+                const gx=barsX+i*(groupW+gap);
+                const hRec=Math.max((receitasM[i]/maxM)*(chH2-18),1);
+                const hDesp=Math.max((despesasM[i]/maxM)*(chH2-18),1);
+                setFill(BLUE_DARK);
+                doc.roundedRect(gx,baseY-hRec,barW,hRec,.6,.6,'F');
+                setFill(RED);
+                doc.roundedRect(gx+barW+2,baseY-hDesp,barW,hDesp,.6,.6,'F');
+                doc.setFont('helvetica','normal');doc.setFontSize(6);
+                setCor(GRAY_TXT);
+                doc.text(nomesM[Number(m.split('-')[1])-1],gx+groupW/2-1,baseY+4,{align:'center'});
+            });
+            setFill(BLUE_DARK);doc.rect(M+4,y+chH2-4,3,3,'F');
+            doc.setFontSize(6.2);setCor(GRAY_TXT);doc.text('Receita',M+9,y+chH2-1.5);
+            setFill(RED);doc.rect(M+32,y+chH2-4,3,3,'F');
+            doc.text('Despesas',M+37,y+chH2-1.5);
+        }
+
+        // ══ PÁGINA 2 ══
+        doc.addPage();
+        addHeaderBand();
+        y=42;
+
+        y=sectionTitle('Cortes mais vendidos',y);
+        if(ranking.length){
+            doc.setFont('helvetica','bold');doc.setFontSize(7.5);setCor(GRAY_MUTED);
+            doc.text('CORTE',M,y);doc.text('QTD',W-M-38,y,{align:'right'});doc.text('FATURADO',W-M,y,{align:'right'});
+            y+=3;setDraw(GRAY_LIGHT);doc.line(M,y,W-M,y);y+=5;
+            ranking.forEach(([nome,d])=>{
+                doc.setFont('helvetica','normal');doc.setFontSize(8.5);setCor(NAVY);
+                doc.text(nome,M,y);
+                doc.text(String(d.qtd)+'x',W-M-38,y,{align:'right'});
+                setCor(BLUE_DARK);doc.setFont('helvetica','bold');
+                doc.text('R$'+d.total.toFixed(0),W-M,y,{align:'right'});
+                y+=6.5;
+            });
+        }else{
+            doc.setFont('helvetica','normal');doc.setFontSize(8.5);setCor(GRAY_MUTED);
+            doc.text('Nenhum corte concluído no período.',M,y);y+=6.5;
+        }
+        y+=6;
+
+        y=sectionTitle('Desempenho por barbeiro',y);
+        if(equipeRows.length){
+            doc.setFont('helvetica','bold');doc.setFontSize(7.5);setCor(GRAY_MUTED);
+            doc.text('BARBEIRO',M,y);doc.text('CORTES',W-M-70,y,{align:'right'});
+            doc.text('FATURADO',W-M-35,y,{align:'right'});doc.text('GANHO',W-M,y,{align:'right'});
+            y+=3;setDraw(GRAY_LIGHT);doc.line(M,y,W-M,y);y+=5;
+            equipeRows.forEach(r=>{
+                doc.setFont('helvetica','normal');doc.setFontSize(8.5);setCor(NAVY);
+                doc.text(r.nome,M,y);
+                doc.text(String(r.cortes),W-M-70,y,{align:'right'});
+                doc.text('R$'+r.total.toFixed(0),W-M-35,y,{align:'right'});
+                setCor(GREEN);doc.setFont('helvetica','bold');
+                doc.text('R$'+r.ganho.toFixed(0),W-M,y,{align:'right'});
+                y+=6.5;
+            });
+        }else{
+            doc.setFont('helvetica','normal');doc.setFontSize(8.5);setCor(GRAY_MUTED);
+            doc.text('Nenhum corte concluído no período.',M,y);
+        }
+
+        addFooter();
+
+        const nomeArquivo=`relatorio-${(barbeiroData.nome||'barbearia').replace(/[^a-z0-9]/gi,'_')}-${periodoExportSelecionado}-${fmtHoje()}.pdf`;
+        doc.save(nomeArquivo);
+        toast('✓ Relatório em PDF baixado!');
+    }catch(e){
+        toast('Erro ao gerar PDF: '+e.message,'var(--red)');
+    }
+    btn.disabled=false;btn.innerHTML='📄 Exportar Relatório (PDF)';
 }
 
 async function carregarFaturamento(){
@@ -4515,7 +4738,7 @@ async function initFuncionarioMode(){
     initFilaFuncionario(bId,funcMembro.nome,bData);
 
     // Update topbar name
-    document.querySelector('.topbar-logo').textContent='PRO\'B';
+    document.querySelector('.topbar-logo').innerHTML='PRO\'<span style="color:#fff">B</span>';
     document.querySelector('#avatar-initials').textContent=funcMembro.nome[0].toUpperCase();
 
     return true;
@@ -5210,26 +5433,7 @@ function initVisual(){
     document.getElementById('vis-tamanho-val').textContent=visTamanho;
     document.getElementById('vis-pole').checked=visPole;
 
-    // Logo preview
-    if(visLogo){
-        document.getElementById('logo-preview').innerHTML=`<img src="${visLogo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
-        document.getElementById('btn-remover-logo').style.display='inline-block';
-    }
-
-    // Logo file input
-    document.getElementById('vis-logo-file').addEventListener('change',e=>{
-        const file=e.target.files[0];
-        if(!file)return;
-        if(file.size>512000){toast('Imagem muito grande! Máx 500KB','var(--red)');return;}
-        const reader=new FileReader();
-        reader.onload=ev=>{
-            visLogo=ev.target.result;
-            document.getElementById('logo-preview').innerHTML=`<img src="${visLogo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
-            document.getElementById('btn-remover-logo').style.display='inline-block';
-            atualizarPreview();
-        };
-        reader.readAsDataURL(file);
-    });
+    // Logo file input (removido — opção de logo desativada)
 
     // Fundo
     atualizarFundoOpts();
@@ -5341,14 +5545,6 @@ function initVisual(){
     renderLetraEditor();
     atualizarPreview();
 }
-
-window.removerLogo=()=>{
-    visLogo='';
-    document.getElementById('logo-preview').innerHTML='🖼️';
-    document.getElementById('btn-remover-logo').style.display='none';
-    document.getElementById('vis-logo-file').value='';
-    atualizarPreview();
-};
 
 function atualizarFundoOpts(){
     const cor=document.getElementById('fundo-cor-opts');
