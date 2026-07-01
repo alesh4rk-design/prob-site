@@ -21,9 +21,8 @@ const PROB_CONFIG = {
     // ── Administrador ─────────────────────────────────────────
     admin: {
         uid:   "GfWnHPvjPjXUgmGjUbuRtdvLtpX2",  // UID Firebase do admin
-        email: "ale.sh4rk@gmail.com",
-        wpp:   "5521966190515",                  // DDI + DDD + número
-        pix:   "21966190515"                     // Chave PIX
+        email: "ale.sh4rk@gmail.com"
+        // WPP e PIX ficam no Firestore (config/admin) — não expostos no código
     },
 
     // ── Sistema ───────────────────────────────────────────────

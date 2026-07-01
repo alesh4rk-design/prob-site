@@ -1791,8 +1791,21 @@ function gerarSlots(iniMin,fimMin,intervalo){
 
 // ══ VERIFICAÇÃO DE ACESSO ══
 const ADMIN_UID = PROB_CONFIG.admin.uid;
-const PIX_ADMIN = PROB_CONFIG.admin.pix;
-const WPP_ADMIN = PROB_CONFIG.admin.wpp;
+
+// Carrega PIX e WPP do Firestore (não ficam expostos no código)
+async function carregarCfgAdmin(){
+    try{
+        const snap = await getDoc(doc(db,'config','admin'));
+        if(snap.exists()){
+            const d = snap.data();
+            if(d.wpp)   WPP_ADMIN    = d.wpp;
+            if(d.pix)   PIX_ADMIN    = d.pix;
+            if(d.preco) PRECO_MENSAL = d.preco;
+        }
+    }catch(e){ console.log('cfg fallback:', e.message); }
+}
+let PIX_ADMIN = '21966190515'; // fallback — sobrescrito pelo Firestore
+let WPP_ADMIN = '5521966190515'; // fallback — sobrescrito pelo Firestore
 // Valor do plano definido pelo admin individualmente — ver barbeiroData.planoValor
 
 async function verificarAcesso(uid){
@@ -2220,6 +2233,7 @@ async function carregarBarbeiro(user){
     if(!user){go('screen-login');return;}
     const snap=await getDoc(doc(db,'barbeiros',user.uid));
     barbeiroData=snap.exists()?{uid:user.uid,...snap.data()}:{uid:user.uid,nome:'',whatsapp:'',cortes:[],endereco:''};
+    await carregarCfgAdmin(); // carrega PIX/WPP do Firestore
     barbeiroData.photoURL=user.photoURL;
     const av=$('avatar-initials');
     if(user.photoURL)av.innerHTML=`<img src="${user.photoURL}" alt="foto">`;
