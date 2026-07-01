@@ -3867,7 +3867,7 @@ function initPerfil(){
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
     const baseUrl = isLocal
         ? window.location.origin + '/'
-        : 'https://legendary-douhua-567efa.netlify.app/';
+        : 'https://alesh4rk-design.github.io/prob-site/';
     const link = baseUrl + 'cliente.html?b=' + barbeiroData.uid;
     $('link-cliente').textContent=link;
     $('btn-copy-link').addEventListener('click',()=>{navigator.clipboard.writeText(link).then(()=>toast('Link copiado!'));});
