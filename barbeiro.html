@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pro'B — Painel do Barbeiro</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <style>
         :root {
             --bg:#0a0e14;--card:#1A1A1E;--card2:#12161c;--border:#2a3f5f;
@@ -707,6 +711,7 @@
     <div class="tabs">
         <div class="tab active" data-tab="agendamentos">📋 Agendamentos</div>
         <div class="tab" data-tab="fila">🪑 Fila de Espera</div>
+        <div class="tab" data-tab="cortes">✂️ Cortes</div>
         <div class="tab" data-tab="horarios">🕐 Horários</div>
         <div class="tab" data-tab="equipe">👥 Equipe</div>
         <div class="tab" data-tab="clientes">🧑 Clientes</div>
@@ -1724,6 +1729,9 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 const $=id=>document.getElementById(id);
+function escapeHtml(str){
+    return String(str??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 const go=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');};
 
 function toast(msg,color='var(--green)'){
@@ -2481,15 +2489,15 @@ function renderFila(lista){
 function renderFilaCard(item,posicao){
     const tempo=Math.floor((new Date()-new Date(item.criadoEm))/60000);
     const tempoStr=tempo<1?'agora':tempo<60?`${tempo}min`:`${Math.floor(tempo/60)}h${tempo%60}min`;
-    const corteTag=item.corte?` · ${item.corte}`:'';
-    const barbeiroTag=item.barbeiro?`<span style="display:inline-flex;align-items:center;gap:.25rem;margin-left:.4rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);border-radius:20px;padding:.1rem .5rem;font-size:.68rem;color:rgba(0,212,255,.85);font-weight:600">✂️ ${item.barbeiro}</span>`:'';
+    const corteTag=item.corte?` · ${escapeHtml(item.corte)}`:'';
+    const barbeiroTag=item.barbeiro?`<span style="display:inline-flex;align-items:center;gap:.25rem;margin-left:.4rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);border-radius:20px;padding:.1rem .5rem;font-size:.68rem;color:rgba(0,212,255,.85);font-weight:600">✂️ ${escapeHtml(item.barbeiro)}</span>`:'';
     const wppMsg=encodeURIComponent(`Olá ${item.clienteNome}! É sua vez na fila da ${barbeiroData.nome||'barbearia'}. Por favor, dirija-se ao atendimento.`);
     const btnWpp=item.clienteWhatsapp?`<a href="https://wa.me/55${item.clienteWhatsapp.replace(/\D/g,'')
 }?text=${wppMsg}" target="_blank" class="btn-wpp" style="margin-right:.25rem" title="Chamar pelo WhatsApp">WPP</a>`:'';
     return `<div class="fila-card">
         <div class="fila-pos">${posicao}º</div>
         <div class="fila-info">
-            <div class="fila-nome">${item.clienteNome}</div>
+            <div class="fila-nome">${escapeHtml(item.clienteNome)}</div>
             <div class="fila-meta" style="display:flex;align-items:center;flex-wrap:wrap;gap:.25rem">
                 <span>Aguardando há ${tempoStr}${corteTag}</span>${barbeiroTag}
             </div>
@@ -2736,9 +2744,9 @@ function renderAppts(container,lista,emptyMsg){
         return `<div class="appt-card ${concluido?'appt-done':cancelado?'appt-canceled':''}">
             <div class="appt-time">${a.hora}</div>
             <div class="appt-info">
-                <span class="appt-name">${a.clienteNome}</span>
+                <span class="appt-name">${escapeHtml(a.clienteNome)}</span>
                 <span class="appt-sep">·</span>
-                <span class="appt-corte">${a.corte}</span>
+                <span class="appt-corte">${escapeHtml(a.corte)}</span>
                 ${barberTag}
                 ${presencialTag}
                 ${dataTag}
@@ -2815,11 +2823,11 @@ function renderCortes(){
         </div>
         ${itens.map(c=>`
         <div class="service-item">
-            ${c.foto?`<img class="service-foto-thumb" src="${c.foto}" alt="${c.nome}" onerror="this.style.display='none'">`:''}
+            ${c.foto?`<img class="service-foto-thumb" src="${c.foto}" alt="${escapeHtml(c.nome)}" onerror="this.style.display='none'">`:''}
             <div style="flex:1;min-width:0">
-                <div class="service-name">${c.nome}</div>
+                <div class="service-name">${escapeHtml(c.nome)}</div>
                 ${c.duracao?`<div style="font-size:.7rem;color:var(--muted);margin-top:.15rem">⏱️ ${c.duracao} min</div>`:''}
-                ${c.obs?`<div style="font-size:.7rem;color:var(--yellow);margin-top:.2rem;max-width:280px">ℹ️ ${c.obs}</div>`:''}
+                ${c.obs?`<div style="font-size:.7rem;color:var(--yellow);margin-top:.2rem;max-width:280px">ℹ️ ${escapeHtml(c.obs)}</div>`:''}
             </div>
             <div style="display:flex;align-items:center;gap:.75rem;flex-shrink:0">
                 <div class="service-price">R$ ${Number(c.preco).toFixed(2)}</div>
@@ -3515,10 +3523,10 @@ function renderClientes(lista){
         const wppMsg = encodeURIComponent(`Olá ${c.nome}! Tá sumido(a) da ${barbeiroData.nome||'barbearia'}, tá? Quando vai aparecer para um corte? 😄`);
 
         return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
-            <div style="width:38px;height:38px;border-radius:50%;background:rgba(0,212,255,.12);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:var(--blue);flex-shrink:0">${(c.nome||'?')[0].toUpperCase()}</div>
+            <div style="width:38px;height:38px;border-radius:50%;background:rgba(0,212,255,.12);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:var(--blue);flex-shrink:0">${escapeHtml((c.nome||'?')[0].toUpperCase())}</div>
             <div style="flex:1;min-width:0">
-                <div style="font-weight:700;font-size:.9rem">${c.nome||'—'} <span style="font-size:.7rem;font-weight:400;color:var(--muted)">${freq}</span></div>
-                <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">📱 ${c.wpp||'—'} · ${c.totalCortes||0} cortes · Favorito: ${favorito}</div>
+                <div style="font-weight:700;font-size:.9rem">${escapeHtml(c.nome||'—')} <span style="font-size:.7rem;font-weight:400;color:var(--muted)">${freq}</span></div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">📱 ${escapeHtml(c.wpp||'—')} · ${c.totalCortes||0} cortes · Favorito: ${escapeHtml(favorito)}</div>
                 <div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">Última visita: ${ultimaVisita} ${alertaSumiu}</div>
             </div>
             <div style="display:flex;gap:.35rem;flex-shrink:0">
@@ -3575,7 +3583,7 @@ async function carregarAvisos1h(){
             const msg = encodeURIComponent(`Olá ${ag.clienteNome}! Passando para lembrar do seu horário às ${ag.hora} hoje na ${barbeiroData.nome||'barbearia'}. Te esperamos! ✂️`);
             return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:8px;gap:.5rem;flex-wrap:wrap">
                 <div>
-                    <div style="font-size:.82rem;font-weight:700">${ag.clienteNome}</div>
+                    <div style="font-size:.82rem;font-weight:700">${escapeHtml(ag.clienteNome)}</div>
                     <div style="font-size:.72rem;color:var(--muted)">⏰ ${ag.hora} · em ${ag.diff}min</div>
                 </div>
                 <a href="https://wa.me/55${wppNum}?text=${msg}" target="_blank" class="btn-wpp">📱 Avisar</a>
@@ -4643,9 +4651,9 @@ async function initFuncionarioMode(){
             <div class="appt-card ${concluido?'appt-done':cancelado?'appt-canceled':''}">
                 <div class="appt-time">${a.hora}</div>
                 <div class="appt-info">
-                    <span class="appt-name">${a.clienteNome}</span>
+                    <span class="appt-name">${escapeHtml(a.clienteNome)}</span>
                     <span class="appt-sep">·</span>
-                    <span class="appt-corte">${a.corte}</span>
+                    <span class="appt-corte">${escapeHtml(a.corte)}</span>
                     ${a.data!==hoje?`<span class="appt-sep">·</span><span class="appt-corte">${a.data}</span>`:''}
                     ${!concluido&&!cancelado?`<span class="badge badge-pend">pend</span>`:''}
                 </div>
@@ -4806,11 +4814,11 @@ function renderFilaFuncionario(lista,bId){
     cont.innerHTML=lista.map((item,i)=>{
         const tempo=Math.floor((new Date()-new Date(item.criadoEm))/60000);
         const tempoStr=tempo<1?'agora':tempo<60?`${tempo}min`:`${Math.floor(tempo/60)}h${tempo%60}min`;
-        const corteTag=item.corte?` · ${item.corte}`:'';
+        const corteTag=item.corte?` · ${escapeHtml(item.corte)}`:'';
         return `<div class="fila-card">
             <div class="fila-pos">${i+1}º</div>
             <div class="fila-info">
-                <div class="fila-nome">${item.clienteNome}</div>
+                <div class="fila-nome">${escapeHtml(item.clienteNome)}</div>
                 <div class="fila-meta">Aguardando há ${tempoStr}${corteTag}</div>
             </div>
             <div class="fila-actions">

@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pro'B — Painel de Chamada</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
         body{
@@ -198,6 +202,10 @@ import { getFirestore, doc, getDoc, collection, query, where, onSnapshot } from 
 const firebaseConfig = PROB_CONFIG.firebase;
 
 const app = initializeApp(firebaseConfig);
+
+function escapeHtml(str){
+    return String(str??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 const db = getFirestore(app);
 
 function getBarbeiroId(){
@@ -325,10 +333,10 @@ function renderPainel(lista){
         : `<div style="display:inline-block;margin-top:1vh;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);border-radius:30px;padding:.4vh 1.2vw;font-size:1vw;color:#00ff88;font-weight:700">🪑 Fila de espera</div>`;
 
     nextContent.innerHTML = `
-        <div class="next-name">${proximo.clienteNome}</div>
-        ${proximo.corte ? `<div class="next-meta">${proximo.corte}</div>` : ''}
+        <div class="next-name">${escapeHtml(proximo.clienteNome)}</div>
+        ${proximo.corte ? `<div class="next-meta">${escapeHtml(proximo.corte)}</div>` : ''}
         ${origemTag(proximo)}
-        ${proximo.barbeiro ? `<div class="next-barber">✂️ ${proximo.barbeiro}</div>` : ''}
+        ${proximo.barbeiro ? `<div class="next-barber">✂️ ${escapeHtml(proximo.barbeiro)}</div>` : ''}
     `;
 
     if(!resto.length){
@@ -342,10 +350,10 @@ function renderPainel(lista){
             <div class="queue-item">
                 <div class="queue-pos">${i+2}º</div>
                 <div class="queue-info">
-                    <div class="queue-name">${item.clienteNome}</div>
-                    <div class="queue-sub">${item.corte ? item.corte+' · ' : ''}${origemMini} · aguardando há ${tempoEspera(item.criadoEm)}</div>
+                    <div class="queue-name">${escapeHtml(item.clienteNome)}</div>
+                    <div class="queue-sub">${item.corte ? escapeHtml(item.corte)+' · ' : ''}${origemMini} · aguardando há ${tempoEspera(item.criadoEm)}</div>
                 </div>
-                ${item.barbeiro ? `<div style="font-size:.85vw;color:rgba(0,212,255,.7);white-space:nowrap">✂️ ${item.barbeiro}</div>` : ''}
+                ${item.barbeiro ? `<div style="font-size:.85vw;color:rgba(0,212,255,.7);white-space:nowrap">✂️ ${escapeHtml(item.barbeiro)}</div>` : ''}
             </div>
         `;}).join('');
     }

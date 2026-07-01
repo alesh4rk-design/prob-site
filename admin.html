@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pro'B — Admin</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <style>
         :root{--bg:#0a0e14;--card:#1A1A1E;--card2:#12161c;--border:#2a3f5f;--blue:#00d4ff;--green:#00ff88;--red:#ff4b2b;--yellow:#f5a623;--text:#e8f4f8;--muted:#7a9fb5;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
         *{margin:0;padding:0;box-sizing:border-box;}
@@ -354,6 +358,13 @@ const db=getFirestore(app);
 const ADMIN_UID = PROB_CONFIG.admin.uid;
 
 const $=id=>document.getElementById(id);
+function escapeHtml(str){
+    return String(str??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+// Para usar dentro de onclick="...('...')" — escapa aspas simples (string JS) e aspas duplas (atributo HTML)
+function escAttr(str){
+    return String(str??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 let todos=[];
 let totalAgend=0;
 let filtroAtual='todos';
@@ -602,10 +613,10 @@ function renderLista(){
         const isVencendo=(s==='ativo'||s==='trial')&&d>0&&d<=7;
         return `<div class="barb-card ${isVencendo?'vencendo-alerta':''}">
             <div class="barb-info">
-                <div class="barb-nome">${b.nome||'Sem nome'}</div>
-                <div class="barb-email">${b.email||b.uid}</div>
+                <div class="barb-nome">${escapeHtml(b.nome||'Sem nome')}</div>
+                <div class="barb-email">${escapeHtml(b.email||b.uid)}</div>
                 <div class="barb-meta">
-                    📱 ${wpp} · 
+                    📱 ${escapeHtml(wpp)} · 
                     📅 Cadastro: ${criadoEm} · 
                     Expira: ${exp} · ${ds}
                 </div>
@@ -618,19 +629,19 @@ function renderLista(){
                     <span style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.1);border-radius:5px;padding:.15rem .5rem;color:var(--muted)">Mês: ${ag.mes}</span>
                     <span style="background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);border-radius:5px;padding:.15rem .5rem;color:var(--green)">✓ ${ag.concluidos} concluídos</span>
                 </div>
-                ${hist.length>1?`<button class="btn-sm" style="margin-top:.4rem;border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="verHistoricoPagamentos('${b.uid}','${(b.nome||'barbeiro').replace(/'/g,'')}')">Ver histórico completo (${hist.length} pagamentos)</button>`:''}
+                ${hist.length>1?`<button class="btn-sm" style="margin-top:.4rem;border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="verHistoricoPagamentos('${b.uid}','${escAttr(b.nome||'barbeiro')}')">Ver histórico completo (${hist.length} pagamentos)</button>`:''}
                 <div class="barb-meta" style="margin-top:.15rem;color:var(--muted);font-size:.68rem;font-family:'Courier New',monospace">${b.uid}</div>
             </div>
             <span class="badge ${bc}">${s}</span>
             <div class="barb-actions">
-                ${s==='pendente'?`<button class="btn-sm btn-ativar-trial" onclick="ativarTrial('${b.uid}','${(b.nome||'barbeiro').replace(/'/g,'')}')">🎁 Ativar Trial</button>`:''}
-                <button class="btn-sm btn-renovar" onclick="abrirModalRenovar('${b.uid}','${(b.nome||'barbeiro').replace(/'/g,'')}')">Renovar</button>
+                ${s==='pendente'?`<button class="btn-sm btn-ativar-trial" onclick="ativarTrial('${b.uid}','${escAttr(b.nome||'barbeiro')}')">🎁 Ativar Trial</button>`:''}
+                <button class="btn-sm btn-renovar" onclick="abrirModalRenovar('${b.uid}','${escAttr(b.nome||'barbeiro')}')">Renovar</button>
                 ${b.whatsapp?`<a class="btn-sm btn-wpp-cobrar" href="https://wa.me/55${b.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent('Olá '+( b.nome||'')+'! Seu acesso Pro\'B vence em breve. Para renovar, entre em contato.')}" target="_blank" style="text-decoration:none">💬 WPP</a>`:''}
                 ${btn2}
                 <a class="btn-sm btn-ativar" href="/cliente.html?b=${b.uid}" target="_blank" style="text-decoration:none;font-size:.68rem" title="Abrir link de agendamento do cliente">🔗 Agendamento</a>
                 <button class="btn-sm" style="border-color:rgba(245,166,35,.4);color:var(--yellow);font-size:.68rem" onclick="gerarContratoPDF('${b.uid}')" title="Baixar contrato em PDF">📄 PDF</button>
                 <a class="btn-sm" style="border-color:rgba(0,212,255,.35);color:rgba(0,212,255,.7);text-decoration:none;font-size:.68rem" href="painel-chamada.html?b=${b.uid}" target="_blank" title="Abrir painel de chamada">📺 Painel</a>
-                <button class="btn-sm" style="border-color:rgba(255,75,43,.4);color:var(--red)" onclick="excluir('${b.uid}','${(b.nome||'barbeiro').replace(/'/g,'')}')">Excluir</button>
+                <button class="btn-sm" style="border-color:rgba(255,75,43,.4);color:var(--red)" onclick="excluir('${b.uid}','${escAttr(b.nome||'barbeiro')}')">Excluir</button>
             </div>
         </div>`;
     }).join('');

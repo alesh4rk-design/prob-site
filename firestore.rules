@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == 'GfWnHPvjPjXUgmGjUbuRtdvLtpX2';
+    }
+    function isOwner(bId) {
+      return request.auth != null && request.auth.uid == bId;
+    }
+
+    // ── Configurações globais do sistema (PIX, WhatsApp, preço padrão) ──
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Barbearias ──
+    match /barbeiros/{bId} {
+      // Leitura pública: necessária p/ tela do cliente, painel de chamada (TV)
+      // e o link de acesso do funcionário — nenhum desses tem login próprio.
+      allow read: if true;
+
+      // Só o próprio dono (autenticado com o mesmo UID do documento) ou o admin
+      // podem criar/editar a barbearia.
+      allow create, update: if isOwner(bId) || isAdmin();
+      allow delete: if isAdmin();
+
+      match /config/{doc} {
+        allow read: if true;
+        allow write: if isOwner(bId) || isAdmin();
+      }
+      match /bloqueios/{doc} {
+        allow read: if true;
+        allow write: if isOwner(bId) || isAdmin();
+      }
+      match /promocoes/{doc} {
+        allow read: if true;
+        allow write: if isOwner(bId) || isAdmin();
+      }
+      match /fidelidade/{doc} {
+        allow read: if true;
+        allow write: if isOwner(bId) || isAdmin();
+      }
+      match /clientes/{doc} {
+        allow read: if true;
+        allow write: if isOwner(bId) || isAdmin();
+      }
+    }
+
+    // ── Status de acesso (trial / ativo / bloqueado / pendente) ──
+    match /acessos/{bId} {
+      // Leitura pública: barbeiro.html e cliente.html verificam bloqueio em tempo real.
+      allow read: if true;
+
+      // Autocadastro: o próprio barbeiro cria seu pedido de acesso ao se cadastrar,
+      // sempre como 'pendente' ou 'trial' — nunca já 'ativo'.
+      allow create: if isOwner(bId)
+                    && request.resource.data.status in ['pendente','trial'];
+
+      // Só o admin aprova, bloqueia, renova, expira ou exclui o acesso.
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Agendamentos ──
+    match /agendamentos/{id} {
+      // Leitura pública: necessária p/ cliente.html conferir horários livres,
+      // painel-chamada.html (TV sem login) e o modo funcionário (sem login próprio).
+      allow read: if true;
+
+      // Criação: exige o formato correto de um agendamento válido.
+      // status só pode nascer como pendente (agendamento normal) ou concluído
+      // (quando o barbeiro atende alguém direto da fila).
+      allow create: if request.resource.data.keys().hasAll(
+                        ['barbeiroId','clienteNome','corte','preco','data','hora','status']
+                      )
+                    && request.resource.data.status in ['pendente','concluido']
+                    && request.resource.data.clienteNome is string
+                    && request.resource.data.clienteNome.size() < 100
+                    && request.resource.data.corte is string
+                    && request.resource.data.corte.size() < 100
+                    && request.resource.data.preco is number
+                    && request.resource.data.preco >= 0
+                    && request.resource.data.preco < 10000;
+
+      // Atualização: só pode mudar o status (concluir/cancelar).
+      // Não deixa reescrever nome, telefone, preço ou horário depois de criado.
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                    && request.resource.data.status in ['pendente','concluido','cancelado'];
+
+      allow delete: if isAdmin();
+    }
+
+    // ── Fila de espera ──
+    match /fila/{id} {
+      allow read: if true;
+
+      allow create: if request.resource.data.keys().hasAll(['barbeiroId','clienteNome','status'])
+                    && request.resource.data.status == 'aguardando'
+                    && request.resource.data.clienteNome is string
+                    && request.resource.data.clienteNome.size() < 100;
+
+      // Atualização: só pode mudar status (+ atendidoEm quando concluído).
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','atendidoEm'])
+                    && request.resource.data.status in ['aguardando','atendido','removido'];
+
+      allow delete: if isAdmin();
+    }
+
+  }
+}
