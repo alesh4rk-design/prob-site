@@ -4,7 +4,7 @@
 // Isso evita mostrar dados desatualizados quando há conexão, mas garante
 // que o app pelo menos abra (modo offline básico) quando não há.
 
-const CACHE_VERSION = 'prob-v1';
+const CACHE_VERSION = 'prob-v2';
 const PRECACHE_URLS = [
     'config.js',
     'favicon.ico',
