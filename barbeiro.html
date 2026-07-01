@@ -475,7 +475,12 @@
         .anim-cor-btn{width:24px;height:24px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .2s;flex-shrink:0;}
         .anim-cor-btn:hover,.anim-cor-btn.active{border-color:#fff;transform:scale(1.15);}
 
-        @media(max-width:500px){.tab{padding:.75rem .9rem;font-size:.78rem;}.appt-card{flex-wrap:wrap;}}
+        @media(max-width:500px){
+            .tab{padding:.75rem .9rem;font-size:.78rem;}
+            .appt-card{flex-wrap:wrap;}
+            .service-item{flex-direction:column;align-items:stretch;}
+            .service-item > div:last-child{justify-content:flex-end;margin-top:.6rem;}
+        }
 
 
     </style>
@@ -1726,7 +1731,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot, addDoc, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = PROB_CONFIG.firebase;
 
@@ -1747,6 +1752,32 @@ function toast(msg,color='var(--green)'){
 function fmtDate(d){return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});}
 function fmtHoje(){return new Date().toISOString().split('T')[0];}
 function horaParaMin(h){const[hh,mm]=h.split(':').map(Number);return hh*60+mm;}
+
+// Registra/atualiza o cliente na base (barbeiros/{uid}/clientes/{id}) sempre
+// que um corte é marcado como concluído — é isso que alimenta a aba Clientes
+// e o programa de fidelidade (carteirinhas).
+async function registrarClienteConcluido(bUid, nome, wpp, corte){
+    try{
+        if(!bUid) return;
+        const wppLimpo = (wpp||'').replace(/\D/g,'');
+        // Chave estável: WhatsApp quando existe, senão nome normalizado.
+        // Sem WhatsApp o rastreio fica menos confiável (dois clientes com o
+        // mesmo nome viram "o mesmo cliente"), mas ainda é melhor que nada.
+        const chave = wppLimpo || ('semtel_' + (nome||'sem_nome').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'_'));
+        if(!chave) return;
+        const ref = doc(db,'barbeiros',bUid,'clientes',chave);
+        const dados = {
+            nome: nome || 'Cliente',
+            wpp: wppLimpo,
+            totalCortes: increment(1),
+            ultimaVisita: new Date().toISOString()
+        };
+        if(corte){
+            dados['cortesFavoritos.'+corte.replace(/[.$#\[\]/]/g,'_')] = increment(1);
+        }
+        await setDoc(ref, dados, {merge:true});
+    }catch(e){ console.error('registrarClienteConcluido:', e); }
+}
 
 const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const HORAS_OPCOES=[];
@@ -1932,6 +1963,25 @@ function mostrarBloqueio(excluido=false){
 
 let authInitialized = false;
 let authLogoutTimer = null;
+let funcModeIniciado = false;
+
+// Detecta se é um link de funcionário — verificado de forma independente do
+// login, porque funcionário NUNCA faz login próprio (link direto, sem senha).
+const urlParamsIniciais = new URLSearchParams(window.location.search);
+const ehLinkFuncionario = !!(urlParamsIniciais.get('func') && urlParamsIniciais.get('bId'));
+
+if(ehLinkFuncionario){
+    go('screen-dash');
+    (async()=>{
+        funcModeIniciado = true;
+        const ok = await initFuncionarioMode();
+        if(!ok){
+            // Link inválido (funcionário removido, barbearia não existe, etc.)
+            funcModeIniciado = false;
+            go('screen-login');
+        }
+    })();
+}
 
 onAuthStateChanged(auth,async user=>{
     if(user){
@@ -1972,8 +2022,11 @@ onAuthStateChanged(auth,async user=>{
         const params = new URLSearchParams(window.location.search);
         if(params.get('func')){
             go('screen-dash');
-            const isFuncMode = await initFuncionarioMode();
-            if(!isFuncMode) initDash();
+            if(!funcModeIniciado){
+                funcModeIniciado = true;
+                const isFuncMode = await initFuncionarioMode();
+                if(!isFuncMode) initDash();
+            }
             return;
         }
 
@@ -1986,6 +2039,8 @@ onAuthStateChanged(auth,async user=>{
         go('screen-dash');
         initDash();
     } else {
+        // Link de funcionário nunca tem sessão logada — não mostra tela de login.
+        if(ehLinkFuncionario) return;
         // Debounce de 2s para evitar logout acidental durante renovação de token
         if(authInitialized){
             authLogoutTimer = setTimeout(()=>{
@@ -2345,8 +2400,11 @@ function initFila(){
     }
 
     // Link do painel de chamada (monitor/TV)
-    const baseUrl = window.location.origin + '/';
-    const linkPainel=baseUrl+'painel?b='+barbeiroData.uid;
+    const isLocalFila = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const baseUrl = isLocalFila
+        ? window.location.origin + '/'
+        : 'https://alesh4rk-design.github.io/prob-site/';
+    const linkPainel=baseUrl+'painel-chamada.html?b='+barbeiroData.uid;
     const linkEl=document.getElementById('link-painel-chamada');
     if(linkEl)linkEl.textContent=linkPainel;
     const btnAbrirPainel=document.getElementById('btn-abrir-painel');
@@ -2479,6 +2537,7 @@ function renderFila(lista){
                 criadoEm:new Date().toISOString()
             });
             await updateDoc(doc(db,'fila',btn.dataset.id),{status:'atendido',atendidoEm:new Date().toISOString()});
+            registrarClienteConcluido(barbeiroData.uid, item.clienteNome, item.clienteWhatsapp, item.corte||'Corte (fila)');
             toast('✓ Atendimento concluído!');
         });
     });
@@ -2768,7 +2827,9 @@ function renderAppts(container,lista,emptyMsg){
     container.querySelectorAll('.btn-concluir').forEach(btn=>{
         btn.addEventListener('click',async()=>{
             btn.disabled=true;btn.textContent='...';
+            const item=lista.find(a=>a.id===btn.dataset.id);
             await updateDoc(doc(db,'agendamentos',btn.dataset.id),{status:'concluido'});
+            if(item) registrarClienteConcluido(barbeiroData.uid, item.clienteNome, item.clienteWhatsapp, item.corte);
             carregarAgendamentos();
             toast('Corte concluído! ✓');
         });
@@ -4672,7 +4733,9 @@ async function initFuncionarioMode(){
         cont.querySelectorAll('.btn-concluir').forEach(btn=>{
             btn.addEventListener('click',async()=>{
                 btn.disabled=true;btn.textContent='...';
+                const item=lista.find(a=>a.id===btn.dataset.id);
                 await updateDoc(doc(db,'agendamentos',btn.dataset.id),{status:'concluido'});
+                if(item) registrarClienteConcluido(bId, item.clienteNome, item.clienteWhatsapp, item.corte);
                 toast('Corte concluído! ✓');
                 location.reload();
             });
@@ -4852,6 +4915,7 @@ function renderFilaFuncionario(lista,bId){
                 criadoEm:new Date().toISOString()
             });
             await updateDoc(doc(db,'fila',btn.dataset.id),{status:'atendido',atendidoEm:new Date().toISOString()});
+            registrarClienteConcluido(bId, item.clienteNome, item.clienteWhatsapp, item.corte||'Corte (fila)');
             toast('✓ Atendimento concluído!');
         });
     });
