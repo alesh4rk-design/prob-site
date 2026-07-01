@@ -468,296 +468,6 @@
 
         @media(max-width:500px){.tab{padding:.75rem .9rem;font-size:.78rem;}.appt-card{flex-wrap:wrap;}}
 
-/* ════════════════════════════════════════
-   SISTEMA DE TEMAS MOBILE — PRO'B
-   ════════════════════════════════════════ */
-
-/* TEMA 1: NEON AZUL (padrão atual) */
-body.tema-neon-azul {
-    --bg:#0a0e14; --card:#1A1A1E; --card2:#12161c; --border:#2a3f5f;
-    --blue:#00d4ff; --green:#00ff88; --red:#ff4b2b; --yellow:#f5a623;
-    --text:#e8f4f8; --muted:#7a9fb5; --accent:#00d4ff;
-    --tab-bg:#12161c; --tab-active:#00d4ff;
-    --topbar-bg:#0d1117; --topbar-border:#1e2d3d;
-}
-
-/* TEMA 2: GOLD PREMIUM */
-body.tema-gold {
-    --bg:#0c0a06; --card:#1a1508; --card2:#110f05; --border:#3d3010;
-    --blue:#f5c842; --green:#a8e063; --red:#ff6b35; --yellow:#f5c842;
-    --text:#f5ecd4; --muted:#8a7850; --accent:#f5c842;
-    --tab-bg:#110f05; --tab-active:#f5c842;
-    --topbar-bg:#0d0b04; --topbar-border:#2d2508;
-}
-body.tema-gold .topbar-logo { color:#f5c842; text-shadow:0 0 12px rgba(245,200,66,.5); }
-body.tema-gold .user-avatar { border-color:#f5c842; color:#f5c842; }
-body.tema-gold .tab.active { color:#f5c842; border-bottom-color:#f5c842; }
-body.tema-gold .section-title { color:#f5c842; }
-body.tema-gold .btn-primary { border-color:#f5c842; color:#f5c842; box-shadow:0 0 16px rgba(245,200,66,.2); }
-body.tema-gold .input-group input:focus,
-body.tema-gold .input-group select:focus { border-color:#f5c842; box-shadow:0 0 16px rgba(245,200,66,.3); }
-body.tema-gold .stats-val { color:#f5c842; }
-body.tema-gold .btn-add { border-color:#f5c842; color:#f5c842; }
-body.tema-gold .btn-save { background:linear-gradient(135deg,#f5c842,#e6a800); color:#000; }
-body.tema-gold .kpi-val { color:#f5c842; }
-body.tema-gold #barber-bg { background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(245,200,66,0.12) 0%, transparent 55%), linear-gradient(180deg,#0c0a06,#1a1508); }
-
-/* TEMA 3: VERMELHO BARBERSHOP */
-body.tema-barber-red {
-    --bg:#0d0507; --card:#1a0a0c; --card2:#120508; --border:#3d1018;
-    --blue:#ff2d55; --green:#30d158; --red:#ff2d55; --yellow:#ffd60a;
-    --text:#fff0f2; --muted:#8a5560; --accent:#ff2d55;
-    --tab-bg:#120508; --tab-active:#ff2d55;
-    --topbar-bg:#0d0507; --topbar-border:#2d0a0f;
-}
-body.tema-barber-red .topbar-logo { color:#ff2d55; text-shadow:0 0 12px rgba(255,45,85,.5); }
-body.tema-barber-red .user-avatar { border-color:#ff2d55; color:#ff2d55; }
-body.tema-barber-red .tab.active { color:#ff2d55; border-bottom-color:#ff2d55; }
-body.tema-barber-red .section-title { color:#ff2d55; }
-body.tema-barber-red .btn-primary { border-color:#ff2d55; color:#ff2d55; box-shadow:0 0 16px rgba(255,45,85,.2); }
-body.tema-barber-red .input-group input:focus,
-body.tema-barber-red .input-group select:focus { border-color:#ff2d55; box-shadow:0 0 16px rgba(255,45,85,.3); }
-body.tema-barber-red .stats-val { color:#ff2d55; }
-body.tema-barber-red .btn-add { border-color:#ff2d55; color:#ff2d55; }
-body.tema-barber-red .btn-save { background:linear-gradient(135deg,#ff2d55,#c4002a); color:#fff; }
-body.tema-barber-red .kpi-val { color:#ff2d55; }
-body.tema-barber-red #barber-bg { background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,45,85,0.12) 0%, transparent 55%), linear-gradient(180deg,#0d0507,#1a0a0c); }
-
-/* ── Mobile First — melhorias gerais ── */
-@media(max-width:768px){
-    /* Topbar compacta */
-    .topbar { padding:.65rem 1rem; position:sticky; top:0; z-index:100; }
-    .topbar-logo { font-size:1.2rem; }
-    #topbar-email { display:none !important; }
-
-    /* Tabs em scroll horizontal com tamanho maior para toque */
-    .tabs { padding:0 .5rem; gap:0; }
-    .tab { padding:.85rem .9rem; font-size:.78rem; white-space:nowrap; min-height:44px; }
-
-    /* Cards maiores para toque */
-    .appt-card { padding:.85rem; border-radius:12px; }
-    .appt-time { font-size:.85rem; }
-    .appt-name { font-size:.85rem; max-width:110px; }
-
-    /* Botões de ação maiores */
-    .btn-concluir, .btn-cancelar, .btn-wpp {
-        padding:.5rem .75rem;
-        font-size:.78rem;
-        min-height:36px;
-    }
-
-    /* Cards de stats 2x2 */
-    .stats-row {
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:.6rem;
-    }
-    .stats-card { border-radius:12px; padding:.85rem; }
-    .stats-val { font-size:1.6rem; }
-
-    /* Formulários mais espaçados */
-    .input-group { margin-bottom:1rem; }
-    .input-group input, .input-group select { padding:.9rem 1rem; font-size:1rem; min-height:48px; }
-
-    /* Botões primários com altura mínima para toque */
-    .btn-primary, .btn-save, .btn-add { min-height:48px; font-size:.9rem; }
-
-    /* Modal ocupa tela toda no mobile */
-    .modal-box { width:100% !important; max-width:100% !important; border-radius:20px 20px 0 0 !important; position:fixed; bottom:0; left:0; right:0; margin:0 !important; }
-
-    /* Tab content sem padding lateral excessivo */
-    .tab-content { padding:1rem; }
-
-    /* Section titles menores */
-    .section-title { font-size:.85rem; }
-}
-
-/* Scrollbar invisível no mobile */
-@media(max-width:768px){
-    .tabs::-webkit-scrollbar { display:none; }
-    .tabs { -ms-overflow-style:none; scrollbar-width:none; }
-}
-
-
-/* ════════════════════════════════
-   SISTEMA DE LAYOUTS — PRO'B
-   ════════════════════════════════ */
-
-/* ── LAYOUT: BOTTOM NAV ── */
-body.layout-bottom .tabs { display: none !important; }
-body.layout-bottom #bottom-nav { display: flex !important; }
-body.layout-bottom #screen-dash { padding-bottom: 60px; }
-body.layout-bottom .topbar { padding: .6rem 1rem; }
-
-#bottom-nav {
-    display: none;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: var(--card2);
-    border-top: 1px solid var(--border);
-    z-index: 200;
-    padding-bottom: env(safe-area-inset-bottom, 0);
-}
-.bnav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px 4px 10px;
-    gap: 3px;
-    cursor: pointer;
-    position: relative;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    font-family: var(--font);
-    transition: color .2s;
-}
-.bnav-item.active { color: var(--blue); }
-.bnav-item .bnav-icon { font-size: 18px; line-height: 1; }
-.bnav-item .bnav-lbl { font-size: 9px; letter-spacing: .2px; }
-.bnav-dot {
-    position: absolute;
-    bottom: 6px;
-    width: 4px; height: 4px;
-    border-radius: 50%;
-    background: var(--blue);
-    display: none;
-}
-.bnav-item.active .bnav-dot { display: block; }
-
-/* ── LAYOUT: TIMELINE ── */
-body.layout-timeline .tabs { display: none !important; }
-body.layout-timeline #timeline-quicknav { display: flex !important; }
-body.layout-timeline #bottom-nav { display: none !important; }
-
-#timeline-quicknav {
-    display: none;
-    gap: 5px;
-    padding: .6rem 1rem;
-    background: var(--card2);
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-}
-#timeline-quicknav::-webkit-scrollbar { display: none; }
-.tqnav-btn {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    padding: 6px 10px;
-    background: var(--card2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    cursor: pointer;
-    color: var(--muted);
-    font-family: var(--font);
-    transition: all .2s;
-}
-.tqnav-btn.active { border-color: var(--blue); color: var(--blue); background: rgba(0,212,255,.06); }
-.tqnav-btn .tqnav-icon { font-size: 16px; line-height: 1; }
-.tqnav-btn .tqnav-lbl { font-size: 8px; white-space: nowrap; }
-
-/* Timeline dos agendamentos */
-.timeline-wrap { position: relative; padding-left: 24px; margin-top: .75rem; }
-.timeline-line { position: absolute; left: 9px; top: 0; bottom: 0; width: 1px; background: var(--border); }
-.tl-event { position: relative; margin-bottom: 10px; }
-.tl-dot {
-    position: absolute;
-    left: -19px; top: 4px;
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    background: var(--bg);
-    transition: all .2s;
-}
-.tl-dot.done { background: var(--green); border-color: var(--green); }
-.tl-dot.now { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 8px var(--blue); }
-body.layout-timeline .tab-content[id="tab-agendamentos"] .stats-row { margin-bottom: .75rem; }
-
-/* ── LAYOUT: SIDEBAR ── */
-body.layout-sidebar .tabs { display: none !important; }
-body.layout-sidebar #bottom-nav { display: none !important; }
-body.layout-sidebar #timeline-quicknav { display: none !important; }
-body.layout-sidebar #dash-content { display: flex !important; flex-direction: row !important; }
-body.layout-sidebar .topbar { display: none !important; }
-body.layout-sidebar .tab-content { padding: 1rem; }
-
-#sidebar-nav {
-    display: none;
-    width: 52px;
-    min-height: 100vh;
-    background: var(--card2);
-    border-right: 1px solid var(--border);
-    flex-direction: column;
-    align-items: center;
-    padding: 12px 0;
-    gap: 4px;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-    flex-shrink: 0;
-    z-index: 100;
-}
-body.layout-sidebar #sidebar-nav { display: flex; }
-.snav-item {
-    width: 38px; height: 38px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    background: transparent;
-    transition: all .2s;
-    color: var(--muted);
-}
-.snav-item.active {
-    background: rgba(0,212,255,.1);
-    border-color: rgba(0,212,255,.3);
-    color: var(--blue);
-}
-.snav-logo {
-    font-size: 11px;
-    font-weight: 900;
-    color: var(--blue);
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    writing-mode: vertical-lr;
-    transform: rotate(180deg);
-}
-.snav-avatar {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    border: 1.5px solid var(--blue);
-    background: var(--card);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--blue);
-    cursor: pointer;
-    margin-top: auto;
-}
-#sidebar-main { flex: 1; min-width: 0; overflow-y: auto; }
-#sidebar-header {
-    display: none;
-    padding: .75rem 1rem;
-    border-bottom: 1px solid var(--border);
-    background: var(--card2);
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-}
-body.layout-sidebar #sidebar-header { display: flex; }
-.sidebar-page-title { font-size: .9rem; font-weight: 700; color: var(--text); }
-.sidebar-date { font-size: .7rem; color: var(--muted); }
 
     </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -982,56 +692,6 @@ body.layout-sidebar #sidebar-header { display: flex; }
         <p style="font-size:.62rem;color:rgba(255,255,255,.15);letter-spacing:1.5px;text-transform:uppercase;margin-top:.5rem">Desenvolvido por Alexandre Lima</p>
     </div>
 
-    <!-- Bottom Navigation (layout-bottom) -->
-    <nav id="bottom-nav">
-        <button class="bnav-item active" data-tab="agendamentos">
-            <span class="bnav-icon">📋</span>
-            <span class="bnav-lbl">Agenda</span>
-            <span class="bnav-dot"></span>
-        </button>
-        <button class="bnav-item" data-tab="fila">
-            <span class="bnav-icon">🪑</span>
-            <span class="bnav-lbl">Fila</span>
-        </button>
-        <button class="bnav-item" data-tab="cortes">
-            <span class="bnav-icon">✂️</span>
-            <span class="bnav-lbl">Cortes</span>
-        </button>
-        <button class="bnav-item" data-tab="clientes">
-            <span class="bnav-icon">👥</span>
-            <span class="bnav-lbl">Clientes</span>
-        </button>
-        <button class="bnav-item" data-tab="visual" id="bnav-mais">
-            <span class="bnav-icon">⚙️</span>
-            <span class="bnav-lbl">Mais</span>
-        </button>
-    </nav>
-
-    <!-- Sidebar Nav (layout-sidebar) -->
-    <nav id="sidebar-nav">
-        <div class="snav-logo">PRO'B</div>
-        <button class="snav-item active" data-tab="agendamentos" title="Agendamentos">📋</button>
-        <button class="snav-item" data-tab="fila" title="Fila">🪑</button>
-        <button class="snav-item" data-tab="cortes" title="Cortes">✂️</button>
-        <button class="snav-item" data-tab="equipe" title="Equipe">👥</button>
-        <button class="snav-item" data-tab="horarios" title="Horários">🕐</button>
-        <button class="snav-item" data-tab="perfil" title="Perfil">⚙️</button>
-        <button class="snav-item" data-tab="visual" title="Visual">🎨</button>
-        <button class="snav-item" data-tab="clientes" title="Clientes">🧑</button>
-        <button class="snav-item" data-tab="gestao" title="Gestão">💼</button>
-        <div class="snav-avatar" id="snav-avatar" title="Sair" onclick="signOut(auth)">?</div>
-    </nav>
-
-    <!-- Sidebar main wrapper -->
-    <div id="sidebar-main">
-    <div id="sidebar-header">
-        <div>
-            <div class="sidebar-page-title" id="sidebar-page-title">Agendamentos</div>
-            <div class="sidebar-date" id="sidebar-date"></div>
-        </div>
-        <button onclick="signOut(auth)" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:.72rem;padding:.25rem .5rem;cursor:pointer">Sair</button>
-    </div>
-
     <div id="dash-content">
     <div class="topbar">
         <div class="topbar-logo-wrap">
@@ -1052,26 +712,12 @@ body.layout-sidebar #sidebar-header { display: flex; }
     <div class="tabs">
         <div class="tab active" data-tab="agendamentos">📋 Agendamentos</div>
         <div class="tab" data-tab="fila">🪑 Fila de Espera</div>
-        <div class="tab" data-tab="cortes">✂️ Cortes</div>
-        <div class="tab" data-tab="equipe">👥 Equipe</div>
         <div class="tab" data-tab="horarios">🕐 Horários</div>
-        <div class="tab" data-tab="perfil">⚙️ Perfil</div>
-        <div class="tab" data-tab="visual">🎨 Visual</div>
-        <div class="tab" data-tab="clientes">👥 Clientes</div>
+        <div class="tab" data-tab="equipe">👥 Equipe</div>
+        <div class="tab" data-tab="clientes">🧑 Clientes</div>
+        <div class="tab" data-tab="perfil">⚙️ Configurações</div>
+        <div class="tab" data-tab="visual">📱 Tela Cliente</div>
         <div class="tab" data-tab="gestao">💼 Gestão da Barbearia</div>
-    </div>
-
-    <!-- Timeline Quick Nav (layout-timeline) -->
-    <div id="timeline-quicknav">
-        <button class="tqnav-btn active" data-tab="agendamentos"><span class="tqnav-icon">📋</span><span class="tqnav-lbl">Agenda</span></button>
-        <button class="tqnav-btn" data-tab="fila"><span class="tqnav-icon">🪑</span><span class="tqnav-lbl">Fila</span></button>
-        <button class="tqnav-btn" data-tab="cortes"><span class="tqnav-icon">✂️</span><span class="tqnav-lbl">Cortes</span></button>
-        <button class="tqnav-btn" data-tab="clientes"><span class="tqnav-icon">👥</span><span class="tqnav-lbl">Clientes</span></button>
-        <button class="tqnav-btn" data-tab="equipe"><span class="tqnav-icon">🫂</span><span class="tqnav-lbl">Equipe</span></button>
-        <button class="tqnav-btn" data-tab="horarios"><span class="tqnav-icon">🕐</span><span class="tqnav-lbl">Horários</span></button>
-        <button class="tqnav-btn" data-tab="perfil"><span class="tqnav-icon">⚙️</span><span class="tqnav-lbl">Perfil</span></button>
-        <button class="tqnav-btn" data-tab="visual"><span class="tqnav-icon">🎨</span><span class="tqnav-lbl">Visual</span></button>
-        <button class="tqnav-btn" data-tab="gestao"><span class="tqnav-icon">💼</span><span class="tqnav-lbl">Gestão</span></button>
     </div>
 
     <!-- TAB Agendamentos -->
@@ -1205,6 +851,11 @@ body.layout-sidebar #sidebar-header { display: flex; }
 
         <div class="section-title">Equipe</div>
         <div id="lista-equipe"><div class="empty-state"><div class="icon">👥</div>Nenhum barbeiro cadastrado ainda.</div></div>
+
+        <!-- Links de acesso para funcionários -->
+        <div class="section-title" style="margin-top:1.5rem">🔗 Links de Acesso</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Envie o link de acesso para cada barbeiro da sua equipe.</div>
+        <div id="lista-links-func-equipe"><div class="empty-state"><div class="icon">🔗</div>Adicione barbeiros acima para gerar os links.</div></div>
 
         <div class="section-title" style="margin-top:1.5rem">Ganhos de Hoje</div>
         <div id="ganhos-hoje"><div class="empty-state"><div class="icon">💰</div>Carregando...</div></div>
@@ -1409,90 +1060,7 @@ body.layout-sidebar #sidebar-header { display: flex; }
     <div class="tab-content" id="tab-visual">
         <div class="section-title">Personalizar Tela do Cliente</div>
 
-        <!-- ── LAYOUT DO PAINEL ── -->
-        <div class="card" style="margin-bottom:1.25rem">
-            <div class="section-title" style="font-size:.75rem">📐 Layout do Painel</div>
-            <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Como as abas e o menu serão organizados:</p>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem">
-                <div class="layout-card" data-layout="tabs" onclick="window.aplicarLayout('tabs')"
-                    style="border:2px solid var(--blue);border-radius:12px;padding:.85rem .75rem;cursor:pointer;background:rgba(0,212,255,.06);transition:all .2s">
-                    <div style="height:36px;background:var(--card2);border-radius:6px;border:1px solid var(--border);margin-bottom:.5rem;display:flex;align-items:flex-end;padding:0 4px 4px;gap:3px;overflow:hidden">
-                        <div style="height:18px;flex:1;background:rgba(0,212,255,.3);border-radius:3px 3px 0 0;display:flex;align-items:center;justify-content:center;font-size:7px;color:#00d4ff">▬</div>
-                        <div style="height:14px;flex:1;background:var(--border);border-radius:3px 3px 0 0"></div>
-                        <div style="height:14px;flex:1;background:var(--border);border-radius:3px 3px 0 0"></div>
-                        <div style="height:14px;flex:1;background:var(--border);border-radius:3px 3px 0 0"></div>
-                    </div>
-                    <div style="font-size:.7rem;font-weight:700;color:var(--blue);text-align:center">Tabs (atual)</div>
-                </div>
-                <div class="layout-card" data-layout="bottom" onclick="window.aplicarLayout('bottom')"
-                    style="border:2px solid rgba(0,212,255,.2);border-radius:12px;padding:.85rem .75rem;cursor:pointer;background:rgba(0,212,255,.02);transition:all .2s">
-                    <div style="height:36px;background:var(--card2);border-radius:6px;border:1px solid var(--border);margin-bottom:.5rem;position:relative">
-                        <div style="position:absolute;bottom:0;left:0;right:0;height:12px;background:var(--card);border-top:1px solid var(--border);border-radius:0 0 6px 6px;display:flex;align-items:center;justify-content:space-around;padding:0 4px">
-                            <span style="font-size:7px">●</span><span style="font-size:7px;color:var(--blue)">●</span><span style="font-size:7px">●</span><span style="font-size:7px">●</span><span style="font-size:7px">●</span>
-                        </div>
-                    </div>
-                    <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-align:center">Bottom Nav</div>
-                </div>
-                <div class="layout-card" data-layout="timeline" onclick="window.aplicarLayout('timeline')"
-                    style="border:2px solid rgba(0,212,255,.2);border-radius:12px;padding:.85rem .75rem;cursor:pointer;background:rgba(0,212,255,.02);transition:all .2s">
-                    <div style="height:36px;background:var(--card2);border-radius:6px;border:1px solid var(--border);margin-bottom:.5rem;padding:4px;display:flex;flex-direction:column;gap:2px;overflow:hidden">
-                        <div style="display:flex;align-items:center;gap:3px"><div style="width:5px;height:5px;border-radius:50%;background:var(--green)"></div><div style="flex:1;height:3px;background:var(--border);border-radius:2px"></div></div>
-                        <div style="display:flex;align-items:center;gap:3px"><div style="width:5px;height:5px;border-radius:50%;background:var(--blue)"></div><div style="flex:1;height:3px;background:var(--border);border-radius:2px"></div></div>
-                        <div style="display:flex;align-items:center;gap:3px"><div style="width:5px;height:5px;border-radius:50%;background:var(--border)"></div><div style="flex:1;height:3px;background:var(--border);border-radius:2px"></div></div>
-                    </div>
-                    <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-align:center">Timeline</div>
-                </div>
-                <div class="layout-card" data-layout="sidebar" onclick="window.aplicarLayout('sidebar')"
-                    style="border:2px solid rgba(0,212,255,.2);border-radius:12px;padding:.85rem .75rem;cursor:pointer;background:rgba(0,212,255,.02);transition:all .2s">
-                    <div style="height:36px;background:var(--card2);border-radius:6px;border:1px solid var(--border);margin-bottom:.5rem;display:flex;overflow:hidden">
-                        <div style="width:12px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:3px 0;gap:2px">
-                            <div style="width:6px;height:6px;border-radius:2px;background:var(--blue)"></div>
-                            <div style="width:6px;height:6px;border-radius:2px;background:var(--border)"></div>
-                            <div style="width:6px;height:6px;border-radius:2px;background:var(--border)"></div>
-                        </div>
-                        <div style="flex:1;padding:4px 3px;display:flex;flex-direction:column;gap:2px">
-                            <div style="height:3px;background:var(--border);border-radius:2px"></div>
-                            <div style="height:3px;background:var(--border);border-radius:2px;width:70%"></div>
-                        </div>
-                    </div>
-                    <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-align:center">Sidebar</div>
-                </div>
-            </div>
-        </div>
 
-        <!-- ── TEMA DO PAINEL DO BARBEIRO ── -->
-        <div class="card" style="margin-bottom:1.25rem">
-            <div class="section-title" style="font-size:.75rem">📱 Tema do Painel</div>
-            <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Escolha o visual do seu painel:</p>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem" id="tema-selector">
-                <div class="tema-card" data-tema="neon-azul" onclick="window.aplicarTema('neon-azul',this)"
-                    style="border:2px solid rgba(0,212,255,.5);border-radius:12px;padding:.85rem .5rem;text-align:center;cursor:pointer;background:rgba(0,212,255,.06);transition:all .2s">
-                    <div style="width:100%;height:32px;border-radius:6px;background:linear-gradient(135deg,#0a0e14,#1A1A1E);border:1px solid #2a3f5f;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center">
-                        <div style="width:16px;height:3px;background:#00d4ff;border-radius:2px"></div>
-                    </div>
-                    <div style="font-size:.72rem;font-weight:700;color:#00d4ff">Neon Azul</div>
-                    <div style="font-size:.62rem;color:var(--muted);margin-top:.15rem">Padrão</div>
-                </div>
-                <div class="tema-card" data-tema="gold" onclick="window.aplicarTema('gold',this)"
-                    style="border:2px solid rgba(245,200,66,.3);border-radius:12px;padding:.85rem .5rem;text-align:center;cursor:pointer;background:rgba(245,200,66,.04);transition:all .2s">
-                    <div style="width:100%;height:32px;border-radius:6px;background:linear-gradient(135deg,#0c0a06,#1a1508);border:1px solid #3d3010;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center">
-                        <div style="width:16px;height:3px;background:#f5c842;border-radius:2px"></div>
-                    </div>
-                    <div style="font-size:.72rem;font-weight:700;color:#f5c842">Gold Premium</div>
-                    <div style="font-size:.62rem;color:var(--muted);margin-top:.15rem">Luxo</div>
-                </div>
-                <div class="tema-card" data-tema="barber-red" onclick="window.aplicarTema('barber-red',this)"
-                    style="border:2px solid rgba(255,45,85,.3);border-radius:12px;padding:.85rem .5rem;text-align:center;cursor:pointer;background:rgba(255,45,85,.04);transition:all .2s">
-                    <div style="width:100%;height:32px;border-radius:6px;background:linear-gradient(135deg,#0d0507,#1a0a0c);border:1px solid #3d1018;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center">
-                        <div style="width:16px;height:3px;background:#ff2d55;border-radius:2px"></div>
-                    </div>
-                    <div style="font-size:.72rem;font-weight:700;color:#ff2d55">Barbershop</div>
-                    <div style="font-size:.62rem;color:var(--muted);margin-top:.15rem">Clássico</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TEMAS PRONTOS -->
         <div class="card" style="margin-bottom:1rem">
             <div class="section-title" style="font-size:.75rem">Temas prontos</div>
             <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Escolha um tema base e personalize em cima:</p>
@@ -1741,14 +1309,11 @@ body.layout-sidebar #sidebar-header { display: flex; }
             <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Animação principal sobre o fundo:</p>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem;margin-bottom:.85rem">
                 <button class="anim-btn active" data-slot="1" data-anim="nenhuma">❌ Nenhuma</button>
-                <button class="anim-btn" data-slot="1" data-anim="barberpole_rain">💈 Barberpole Rain</button>
-                <button class="anim-btn" data-slot="1" data-anim="onda_plasma">🌊 Onda de Plasma</button>
-                <button class="anim-btn" data-slot="1" data-anim="hexagonal">🔲 Matrix Hexagonal</button>
+                <button class="anim-btn" data-slot="1" data-anim="barberpole_rain">💈 Barberpole</button>
+                <button class="anim-btn" data-slot="1" data-anim="onda_plasma">🌊 Onda Plasma</button>
+                <button class="anim-btn" data-slot="1" data-anim="hexagonal">🔲 Hexagonal</button>
                 <button class="anim-btn" data-slot="1" data-anim="constelacao">💫 Constelação</button>
-                <button class="anim-btn" data-slot="1" data-anim="chamas">🔥 Chamas Neon</button>
-                <button class="anim-btn" data-slot="1" data-anim="raios">⚡ Raios</button>
                 <button class="anim-btn" data-slot="1" data-anim="galaxia">🌌 Galáxia</button>
-                <button class="anim-btn" data-slot="1" data-anim="particulas">✨ Partículas</button>
             </div>
             <div id="anim1-cores-wrap" style="display:none;border-top:1px solid var(--border);padding-top:.75rem">
                 <p style="font-size:.7rem;color:var(--muted);margin-bottom:.6rem">Cores do Efeito 1:</p>
@@ -1788,13 +1353,7 @@ body.layout-sidebar #sidebar-header { display: flex; }
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem;margin-bottom:.85rem">
                 <button class="anim-btn active" data-slot="2" data-anim="nenhuma">❌ Nenhuma</button>
                 <button class="anim-btn" data-slot="2" data-anim="particulas">✨ Partículas</button>
-                <button class="anim-btn" data-slot="2" data-anim="barberpole_rain">💈 Barberpole Rain</button>
-                <button class="anim-btn" data-slot="2" data-anim="onda_plasma">🌊 Onda de Plasma</button>
-                <button class="anim-btn" data-slot="2" data-anim="hexagonal">🔲 Matrix Hexagonal</button>
-                <button class="anim-btn" data-slot="2" data-anim="constelacao">💫 Constelação</button>
-                <button class="anim-btn" data-slot="2" data-anim="chamas">🔥 Chamas Neon</button>
-                <button class="anim-btn" data-slot="2" data-anim="raios">⚡ Raios</button>
-                <button class="anim-btn" data-slot="2" data-anim="galaxia">🌌 Galáxia</button>
+                <button class="anim-btn" data-slot="2" data-anim="chamas">🔥 Chamas</button>
             </div>
             <div id="anim2-cores-wrap" style="display:none;border-top:1px solid var(--border);padding-top:.75rem">
                 <p style="font-size:.7rem;color:var(--muted);margin-bottom:.6rem">Cores do Efeito 2:</p>
@@ -2731,6 +2290,7 @@ function initDash(){
         barbeiroData={...barbeiroData,...snap.data()};
         renderCortes();
         renderEquipe();
+    renderLinksEquipe();
         carregarGanhos();
         if(typeof renderGastos==='function'){renderGastos();carregarResumoGestao();}
         // Atualiza preview visual em tempo real
@@ -2740,8 +2300,6 @@ function initDash(){
     carregarAgendamentos();
     carregarAvisos1h();
     // Aplica tema salvo
-    carregarTema(barbeiroData?.personalizacao?.tema || 'neon-azul');
-    carregarLayout(barbeiroData?.personalizacao?.layout || 'tabs');
     carregarFaturamento();
     initHorarios();
     initPerfil();
@@ -3302,6 +2860,31 @@ function renderCortes(){
 }
 
 // EQUIPE
+function renderLinksEquipe(){
+    const container = document.getElementById('lista-links-func-equipe');
+    if(!container) return;
+    const equipe = barbeiroData.equipe || [];
+    if(!equipe.length){
+        container.innerHTML = '<div class="empty-state"><div class="icon">🔗</div>Adicione barbeiros acima para gerar os links.</div>';
+        return;
+    }
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const baseUrl = isLocal ? window.location.origin + '/' : 'https://alesh4rk-design.github.io/prob-site/';
+
+    container.innerHTML = equipe.map(b => {
+        const funcLink = `${baseUrl}barbeiro.html?func=${encodeURIComponent(b.id)}&bId=${barbeiroData.uid}`;
+        const msgWpp = encodeURIComponent(`Olá ${b.nome}! Seu link de acesso Pro'B: ${funcLink}`);
+        return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem">
+            <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem">✂️ ${b.nome}</div>
+            <div style="font-size:.7rem;color:var(--muted);word-break:break-all;margin-bottom:.6rem;background:var(--card);padding:.4rem .65rem;border-radius:6px;border:1px solid var(--border)">${funcLink}</div>
+            <div style="display:flex;gap:.5rem">
+                <button class="btn-add" style="flex:1;font-size:.75rem;padding:.4rem" onclick="navigator.clipboard.writeText('${funcLink}').then(()=>toast('✓ Link de ${b.nome} copiado!'))">📋 Copiar</button>
+                <a href="https://wa.me/?text=${msgWpp}" target="_blank" class="btn-wpp" style="flex:1;text-align:center;font-size:.75rem;padding:.4rem;text-decoration:none">📱 WhatsApp</a>
+            </div>
+        </div>`;
+    }).join('');
+}
+
 function renderEquipe(){
     const lista=barbeiroData.equipe||[];
     const container=$('lista-equipe');
@@ -4021,146 +3604,6 @@ async function carregarAvisos1h(){
 // Verifica avisos a cada 5 minutos
 setInterval(carregarAvisos1h, 5*60*1000);
 
-
-// ══ SISTEMA DE TEMAS ══
-window.aplicarTema = function(tema, el){
-    // Remove todos os temas do body
-    document.body.classList.remove('tema-neon-azul','tema-gold','tema-barber-red');
-    // Aplica o novo tema
-    document.body.classList.add('tema-'+tema);
-    // Atualiza visual dos cards de seleção
-    document.querySelectorAll('.tema-card').forEach(c=>{
-        c.style.opacity = c.dataset.tema === tema ? '1' : '.55';
-        c.style.transform = c.dataset.tema === tema ? 'scale(1.04)' : 'scale(1)';
-    });
-    // Salva no Firestore
-    if(barbeiroData?.uid){
-        import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js').then(({doc,updateDoc})=>{
-            updateDoc(doc(db,'barbeiros',barbeiroData.uid),{'personalizacao.tema':tema}).catch(()=>{});
-        });
-    }
-    toast('✓ Tema '+tema+' aplicado!');
-}
-
-function carregarTema(tema){
-    if(!tema) tema = 'neon-azul';
-    document.body.classList.remove('tema-neon-azul','tema-gold','tema-barber-red');
-    document.body.classList.add('tema-'+tema);
-    document.querySelectorAll('.tema-card').forEach(c=>{
-        c.style.opacity = c.dataset.tema === tema ? '1' : '.55';
-        c.style.transform = c.dataset.tema === tema ? 'scale(1.04)' : 'scale(1)';
-    });
-}
-
-
-// ══════════════════════════════════════════════
-// SISTEMA DE LAYOUTS
-// ══════════════════════════════════════════════
-
-const TABS_INFO = {
-    agendamentos: { icon:'📋', label:'Agendamentos' },
-    fila:         { icon:'🪑', label:'Fila de Espera' },
-    cortes:       { icon:'✂️', label:'Cortes' },
-    equipe:       { icon:'👥', label:'Equipe' },
-    horarios:     { icon:'🕐', label:'Horários' },
-    perfil:       { icon:'⚙️', label:'Perfil' },
-    visual:       { icon:'🎨', label:'Visual' },
-    clientes:     { icon:'🧑', label:'Clientes' },
-    gestao:       { icon:'💼', label:'Gestão' },
-};
-
-let layoutAtual = 'tabs'; // tabs | bottom | timeline | sidebar
-
-window.aplicarLayout = function(layout) {
-    layoutAtual = layout;
-    // Remove todos os layouts
-    document.body.classList.remove('layout-bottom','layout-timeline','layout-sidebar');
-    if(layout !== 'tabs') document.body.classList.add('layout-'+layout);
-
-    // Salva no Firestore
-    if(barbeiroData?.uid){
-        updateDoc(doc(db,'barbeiros',barbeiroData.uid),{'personalizacao.layout':layout}).catch(()=>{});
-    }
-
-    // Atualiza seletor visual na aba Visual
-    document.querySelectorAll('.layout-card').forEach(c=>{
-        const sel = c.dataset.layout === layout;
-        c.style.opacity    = sel ? '1' : '.55';
-        c.style.transform  = sel ? 'scale(1.04)' : 'scale(1)';
-        c.style.borderColor = sel ? 'var(--blue)' : 'rgba(0,212,255,.2)';
-    });
-
-    // Atualiza sidebar date
-    const sdDate = document.getElementById('sidebar-date');
-    if(sdDate) sdDate.textContent = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'short'});
-
-    toast('✓ Layout aplicado!');
-}
-
-function carregarLayout(layout) {
-    if(!layout) layout = 'tabs';
-    layoutAtual = layout;
-    document.body.classList.remove('layout-bottom','layout-timeline','layout-sidebar');
-    if(layout !== 'tabs') document.body.classList.add('layout-'+layout);
-
-    document.querySelectorAll('.layout-card').forEach(c=>{
-        const sel = c.dataset.layout === layout;
-        c.style.opacity    = sel ? '1' : '.55';
-        c.style.transform  = sel ? 'scale(1.04)' : 'scale(1)';
-        c.style.borderColor = sel ? 'var(--blue)' : 'rgba(0,212,255,.2)';
-    });
-
-    const sdDate = document.getElementById('sidebar-date');
-    if(sdDate) sdDate.textContent = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'short'});
-}
-
-// Troca de aba unificada — funciona para todos os layouts
-function switchTab(tabName) {
-    // Esconde todos os tab-contents
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    const target = document.getElementById('tab-'+tabName);
-    if(target) target.classList.add('active');
-
-    // Tabs horizontal
-    document.querySelectorAll('.tab').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === tabName);
-    });
-
-    // Bottom nav
-    document.querySelectorAll('.bnav-item').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === tabName);
-    });
-
-    // Sidebar nav
-    document.querySelectorAll('.snav-item').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === tabName);
-    });
-
-    // Timeline quicknav
-    document.querySelectorAll('.tqnav-btn').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === tabName);
-    });
-
-    // Sidebar header title
-    const title = document.getElementById('sidebar-page-title');
-    if(title && TABS_INFO[tabName]) title.textContent = TABS_INFO[tabName].label;
-
-    // Callbacks específicos por aba
-    if(tabName==='cortes') carregarPromocoes();
-    if(tabName==='clientes'){ carregarClientes(); carregarAvisos1h(); }
-    if(tabName==='gestao') initGestao();
-}
-
-// Hookeia todos os navegadores
-document.querySelectorAll('.tab, .bnav-item, .snav-item, .tqnav-btn').forEach(el => {
-    el.addEventListener('click', () => {
-        const tab = el.dataset.tab;
-        if(tab) switchTab(tab);
-    });
-});
-
-// Substitui o listener antigo das tabs (que já estava no código)
-// O switchTab acima já cobre tudo
 
 // ── SISTEMA DE CATEGORIAS ──
 function removerCategoria(sessao){
