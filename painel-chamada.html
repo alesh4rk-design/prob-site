@@ -14,7 +14,7 @@
             background:#04070c;
             color:#e8f4f8;
             font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-            min-height:100vh;
+            height:100vh;
             overflow:hidden;
             position:relative;
         }
@@ -30,26 +30,26 @@
 
         .wrap{
             position:relative;z-index:2;
-            min-height:100vh;
+            height:100vh;
             display:flex;flex-direction:column;
-            padding:2.5vh 3vw;
+            padding:min(2.5vh,20px) 3vw;
         }
 
         .header{
             text-align:center;
-            margin-bottom:2vh;
+            margin-bottom:min(2vh,14px);
         }
         .logo{
-            font-size:2.2vw;font-weight:900;letter-spacing:.3vw;
+            font-size:min(2.2vw,4.2vh);font-weight:900;letter-spacing:.3vw;
             color:#00d4ff;text-shadow:0 0 20px rgba(0,212,255,.6);
         }
         .barber-name{
-            font-size:1.6vw;font-weight:700;color:#fff;
+            font-size:min(1.6vw,3vh);font-weight:700;color:#fff;
             margin-top:.5vh;letter-spacing:.15vw;text-transform:uppercase;
         }
         .clock{
             font-family:'Courier New',monospace;
-            font-size:1.1vw;color:rgba(255,255,255,.4);
+            font-size:min(1.1vw,2vh);color:rgba(255,255,255,.4);
             margin-top:.5vh;
         }
 
@@ -59,6 +59,7 @@
             grid-template-columns:1fr 1.6fr;
             gap:2vw;
             align-items:stretch;
+            min-height:0;
         }
 
         /* Próximo da fila — destaque */
@@ -68,7 +69,7 @@
             border-radius:24px;
             display:flex;flex-direction:column;
             align-items:center;justify-content:center;
-            padding:3vh 2vw;
+            padding:min(3vh,20px) 2vw;
             position:relative;
             overflow:hidden;
             animation:pulseGlow 2.5s ease-in-out infinite;
@@ -78,26 +79,26 @@
             50%{box-shadow:0 0 60px rgba(0,212,255,.35);}
         }
         .next-label{
-            font-size:1.3vw;letter-spacing:.4vw;text-transform:uppercase;
-            color:rgba(0,212,255,.7);font-weight:700;margin-bottom:2vh;
+            font-size:min(1.3vw,2.6vh);letter-spacing:.4vw;text-transform:uppercase;
+            color:rgba(0,212,255,.7);font-weight:700;margin-bottom:min(2vh,14px);
         }
         .next-name{
-            font-size:4.5vw;font-weight:900;text-align:center;
+            font-size:min(4.5vw,7vh);font-weight:900;text-align:center;
             color:#fff;text-shadow:0 0 25px rgba(0,212,255,.5);
             line-height:1.1;word-break:break-word;
         }
         .next-meta{
-            font-size:1.3vw;color:rgba(255,255,255,.55);
-            margin-top:2vh;text-align:center;
+            font-size:min(1.3vw,2.4vh);color:rgba(255,255,255,.55);
+            margin-top:min(2vh,12px);text-align:center;
         }
         .next-barber{
-            margin-top:1.5vh;
+            margin-top:min(1.5vh,10px);
             background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);
             border-radius:30px;padding:.6vh 1.5vw;
-            font-size:1.1vw;color:#00ff88;font-weight:700;
+            font-size:min(1.1vw,2vh);color:#00ff88;font-weight:700;
         }
         .empty-next{
-            font-size:1.8vw;color:rgba(255,255,255,.3);text-align:center;
+            font-size:min(1.8vw,3vh);color:rgba(255,255,255,.3);text-align:center;
         }
 
         /* Lista de espera */
@@ -105,47 +106,51 @@
             background:rgba(255,255,255,.02);
             border:1px solid rgba(255,255,255,.08);
             border-radius:24px;
-            padding:2.5vh 2vw;
+            padding:min(2.5vh,18px) 2vw;
             display:flex;flex-direction:column;
             overflow:hidden;
+            min-height:0;
         }
         .queue-title{
-            font-size:1.2vw;letter-spacing:.2vw;text-transform:uppercase;
-            color:rgba(255,255,255,.5);font-weight:700;margin-bottom:1.5vh;
+            font-size:min(1.2vw,2.2vh);letter-spacing:.2vw;text-transform:uppercase;
+            color:rgba(255,255,255,.5);font-weight:700;margin-bottom:min(1.5vh,10px);
             display:flex;align-items:center;gap:.5vw;
+            flex-shrink:0;
         }
         .queue-list{
-            flex:1;overflow-y:auto;
-            display:flex;flex-direction:column;gap:1vh;
+            flex:1;overflow-y:auto;min-height:0;
+            display:flex;flex-direction:column;gap:min(1vh,8px);
         }
         .queue-item{
             display:flex;align-items:center;gap:1vw;
             background:rgba(255,255,255,.03);
             border:1px solid rgba(255,255,255,.06);
             border-radius:12px;
-            padding:1.2vh 1.2vw;
+            padding:min(1.2vh,10px) 1.2vw;
             transition:all .3s;
+            flex-shrink:0;
         }
         .queue-pos{
-            width:2.2vw;height:2.2vw;min-width:36px;min-height:36px;
+            width:min(2.2vw,4vh);height:min(2.2vw,4vh);min-width:32px;min-height:32px;
             border-radius:50%;
             background:rgba(255,255,255,.06);
             border:1px solid rgba(255,255,255,.15);
             display:flex;align-items:center;justify-content:center;
-            font-weight:900;font-size:1.1vw;color:rgba(255,255,255,.6);
+            font-weight:900;font-size:min(1.1vw,2vh);color:rgba(255,255,255,.6);
             flex-shrink:0;
         }
         .queue-info{flex:1;min-width:0;}
-        .queue-name{font-size:1.3vw;font-weight:700;color:#fff;}
-        .queue-sub{font-size:.9vw;color:rgba(255,255,255,.4);margin-top:.2vh;}
+        .queue-name{font-size:min(1.3vw,2.2vh);font-weight:700;color:#fff;}
+        .queue-sub{font-size:min(.9vw,1.6vh);color:rgba(255,255,255,.4);margin-top:.2vh;}
         .empty-queue{
             text-align:center;color:rgba(255,255,255,.25);
-            font-size:1.2vw;padding:4vh 0;
+            font-size:min(1.2vw,2.2vh);padding:4vh 0;
         }
 
         .footer{
-            text-align:center;margin-top:2vh;
-            font-size:.85vw;color:rgba(255,255,255,.2);letter-spacing:.1vw;
+            text-align:center;margin-top:min(2vh,10px);
+            font-size:min(.85vw,1.5vh);color:rgba(255,255,255,.2);letter-spacing:.1vw;
+            flex-shrink:0;
         }
 
         @media(max-width:900px){
