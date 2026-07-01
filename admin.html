@@ -395,10 +395,6 @@ async function carregarCfg(){
     const snap=await getDoc(doc(db,'config','admin'));
     if(snap.exists()){
         cfg=snap.data();
-        // Atualiza variáveis globais com valores do Firestore
-        if(cfg.wpp)   WPP_ADMIN   = cfg.wpp;
-        if(cfg.pix)   PIX_ADMIN   = cfg.pix;
-        if(cfg.preco) PRECO_MENSAL = cfg.preco;
         if(typeof $==='function'&&$('cfg-pix'))  $('cfg-pix').value=cfg.pix||'';
         if(typeof $==='function'&&$('cfg-wpp'))  $('cfg-wpp').value=cfg.wpp||'';
         if(typeof $==='function'&&$('cfg-preco'))$('cfg-preco').value=cfg.preco||'';
