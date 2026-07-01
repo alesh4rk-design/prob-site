@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pro'B — Agendamento</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <style>
         :root {
             --bg:    #0a0e14;
@@ -518,11 +522,6 @@
 <canvas id="anim-canvas-2" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;display:none;"></canvas>
 <canvas id="particles-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;display:none;"></canvas>
 
-<!-- ══ Carregando estado de login ══ -->
-<div id="auth-loading" style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#04070c;color:var(--blue,#00d4ff);font-size:.85rem;letter-spacing:1px;">
-    Carregando…
-</div>
-
 <div class="container">
 
 
@@ -532,7 +531,6 @@
         <div class="step-dot" id="dot-1"></div>
         <div class="step-dot" id="dot-2"></div>
         <div class="step-dot" id="dot-3"></div>
-        <div class="step-dot" id="dot-4"></div>
     </div>
 
     <!-- Tela de barbearia bloqueada/inativa -->
@@ -544,7 +542,7 @@
         </p>
     </div>
 
-    <!-- ══ STEP 0: Login (Google ou Email/Senha) ══ -->
+    <!-- ══ STEP 0: Identificação ══ -->
     <div class="screen active" id="s0">
         <div class="header">
             <!-- Layout lado a lado: ícone/barberpole + nome -->
@@ -570,80 +568,6 @@
         </div>
 
         <div class="form-box">
-            <div class="form-title">🔐 Entrar para agendar</div>
-            <p style="font-size:.8rem;color:var(--muted);line-height:1.6;margin:-.4rem 0 1rem;">Pra continuar, entre com sua conta.</p>
-
-            <button id="btn-login-google" style="width:100%;display:flex;align-items:center;justify-content:center;gap:.65rem;padding:.85rem 1.5rem;background:#fff;border:none;border-radius:10px;color:#1f1f1f;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3);margin-bottom:.9rem;">
-                <svg width="20" height="20" viewBox="0 0 48 48" style="flex-shrink:0">
-                    <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.7 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
-                    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
-                    <path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.3C29.4 35.2 26.8 36 24 36c-5.3 0-9.8-3.3-11.3-7.9l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/>
-                    <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.5 5.6-6.5 7.1l6.5 5.3C38.9 37.4 44 31.6 44 24c0-1.3-.1-2.7-.4-3.5z"/>
-                </svg>
-                Entrar com Google
-            </button>
-
-            <div style="display:flex;align-items:center;gap:.7rem;color:var(--muted);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:.9rem;">
-                <span style="flex:1;height:1px;background:var(--border);"></span> ou <span style="flex:1;height:1px;background:var(--border);"></span>
-            </div>
-
-            <div class="input-group">
-                <label>📧 E-mail</label>
-                <input type="email" id="login-email" placeholder="seuemail@exemplo.com" autocomplete="email">
-            </div>
-            <div class="input-group">
-                <label>🔒 Senha</label>
-                <input type="password" id="login-senha" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
-            </div>
-
-            <span class="err" id="login-err" style="display:none;margin-bottom:.6rem;"></span>
-
-            <button class="btn-primary" id="btn-email-entrar">Entrar</button>
-            <button id="btn-email-criar" type="button" style="width:100%;margin-top:.6rem;padding:.8rem;background:transparent;border:1.5px dashed var(--border);border-radius:8px;color:var(--blue);font-weight:700;font-size:.85rem;cursor:pointer;">
-                Criar conta com e-mail
-            </button>
-            <button id="btn-esqueci-senha" type="button" style="width:100%;background:transparent;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;text-decoration:underline;padding:.6rem .2rem .1rem;">
-                Esqueci minha senha
-            </button>
-        </div>
-
-        <!-- Crédito e contato -->
-        <a href="https://wa.me/5521966190515?text=Ol%C3%A1!%20Vi%20o%20sistema%20Pro'B%20e%20tenho%20interesse!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.4rem;margin-top:.75rem;text-decoration:none;opacity:.55;transition:opacity .2s;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='.55'">
-            <span style="font-size:.58rem;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase">Desenvolvido por Alexandre Lima</span>
-            <span style="font-size:.62rem;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:20px;padding:.15rem .5rem;color:#25d366;letter-spacing:.5px">📱 Contratar</span>
-        </a>
-    </div>
-
-    <!-- ══ Tela: verificação de e-mail pendente (não é um "step" numerado) ══ -->
-    <div class="screen" id="s-verify">
-        <div class="header">
-            <div class="barber-neon-wrap"><div class="barber-neon" id="barber-name-verify"></div></div>
-        </div>
-        <div class="form-box" style="text-align:center;">
-            <div style="font-size:2.4rem;line-height:1;margin-bottom:.6rem;">📩</div>
-            <div class="form-title" style="justify-content:center;">Confirme seu e-mail</div>
-            <p style="font-size:.83rem;color:var(--muted);line-height:1.65;margin:0 0 1.1rem;">
-                Enviamos um link de confirmação para <strong id="verify-email-alvo" style="color:#fff;">—</strong>.<br>
-                Abra o e-mail (confira o spam também) e clique no link antes de continuar.
-            </p>
-            <button id="btn-ja-verifiquei" class="btn-primary">Já confirmei, continuar</button>
-            <button id="btn-reenviar-verificacao" type="button" style="width:100%;margin-top:.7rem;background:transparent;border:none;color:var(--blue);font-size:.78rem;cursor:pointer;text-decoration:underline;">Reenviar e-mail</button>
-            <button id="btn-verify-sair" type="button" style="width:100%;background:transparent;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;margin-top:.5rem;">Sair / usar outra conta</button>
-            <p id="verify-msg" style="display:none;font-size:.76rem;color:var(--green);margin:.6rem 0 0;"></p>
-        </div>
-    </div>
-
-    <!-- ══ STEP 1: Identificação ══ -->
-    <div class="screen" id="s1">
-        <div class="header">
-            <div class="barber-neon-wrap"><div class="barber-neon" id="barber-name-1"></div></div>
-        </div>
-        <div class="form-box">
-            <div id="cli-conta-logada" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.9rem;padding:.5rem .65rem;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);border-radius:8px;">
-                <img id="cli-conta-foto" src="" alt="" style="width:26px;height:26px;border-radius:50%;display:none;flex-shrink:0;">
-                <span id="cli-conta-email" style="flex:1;font-size:.72rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-                <button id="btn-logout" type="button" style="background:transparent;border:none;color:var(--blue);font-size:.72rem;font-weight:700;cursor:pointer;flex-shrink:0;">Sair</button>
-            </div>
             <div class="form-title">👤 Seus dados</div>
             <div class="input-group">
                 <label>Nome ou apelido</label>
@@ -667,6 +591,19 @@
             </label>
         </div>
 
+            <!-- Captcha simples — confirma que é humano -->
+        <div id="captcha-wrap" style="padding:.85rem;background:rgba(0,212,255,.04);border:1.5px solid rgba(0,212,255,.2);border-radius:10px;margin-bottom:.85rem;">
+            <label style="display:block;font-size:.78rem;color:rgba(232,244,248,.75);margin-bottom:.55rem;">
+                🤖 Prova de que você não é um robô
+            </label>
+            <div style="display:flex;align-items:center;gap:.6rem;">
+                <span id="captcha-pergunta" style="font-size:.95rem;font-weight:700;color:#fff;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;white-space:nowrap;">?</span>
+                <input type="text" inputmode="numeric" id="captcha-resposta" placeholder="Resposta" style="flex:1;min-width:0;">
+                <button type="button" id="captcha-refresh" title="Gerar outra pergunta" style="flex-shrink:0;width:38px;height:38px;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:1rem;cursor:pointer;">↻</button>
+            </div>
+            <span class="err" id="err-captcha">Resposta incorreta. Tente novamente.</span>
+        </div>
+
         <button class="btn-primary" id="btn-s0">✂️ Escolher Corte →</button>
         </div>
 
@@ -677,8 +614,8 @@
         </a>
     </div>
 
-    <!-- ══ STEP 2: Escolher corte ══ -->
-    <div class="screen" id="s2">
+    <!-- ══ STEP 1: Escolher corte ══ -->
+    <div class="screen" id="s1">
         <!-- Banner de promoções ativas -->
         <div id="banner-promocoes" style="display:none;margin-bottom:1rem"></div>
         <div class="header">
@@ -703,8 +640,8 @@
         </div>
     </div>
 
-    <!-- ══ STEP 3: Escolher data e hora ══ -->
-    <div class="screen" id="s3">
+    <!-- ══ STEP 2: Escolher data e hora ══ -->
+    <div class="screen" id="s2">
         <div class="header">
             <div class="barber-neon-wrap"><div class="barber-neon" id="barber-name-3"></div></div>
         </div>
@@ -723,8 +660,8 @@
         </div>
     </div>
 
-    <!-- ══ STEP 4: Ticket ══ -->
-    <div class="screen" id="s4">
+    <!-- ══ STEP 3: Ticket ══ -->
+    <div class="screen" id="s3">
         <div class="ticket-wrap">
             <div class="ticket-top">
                 <div class="check-zone">
@@ -799,23 +736,24 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 
 const firebaseConfig = PROB_CONFIG.firebase;
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
-const auth = getAuth(app);
+
+function escapeHtml(str){
+    return String(str??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 
 /* ── State ── */
 let barbeiroId   = '';
 let barbeiroInfo = {};
 let clienteNome  = '';
 let clienteWpp   = '';
-let clienteUid   = '';
-let clienteEmail = '';
-let clienteFoto  = '';
+const clienteUid   = ''; // sem login — mantido vazio por compatibilidade com o formato salvo no Firestore
+const clienteEmail = '';
 let servicosEscolhidos = []; // array de objetos {nome,preco,duracao,obs,sessao}
 let barbeiroCortador = null; // barbeiro da equipe escolhido
 
@@ -844,181 +782,6 @@ function toast(msg) {
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2800);
 }
-
-/* ── Login obrigatório (Google ou Email/Senha verificado) ── */
-function mapAuthError(code) {
-    const map = {
-        'auth/email-already-in-use': 'Esse e-mail já está cadastrado. Tente entrar em vez de criar conta.',
-        'auth/invalid-email':        'E-mail inválido.',
-        'auth/weak-password':        'Senha muito fraca (mínimo 6 caracteres).',
-        'auth/wrong-password':       'Senha incorreta.',
-        'auth/invalid-credential':   'E-mail ou senha incorretos.',
-        'auth/user-not-found':       'Não encontramos uma conta com esse e-mail.',
-        'auth/missing-password':     'Digite a senha.',
-        'auth/too-many-requests':    'Muitas tentativas. Aguarde um pouco e tente de novo.',
-        'auth/popup-closed-by-user': 'Login cancelado.'
-    };
-    return map[code] || 'Algo deu errado. Tente novamente.';
-}
-
-function showLoginErr(msg, ok) {
-    const el = $('login-err');
-    el.textContent = msg;
-    el.style.color = ok ? 'var(--green)' : 'var(--red)';
-    el.style.display = 'block';
-}
-
-function unlockApp(user) {
-    clienteUid   = user.uid;
-    clienteEmail = user.email || '';
-    clienteFoto  = user.photoURL || '';
-
-    const inputNome = $('cli-nome');
-    if (inputNome && !inputNome.value) {
-        inputNome.value = user.displayName || '';
-    }
-
-    $('cli-conta-email').textContent = clienteEmail;
-    if (clienteFoto) {
-        $('cli-conta-foto').src = clienteFoto;
-        $('cli-conta-foto').style.display = 'block';
-    } else {
-        $('cli-conta-foto').style.display = 'none';
-    }
-
-    // Só avança pro step de dados se ainda estiver no login/verificação
-    if (currentStep === 0 || currentScreenId === 's-verify') {
-        goStep(1);
-    }
-}
-
-function showVerifyScreen(user) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    $('s-verify').classList.add('active');
-    currentScreenId = 's-verify';
-    $('verify-email-alvo').textContent = user.email || '';
-    window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function applyAuthState(user) {
-    if (user) {
-        const isPassword = user.providerData.some(p => p.providerId === 'password');
-        if (isPassword && !user.emailVerified) {
-            showVerifyScreen(user);
-            return;
-        }
-        unlockApp(user);
-    } else {
-        clienteUid = clienteEmail = clienteFoto = '';
-        goStep(0);
-    }
-}
-
-onAuthStateChanged(auth, (user) => {
-    $('auth-loading').style.display = 'none';
-    applyAuthState(user);
-});
-
-/* — Google — */
-$('btn-login-google').addEventListener('click', async () => {
-    $('login-err').style.display = 'none';
-    try {
-        await signInWithPopup(auth, new GoogleAuthProvider());
-        // onAuthStateChanged cuida do resto
-    } catch (e) {
-        console.error('Erro no login com Google:', e);
-        showLoginErr(mapAuthError(e.code));
-    }
-});
-
-/* — Email/Senha: entrar — */
-$('btn-email-entrar').addEventListener('click', async () => {
-    $('login-err').style.display = 'none';
-    const email = $('login-email').value.trim();
-    const senha = $('login-senha').value;
-    if (!email || !senha) { showLoginErr('Preencha e-mail e senha.'); return; }
-
-    try {
-        await signInWithEmailAndPassword(auth, email, senha);
-        // onAuthStateChanged cuida do resto (inclusive checar verificação)
-    } catch (e) {
-        console.error('Erro ao entrar:', e);
-        showLoginErr(mapAuthError(e.code));
-    }
-});
-
-/* — Email/Senha: criar conta — */
-$('btn-email-criar').addEventListener('click', async () => {
-    $('login-err').style.display = 'none';
-    const email = $('login-email').value.trim();
-    const senha = $('login-senha').value;
-    if (!email || !senha) { showLoginErr('Preencha e-mail e senha.'); return; }
-    if (senha.length < 6) { showLoginErr('A senha precisa ter pelo menos 6 caracteres.'); return; }
-
-    try {
-        const cred = await createUserWithEmailAndPassword(auth, email, senha);
-        await sendEmailVerification(cred.user);
-        // onAuthStateChanged detecta emailVerified=false e mostra a tela de verificação
-    } catch (e) {
-        console.error('Erro ao criar conta:', e);
-        showLoginErr(mapAuthError(e.code));
-    }
-});
-
-/* — Esqueci minha senha — */
-$('btn-esqueci-senha').addEventListener('click', async () => {
-    $('login-err').style.display = 'none';
-    const email = $('login-email').value.trim();
-    if (!email) { showLoginErr('Digite seu e-mail no campo acima para receber o link de redefinição.'); return; }
-
-    try {
-        await sendPasswordResetEmail(auth, email);
-        showLoginErr('Link de redefinição enviado! Verifique seu e-mail.', true);
-    } catch (e) {
-        console.error('Erro ao enviar redefinição de senha:', e);
-        showLoginErr(mapAuthError(e.code));
-    }
-});
-
-/* — Tela de verificação pendente — */
-$('btn-ja-verifiquei').addEventListener('click', async () => {
-    $('verify-msg').style.display = 'none';
-    if (!auth.currentUser) return;
-    try {
-        await auth.currentUser.reload();
-        if (auth.currentUser.emailVerified) {
-            unlockApp(auth.currentUser);
-        } else {
-            $('verify-msg').style.color = 'var(--red)';
-            $('verify-msg').textContent = 'Ainda não confirmado. Abra o e-mail e clique no link recebido.';
-            $('verify-msg').style.display = 'block';
-        }
-    } catch (e) {
-        console.error('Erro ao checar verificação:', e);
-    }
-});
-
-$('btn-reenviar-verificacao').addEventListener('click', async () => {
-    $('verify-msg').style.display = 'none';
-    if (!auth.currentUser) return;
-    try {
-        await sendEmailVerification(auth.currentUser);
-        $('verify-msg').style.color = 'var(--green)';
-        $('verify-msg').textContent = 'E-mail reenviado!';
-        $('verify-msg').style.display = 'block';
-    } catch (e) {
-        console.error('Erro ao reenviar verificação:', e);
-        $('verify-msg').style.color = 'var(--red)';
-        $('verify-msg').textContent = mapAuthError(e.code);
-        $('verify-msg').style.display = 'block';
-    }
-});
-
-$('btn-verify-sair').addEventListener('click', () => signOut(auth));
-
-$('btn-logout').addEventListener('click', () => {
-    signOut(auth);
-});
 
 
 function goStep(n) {
@@ -1094,7 +857,7 @@ function aplicarPersonalizacao(data) {
     }
 
     // Steps simples (Neon Name)
-    ['barber-name-1','barber-name-2','barber-name-3','barber-name-verify'].forEach(id=>{
+    ['barber-name-1','barber-name-2','barber-name-3'].forEach(id=>{
         const el=$(id);
         if(el) {
             el.innerHTML=montarNomeHTML(nomeExibido);
@@ -1222,6 +985,20 @@ function carregarBarbeiro() {
     }, e => console.error('Erro barbeiro listener:', e));
 }
 
+/* ── Captcha simples (soma) ── */
+let captchaEsperado = 0;
+function gerarCaptcha(){
+    const a = Math.floor(Math.random()*8)+2;   // 2-9
+    const b = Math.floor(Math.random()*8)+2;   // 2-9
+    captchaEsperado = a + b;
+    $('captcha-pergunta').textContent = `${a} + ${b} = ?`;
+    $('captcha-resposta').value = '';
+    $('err-captcha').style.display = 'none';
+    $('captcha-resposta').style.borderColor = 'var(--border)';
+}
+$('captcha-refresh').addEventListener('click', gerarCaptcha);
+gerarCaptcha();
+
 /* ── STEP 0: Identificação ── */
 $('btn-s0').addEventListener('click', () => {
     // Valida LGPD
@@ -1253,9 +1030,20 @@ $('btn-s0').addEventListener('click', () => {
     }
     if (!ok) return;
 
+    // Valida captcha
+    $('err-captcha').style.display = 'none';
+    $('captcha-resposta').style.borderColor = 'var(--border)';
+    const respostaCaptcha = parseInt($('captcha-resposta').value, 10);
+    if (isNaN(respostaCaptcha) || respostaCaptcha !== captchaEsperado) {
+        $('err-captcha').style.display = 'block';
+        $('captcha-resposta').style.borderColor = 'var(--red)';
+        gerarCaptcha();
+        return;
+    }
+
     clienteNome = nome;
     clienteWpp  = wpp;
-    goStep(2);
+    goStep(1);
     carregarCortes();
 });
 
@@ -1279,12 +1067,12 @@ async function carregarCortes() {
     const temMultiplasSessoes = Object.keys(porSessao).length > 1;
 
     grid.innerHTML = Object.entries(porSessao).map(([sessao, itens]) => `
-        ${temMultiplasSessoes ? `<div style="font-size:.78rem;color:var(--blue);font-weight:700;margin:.85rem 0 .5rem;text-transform:uppercase;letter-spacing:.5px">📁 ${sessao}</div>` : ''}
+        ${temMultiplasSessoes ? `<div style="font-size:.78rem;color:var(--blue);font-weight:700;margin:.85rem 0 .5rem;text-transform:uppercase;letter-spacing:.5px">📁 ${escapeHtml(sessao)}</div>` : ''}
         ${itens.map(c => `
         <div class="service-card ${c.foto?'tem-foto':''}" data-idx="${c._idx}">
-            ${c.foto?`<img class="service-card-foto" src="${c.foto}" alt="${c.nome}" loading="lazy" onerror="this.style.display='none';this.closest('.service-card').classList.remove('tem-foto')">`:''}
+            ${c.foto?`<img class="service-card-foto" src="${c.foto}" alt="${escapeHtml(c.nome)}" loading="lazy" onerror="this.style.display='none';this.closest('.service-card').classList.remove('tem-foto')">`:''}
             <div class="service-info">
-                <div class="service-nome">${c.nome}</div>
+                <div class="service-nome">${escapeHtml(c.nome)}</div>
                 <div class="service-preco">R$ ${Number(c.preco).toFixed(2)}</div>
                 ${c.obs ? `<div class="service-obs">ℹ️ ${c.obs}</div>` : ''}
             </div>
@@ -1321,7 +1109,7 @@ async function carregarCortes() {
         eqGrid.innerHTML = equipe.map((b,i) => `
             <div class="service-card" data-eq="${i}">
                 <div class="service-info">
-                    <div class="service-nome">✂️ ${b.nome}</div>
+                    <div class="service-nome">✂️ ${escapeHtml(b.nome)}</div>
                 </div>
                 <div class="service-check">✓</div>
             </div>`).join('');
@@ -1361,9 +1149,9 @@ function verificarBtnS1() {
     if(filaBtn) filaBtn.style.opacity = ok ? '1' : '.5';
 }
 
-$('btn-s1').addEventListener('click', () => { goStep(3); carregarHorarios(); });
+$('btn-s1').addEventListener('click', () => { goStep(2); carregarHorarios(); });
 $('btn-entrar-fila').addEventListener('click', entrarNaFila);
-$('back-s1').addEventListener('click', () => goStep(1));
+$('back-s1').addEventListener('click', () => goStep(0));
 
 /* ── STEP 2: Data e Hora ── */
 function getTodayKey() { return new Date().toISOString().split('T')[0]; }
@@ -1507,7 +1295,7 @@ async function renderHours(data) {
 }
 
 $('btn-s2').addEventListener('click', confirmarAgendamento);
-$('back-s2').addEventListener('click', () => goStep(2));
+$('back-s2').addEventListener('click', () => goStep(1));
 
 /* ── STEP 3: Confirmar e salvar ── */
 async function entrarNaFila() {
@@ -1564,7 +1352,7 @@ async function entrarNaFila() {
             setTimeout(() => window.open(`https://wa.me/55${barbeiroInfo.whatsapp}?text=${msg}`,'_blank'), 800);
         }
 
-        goStep(4);
+        goStep(3);
     } catch(e) {
         toast('Erro ao entrar na fila: ' + e.message);
         btn.textContent = '🪑 Prefiro entrar na fila (sem hora marcada)';
@@ -1632,7 +1420,7 @@ async function confirmarAgendamento() {
             setTimeout(() => window.open(`https://wa.me/55${barbeiroInfo.whatsapp}?text=${msg}`,'_blank'), 800);
         }
 
-        goStep(4);
+        goStep(3);
 
     } catch(e) {
         toast('Erro ao salvar. Tente novamente.');
@@ -1643,7 +1431,7 @@ async function confirmarAgendamento() {
 
 /* ── Novo agendamento ── */
 $('btn-novo').addEventListener('click', () => {
-    $('cli-nome').value = auth.currentUser ? (auth.currentUser.displayName || '') : '';
+    $('cli-nome').value = '';
     $('cli-wpp').value  = '';
     servicosEscolhidos = [];
     barbeiroCortador   = null;
@@ -1651,7 +1439,8 @@ $('btn-novo').addEventListener('click', () => {
     dataEscolhida      = '';
     $('btn-s1').disabled = true;
     $('btn-s2').disabled = true;
-    goStep(1);
+    gerarCaptcha();
+    goStep(0);
 });
 
 /* ── Init ── */
