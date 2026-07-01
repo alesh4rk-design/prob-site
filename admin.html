@@ -8,6 +8,12 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest-admin.json">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pro'B Admin">
     <style>
         :root{--bg:#0a0e14;--card:#1A1A1E;--card2:#12161c;--border:#2a3f5f;--blue:#00d4ff;--green:#00ff88;--red:#ff4b2b;--yellow:#f5a623;--text:#e8f4f8;--muted:#7a9fb5;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
         *{margin:0;padding:0;box-sizing:border-box;}
@@ -973,6 +979,14 @@ window.excluir=async(uid,nome)=>{
 
 $('search').addEventListener('input',renderLista);
 window.filtrar=(f,btn)=>{filtroAtual=f;document.querySelectorAll('[data-filtro]').forEach(b=>b.style.opacity='.5');btn.style.opacity='1';renderLista();};
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    });
+}
 </script>
 </body>
 </html>
