@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro'B — Painel de Chamada</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            background:#04070c;
+            color:#e8f4f8;
+            font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+            min-height:100vh;
+            overflow:hidden;
+            position:relative;
+        }
+        #bg{
+            position:fixed;inset:0;z-index:0;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,180,255,0.18) 0%, transparent 55%),
+                radial-gradient(ellipse 60% 40% at 15% 85%, rgba(0,212,255,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 85% 85%, rgba(0,150,220,0.10) 0%, transparent 60%),
+                linear-gradient(180deg, #060a12 0%, #0a1018 25%, #0d1622 50%, #081018 75%, #04070c 100%);
+        }
+        #particles{position:fixed;inset:0;z-index:1;pointer-events:none;}
+
+        .wrap{
+            position:relative;z-index:2;
+            min-height:100vh;
+            display:flex;flex-direction:column;
+            padding:2.5vh 3vw;
+        }
+
+        .header{
+            text-align:center;
+            margin-bottom:2vh;
+        }
+        .logo{
+            font-size:2.2vw;font-weight:900;letter-spacing:.3vw;
+            color:#00d4ff;text-shadow:0 0 20px rgba(0,212,255,.6);
+        }
+        .barber-name{
+            font-size:1.6vw;font-weight:700;color:#fff;
+            margin-top:.5vh;letter-spacing:.15vw;text-transform:uppercase;
+        }
+        .clock{
+            font-family:'Courier New',monospace;
+            font-size:1.1vw;color:rgba(255,255,255,.4);
+            margin-top:.5vh;
+        }
+
+        .main{
+            flex:1;
+            display:grid;
+            grid-template-columns:1fr 1.6fr;
+            gap:2vw;
+            align-items:stretch;
+        }
+
+        /* Próximo da fila — destaque */
+        .next-panel{
+            background:rgba(0,212,255,.05);
+            border:2px solid rgba(0,212,255,.3);
+            border-radius:24px;
+            display:flex;flex-direction:column;
+            align-items:center;justify-content:center;
+            padding:3vh 2vw;
+            position:relative;
+            overflow:hidden;
+            animation:pulseGlow 2.5s ease-in-out infinite;
+        }
+        @keyframes pulseGlow{
+            0%,100%{box-shadow:0 0 30px rgba(0,212,255,.15);}
+            50%{box-shadow:0 0 60px rgba(0,212,255,.35);}
+        }
+        .next-label{
+            font-size:1.3vw;letter-spacing:.4vw;text-transform:uppercase;
+            color:rgba(0,212,255,.7);font-weight:700;margin-bottom:2vh;
+        }
+        .next-name{
+            font-size:4.5vw;font-weight:900;text-align:center;
+            color:#fff;text-shadow:0 0 25px rgba(0,212,255,.5);
+            line-height:1.1;word-break:break-word;
+        }
+        .next-meta{
+            font-size:1.3vw;color:rgba(255,255,255,.55);
+            margin-top:2vh;text-align:center;
+        }
+        .next-barber{
+            margin-top:1.5vh;
+            background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);
+            border-radius:30px;padding:.6vh 1.5vw;
+            font-size:1.1vw;color:#00ff88;font-weight:700;
+        }
+        .empty-next{
+            font-size:1.8vw;color:rgba(255,255,255,.3);text-align:center;
+        }
+
+        /* Lista de espera */
+        .queue-panel{
+            background:rgba(255,255,255,.02);
+            border:1px solid rgba(255,255,255,.08);
+            border-radius:24px;
+            padding:2.5vh 2vw;
+            display:flex;flex-direction:column;
+            overflow:hidden;
+        }
+        .queue-title{
+            font-size:1.2vw;letter-spacing:.2vw;text-transform:uppercase;
+            color:rgba(255,255,255,.5);font-weight:700;margin-bottom:1.5vh;
+            display:flex;align-items:center;gap:.5vw;
+        }
+        .queue-list{
+            flex:1;overflow-y:auto;
+            display:flex;flex-direction:column;gap:1vh;
+        }
+        .queue-item{
+            display:flex;align-items:center;gap:1vw;
+            background:rgba(255,255,255,.03);
+            border:1px solid rgba(255,255,255,.06);
+            border-radius:12px;
+            padding:1.2vh 1.2vw;
+            transition:all .3s;
+        }
+        .queue-pos{
+            width:2.2vw;height:2.2vw;min-width:36px;min-height:36px;
+            border-radius:50%;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.15);
+            display:flex;align-items:center;justify-content:center;
+            font-weight:900;font-size:1.1vw;color:rgba(255,255,255,.6);
+            flex-shrink:0;
+        }
+        .queue-info{flex:1;min-width:0;}
+        .queue-name{font-size:1.3vw;font-weight:700;color:#fff;}
+        .queue-sub{font-size:.9vw;color:rgba(255,255,255,.4);margin-top:.2vh;}
+        .empty-queue{
+            text-align:center;color:rgba(255,255,255,.25);
+            font-size:1.2vw;padding:4vh 0;
+        }
+
+        .footer{
+            text-align:center;margin-top:2vh;
+            font-size:.85vw;color:rgba(255,255,255,.2);letter-spacing:.1vw;
+        }
+
+        @media(max-width:900px){
+            .main{grid-template-columns:1fr;}
+            .logo{font-size:6vw;}
+            .barber-name{font-size:4.5vw;}
+            .next-name{font-size:10vw;}
+            .next-label{font-size:3vw;}
+            .next-meta,.next-barber{font-size:2.8vw;}
+            .queue-title{font-size:3vw;}
+            .queue-name{font-size:3.5vw;}
+            .queue-sub{font-size:2.2vw;}
+            .queue-pos{width:8vw;height:8vw;font-size:3vw;}
+            .clock{font-size:2.5vw;}
+        }
+    </style>
+</head>
+<body>
+
+<div id="bg"></div>
+<canvas id="particles"></canvas>
+
+<div class="wrap">
+    <div class="header">
+        <div class="logo">PRO'B</div>
+        <div class="barber-name" id="nome-barbearia">Carregando...</div>
+        <div class="clock" id="relogio">--:--:--</div>
+    </div>
+
+    <div class="main">
+        <div class="next-panel">
+            <div class="next-label">🔔 Próximo a ser atendido</div>
+            <div id="next-content">
+                <div class="empty-next">Aguardando clientes...</div>
+            </div>
+        </div>
+
+        <div class="queue-panel">
+            <div class="queue-title">🪑 Fila de espera</div>
+            <div class="queue-list" id="queue-list">
+                <div class="empty-queue">Ninguém na fila no momento.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">Sistema de Agendamento Pro'B · Atualização em tempo real</div>
+</div>
+
+<script src="config.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getFirestore, doc, getDoc, collection, query, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const firebaseConfig = PROB_CONFIG.firebase;
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+function getBarbeiroId(){
+    const params = new URLSearchParams(window.location.search);
+    return params.get('b');
+}
+
+const barbeiroId = getBarbeiroId();
+let listaFila = [];
+let listaAgend = [];
+
+function fmtHojeStr(){
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function horaParaMin(h){
+    const [hh,mm] = h.split(':').map(Number);
+    return hh*60+mm;
+}
+
+// Configuração do painel — lida do Firebase
+let painelModo = 'na_hora';
+let painelAntecedenciaMin = 15;
+
+function combinarERenderizar(){
+    const agora = new Date();
+    const agoraMin = agora.getHours()*60 + agora.getMinutes();
+
+    let agendFiltrados = [];
+
+    if(painelModo === 'dia_todo'){
+        // Mostra todos os pendentes do dia
+        agendFiltrados = listaAgend.filter(a => a.status==='pendente');
+
+    } else if(painelModo === 'antecedencia'){
+        // Mostra os que estão dentro da janela de antecedência
+        agendFiltrados = listaAgend.filter(a =>
+            a.status==='pendente' &&
+            horaParaMin(a.hora) <= agoraMin + painelAntecedenciaMin
+        );
+
+    } else {
+        // 'na_hora' — padrão: só quando chegou ou passou a hora
+        agendFiltrados = listaAgend.filter(a =>
+            a.status==='pendente' && horaParaMin(a.hora) <= agoraMin
+        );
+    }
+
+    const agendChegados = agendFiltrados.map(a => ({
+        id: a.id,
+        clienteNome: a.clienteNome,
+        corte: a.corte,
+        barbeiro: a.barbeiro||'',
+        criadoEm: `${a.data}T${a.hora}:00`,
+        origemTipo: 'agendado',
+        horaAgendada: a.hora
+    }));
+
+    const filaItens = listaFila.map(f => ({...f, origemTipo:'fila'}));
+
+    const combinada = [...agendChegados, ...filaItens];
+    combinada.sort((a,b)=> new Date(a.criadoEm) - new Date(b.criadoEm));
+
+    renderPainel(combinada);
+}
+
+if(!barbeiroId){
+    document.getElementById('nome-barbearia').textContent = 'Link inválido';
+} else {
+    // Carrega nome da barbearia
+    getDoc(doc(db,'barbeiros',barbeiroId)).then(snap=>{
+        if(snap.exists()){
+            const data = snap.data();
+            document.getElementById('nome-barbearia').textContent = data.personalizacao?.nomeCliente || data.nome || 'Barbearia';
+            // Lê configuração do painel
+            painelModo = data.painelModo || 'na_hora';
+            painelAntecedenciaMin = data.painelAntecedenciaMin || 15;
+            combinarERenderizar();
+        }
+    });
+
+    // Escuta a fila em tempo real
+    const qFila = query(collection(db,'fila'), where('barbeiroId','==',barbeiroId), where('status','==','aguardando'));
+    onSnapshot(qFila, snap => {
+        listaFila = [];
+        snap.forEach(d => listaFila.push({id:d.id, ...d.data()}));
+        combinarERenderizar();
+    });
+
+    // Escuta os agendamentos de hoje em tempo real
+    const qAgend = query(collection(db,'agendamentos'), where('barbeiroId','==',barbeiroId), where('data','==',fmtHojeStr()));
+    onSnapshot(qAgend, snap => {
+        listaAgend = [];
+        snap.forEach(d => listaAgend.push({id:d.id, ...d.data()}));
+        combinarERenderizar();
+    });
+
+    // Recalcula a cada minuto (para "promover" agendamentos que acabaram de chegar a hora)
+    setInterval(combinarERenderizar, 30000);
+}
+
+function tempoEspera(criadoEm){
+    const min = Math.floor((new Date() - new Date(criadoEm)) / 60000);
+    if(min < 1) return 'agora mesmo';
+    if(min < 60) return `${min} min`;
+    return `${Math.floor(min/60)}h${min%60}min`;
+}
+
+function renderPainel(lista){
+    const nextContent = document.getElementById('next-content');
+    const queueList = document.getElementById('queue-list');
+
+    if(!lista.length){
+        nextContent.innerHTML = '<div class="empty-next">Aguardando clientes...</div>';
+        queueList.innerHTML = '<div class="empty-queue">Ninguém na fila no momento.</div>';
+        return;
+    }
+
+    const proximo = lista[0];
+    const resto = lista.slice(1);
+
+    const origemTag = (item) => item.origemTipo==='agendado'
+        ? `<div style="display:inline-block;margin-top:1vh;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);border-radius:30px;padding:.4vh 1.2vw;font-size:1vw;color:#f5a623;font-weight:700">📅 Agendado · ${item.horaAgendada}</div>`
+        : `<div style="display:inline-block;margin-top:1vh;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);border-radius:30px;padding:.4vh 1.2vw;font-size:1vw;color:#00ff88;font-weight:700">🪑 Fila de espera</div>`;
+
+    nextContent.innerHTML = `
+        <div class="next-name">${proximo.clienteNome}</div>
+        ${proximo.corte ? `<div class="next-meta">${proximo.corte}</div>` : ''}
+        ${origemTag(proximo)}
+        ${proximo.barbeiro ? `<div class="next-barber">✂️ ${proximo.barbeiro}</div>` : ''}
+    `;
+
+    if(!resto.length){
+        queueList.innerHTML = '<div class="empty-queue">Mais ninguém na fila.</div>';
+    } else {
+        queueList.innerHTML = resto.map((item,i)=>{
+            const origemMini = item.origemTipo==='agendado'
+                ? `<span style="color:#f5a623">📅 ${item.horaAgendada}</span>`
+                : `<span style="color:#00ff88">🪑 fila</span>`;
+            return `
+            <div class="queue-item">
+                <div class="queue-pos">${i+2}º</div>
+                <div class="queue-info">
+                    <div class="queue-name">${item.clienteNome}</div>
+                    <div class="queue-sub">${item.corte ? item.corte+' · ' : ''}${origemMini} · aguardando há ${tempoEspera(item.criadoEm)}</div>
+                </div>
+                ${item.barbeiro ? `<div style="font-size:.85vw;color:rgba(0,212,255,.7);white-space:nowrap">✂️ ${item.barbeiro}</div>` : ''}
+            </div>
+        `;}).join('');
+    }
+}
+
+// Relógio + reset automático à meia-noite
+let diaAtual = new Date().toDateString();
+
+function atualizarRelogio(){
+    const now = new Date();
+    document.getElementById('relogio').textContent = now.toLocaleTimeString('pt-BR');
+
+    // Se o dia mudou (painel ficou aberto overnight), recarrega a página
+    // para o listener de agendamentos buscar o novo dia corretamente
+    if(now.toDateString() !== diaAtual){
+        diaAtual = now.toDateString();
+        window.location.reload();
+    }
+}
+setInterval(atualizarRelogio, 1000);
+atualizarRelogio();
+
+// Partículas de fundo (decorativo)
+(function(){
+    const cv = document.getElementById('particles');
+    const ctx = cv.getContext('2d');
+    function resize(){ cv.width = window.innerWidth; cv.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const particles = Array.from({length:40}, ()=>({
+        x: Math.random()*cv.width, y: Math.random()*cv.height,
+        vx: (Math.random()-.5)*0.2, vy: -Math.random()*0.3-0.05,
+        r: Math.random()*1.5+0.4, alpha: Math.random()*0.4+0.1
+    }));
+
+    function draw(){
+        ctx.clearRect(0,0,cv.width,cv.height);
+        particles.forEach(p=>{
+            p.x += p.vx; p.y += p.vy;
+            if(p.y < -5){ p.x = Math.random()*cv.width; p.y = cv.height+5; }
+            ctx.beginPath();
+            ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+            ctx.fillStyle = `rgba(0,212,255,${p.alpha})`;
+            ctx.shadowColor = 'rgba(0,212,255,0.8)'; ctx.shadowBlur = 4;
+            ctx.fill(); ctx.shadowBlur = 0;
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
+</body>
+</html>

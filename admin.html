@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro'B — Admin</title>
+    <style>
+        :root{--bg:#0a0e14;--card:#1A1A1E;--card2:#12161c;--border:#2a3f5f;--blue:#00d4ff;--green:#00ff88;--red:#ff4b2b;--yellow:#f5a623;--text:#e8f4f8;--muted:#7a9fb5;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+        .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
+        .login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:360px;box-shadow:0 0 40px rgba(0,212,255,.12);}
+        .admin-logo{text-align:center;margin-bottom:2rem;}
+        .admin-logo h1{font-size:2rem;font-weight:900;letter-spacing:4px;color:var(--blue);text-shadow:0 0 20px rgba(0,212,255,.5);}
+        .admin-logo p{font-size:.75rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:.25rem;}
+        .input-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem;}
+        .input-group label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+        .input-group input{background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.85rem 1rem;color:var(--text);font-size:1rem;font-family:var(--font);outline:none;transition:all .3s;width:100%;}
+        .input-group input:focus{border-color:var(--blue);box-shadow:0 0 12px rgba(0,212,255,.3);}
+        .btn-primary{width:100%;padding:1rem;background:transparent;border:2px solid var(--blue);border-radius:8px;color:var(--blue);font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all .3s;margin-top:.5rem;}
+        .btn-primary:hover{background:rgba(0,212,255,.1);box-shadow:0 0 20px rgba(0,212,255,.4);}
+        .err{color:var(--red);font-size:.8rem;text-align:center;margin-top:.5rem;display:none;}
+        .topbar{background:rgba(10,14,20,.96);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+        .topbar-logo{font-size:1.3rem;font-weight:900;letter-spacing:3px;color:var(--blue);text-shadow:0 0 10px rgba(0,212,255,.4);}
+        .btn-logout{padding:.4rem .85rem;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:.78rem;cursor:pointer;transition:all .2s;}
+        .btn-logout:hover{border-color:var(--red);color:var(--red);}
+        .content{max-width:960px;margin:0 auto;padding:1.5rem;}
+        .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.5rem;}
+        .kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center;}
+        .kpi-val{font-family:'Courier New',monospace;font-size:1.8rem;font-weight:900;color:var(--blue);text-shadow:0 0 10px rgba(0,212,255,.3);}
+        .kpi.green .kpi-val{color:var(--green);text-shadow:0 0 10px rgba(0,255,136,.3);}
+        .kpi.red .kpi-val{color:var(--red);}
+        .kpi.yellow .kpi-val{color:var(--yellow);}
+        .kpi-lbl{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:.25rem;}
+        .section-title{font-size:.9rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+        .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+        .barb-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:.65rem;display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;transition:border-color .2s;}
+        .barb-card:hover{border-color:rgba(0,212,255,.25);}
+        .barb-info{flex:1;min-width:160px;}
+        .barb-nome{font-size:.92rem;font-weight:700;}
+        .barb-email{font-size:.75rem;color:var(--muted);margin-top:.15rem;}
+        .barb-meta{font-size:.72rem;color:var(--muted);margin-top:.2rem;}
+        .badge{padding:.2rem .55rem;border-radius:20px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;}
+        .badge-ativo{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.25);}
+        .badge-trial{background:rgba(0,212,255,.1);color:var(--blue);border:1px solid rgba(0,212,255,.25);}
+        .badge-exp{background:rgba(255,75,43,.1);color:var(--red);border:1px solid rgba(255,75,43,.25);}
+        .badge-bloq{background:rgba(100,100,100,.15);color:var(--muted);border:1px solid var(--border);}
+        .barb-actions{display:flex;gap:.4rem;flex-wrap:wrap;}
+        .btn-sm{padding:.3rem .7rem;background:transparent;border-radius:6px;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .2s;border:1px solid;}
+        .btn-renovar{border-color:var(--green);color:var(--green);}
+        .btn-renovar:hover{background:rgba(0,255,136,.1);}
+        .btn-bloquear{border-color:var(--red);color:var(--red);}
+        .btn-bloquear:hover{background:rgba(255,75,43,.1);}
+        .btn-ativar{border-color:var(--blue);color:var(--blue);}
+        .btn-ativar:hover{background:rgba(0,212,255,.1);}
+        .dias-badge{font-family:'Courier New',monospace;font-size:.78rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;}
+        .dias-ok{color:var(--green);}
+        .dias-warn{color:var(--yellow);}
+        .dias-crit{color:var(--red);}
+        .search-bar{background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.7rem 1rem;color:var(--text);font-size:.9rem;font-family:var(--font);outline:none;width:100%;margin-bottom:1rem;transition:border-color .3s;}
+        .search-bar:focus{border-color:var(--blue);}
+        .search-bar::placeholder{color:var(--muted);}
+        .config-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem;}
+        .filter-row{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;}
+        .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--green);border-radius:8px;padding:.7rem 1.25rem;font-size:.85rem;color:var(--green);transition:transform .3s;z-index:999;white-space:nowrap;}
+        .toast.show{transform:translateX(-50%) translateY(0);}
+        .empty{text-align:center;padding:2rem;color:var(--muted);font-size:.88rem;}
+        .plano-btn.active{border-color:var(--blue)!important;color:var(--blue)!important;background:rgba(0,212,255,.08)!important;}
+        @media(max-width:500px){.barb-card{flex-direction:column;align-items:flex-start;}}
+
+        /* ── Painel de Uso ── */
+        .uso-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+        .uso-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+        .uso-titulo{font-size:.85rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);}
+        .uso-status{display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .75rem;border-radius:20px;font-size:.72rem;font-weight:700;}
+        .uso-status.verde{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3);}
+        .uso-status.amarelo{background:rgba(245,166,35,.1);color:var(--yellow);border:1px solid rgba(245,166,35,.3);}
+        .uso-status.vermelho{background:rgba(255,75,43,.1);color:var(--red);border:1px solid rgba(255,75,43,.3);}
+        .uso-dot{width:7px;height:7px;border-radius:50%;animation:blink 1.2s ease-in-out infinite;}
+        .uso-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem;margin-bottom:1rem;}
+        .uso-item{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;}
+        .uso-item-val{font-family:'Courier New',monospace;font-size:1.1rem;font-weight:900;color:var(--blue);}
+        .uso-item-lbl{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:.2rem;}
+        .uso-barra-wrap{margin-top:.75rem;}
+        .uso-barra-label{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:.35rem;}
+        .uso-barra-bg{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+        .uso-barra-fill{height:100%;border-radius:4px;transition:width .6s ease;}
+        .uso-aviso{margin-top:.75rem;padding:.65rem .85rem;border-radius:8px;font-size:.75rem;line-height:1.5;}
+        .uso-aviso.verde{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);color:rgba(0,255,136,.8);}
+        .uso-aviso.amarelo{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);color:rgba(245,166,35,.8);}
+        .uso-aviso.vermelho{background:rgba(255,75,43,.06);border:1px solid rgba(255,75,43,.2);color:rgba(255,75,43,.8);}
+        @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+        /* Modal histórico */
+        #modal-historico{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;}
+        .hist-sheet{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;}
+        .hist-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+        .hist-titulo{font-size:1rem;font-weight:700;color:var(--green);}
+        .hist-close{background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;}
+        .hist-lista{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;}
+        .hist-item{display:flex;justify-content:space-between;align-items:center;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;font-size:.8rem;}
+        .hist-total{padding:.75rem;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);border-radius:8px;text-align:center;font-size:.88rem;color:var(--green);font-weight:700;}
+        /* Badge vencendo */
+        .barb-card.vencendo-alerta{border-color:rgba(245,166,35,.4)!important;background:linear-gradient(135deg,var(--card),rgba(245,166,35,.03));}
+        .barb-card.vencendo-alerta .barb-nome::after{content:' ⚠️';font-size:.75rem;}
+        /* Gráfico */
+        .chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem;}
+        .chart-bars{display:flex;align-items:flex-end;gap:.35rem;height:80px;margin-top:.75rem;}
+        .chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;}
+        .chart-bar{width:100%;background:rgba(0,212,255,.25);border-radius:4px 4px 0 0;border:1px solid rgba(0,212,255,.4);transition:height .4s;min-height:2px;cursor:default;}
+        .chart-bar:hover{background:rgba(0,212,255,.45);}
+        .chart-label{font-size:.58rem;color:var(--muted);text-align:center;white-space:nowrap;}
+        .chart-val{font-size:.6rem;color:var(--blue);font-weight:700;}
+        /* Btn WPP cobrança */
+        .btn-wpp-cobrar{border-color:#25d366;color:#25d366;}
+        .badge-pendente{background:rgba(245,166,35,.15);color:var(--yellow);border:1px solid rgba(245,166,35,.4);font-weight:700;}
+        .btn-ativar-trial{border-color:rgba(0,255,136,.5)!important;color:var(--green)!important;font-weight:700;}
+        .btn-ativar-trial:hover{background:rgba(0,255,136,.1)!important;}
+        .btn-wpp-cobrar:hover{background:rgba(37,211,102,.1);}
+    </style>
+</head>
+<body>
+
+<div id="page-login" class="login-wrap">
+    <div class="login-box">
+        <div class="admin-logo"><h1>PRO'B</h1><p>Painel Administrativo</p></div>
+        <div class="input-group"><label>E-mail</label><input type="email" id="adm-email" placeholder="seu@email.com"></div>
+        <div class="input-group"><label>Senha</label><input type="password" id="adm-senha" placeholder="••••••••"></div>
+        <button class="btn-primary" id="btn-adm-login">Entrar</button>
+        <p class="err" id="err-adm">Acesso negado.</p>
+    </div>
+</div>
+
+<div id="page-dash" style="display:none">
+    <div class="topbar">
+        <div class="topbar-logo">PRO'B — ADMIN</div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+            <a href="demo.html" target="_blank" style="padding:.4rem .85rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.4);border-radius:6px;color:var(--blue);font-size:.78rem;font-weight:700;text-decoration:none;transition:all .2s" onmouseover="this.style.background='rgba(0,212,255,.2)'" onmouseout="this.style.background='rgba(0,212,255,.1)'">🎯 Ver Demo</a>
+            <button class="btn-logout" id="btn-adm-logout">Sair</button>
+        </div>
+    </div>
+    <div class="content">
+
+        <div class="kpis">
+            <div class="kpi green"><div class="kpi-val" id="k-ativos">0</div><div class="kpi-lbl">Ativos</div></div>
+            <div class="kpi"><div class="kpi-val" id="k-trial">0</div><div class="kpi-lbl">Em trial</div></div>
+            <div class="kpi yellow"><div class="kpi-val" id="k-vencendo">0</div><div class="kpi-lbl">Vence em 7d</div></div>
+            <div class="kpi red"><div class="kpi-val" id="k-exp">0</div><div class="kpi-lbl">Expirados</div></div>
+            <div class="kpi green"><div class="kpi-val" id="k-mrr">R$0</div><div class="kpi-lbl">Receita este mês</div></div>
+            <div class="kpi"><div class="kpi-val" id="k-agend">0</div><div class="kpi-lbl">Agendamentos total</div></div>
+        </div>
+
+        <div class="chart-wrap" id="chart-wrap" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="section-title" style="margin-bottom:0">📈 Receita Mensal</div>
+                <span id="chart-total-ano" style="font-size:.75rem;color:var(--muted)"></span>
+            </div>
+            <div class="chart-bars" id="chart-bars"></div>
+        </div>
+
+                <!-- ══ PAINEL DE USO DO SISTEMA ══ -->
+                <div class="uso-card">
+                    <div class="uso-header">
+                        <div class="uso-titulo">📊 Uso do Sistema</div>
+                        <div class="uso-status verde" id="uso-status-badge">
+                            <div class="uso-dot" style="background:var(--green)"></div>
+                            <span id="uso-status-txt">Carregando...</span>
+                        </div>
+                    </div>
+                    <div class="uso-grid">
+                        <div class="uso-item">
+                            <div class="uso-item-val" id="uso-barbearias">—</div>
+                            <div class="uso-item-lbl">Barbearias ativas</div>
+                        </div>
+                        <div class="uso-item">
+                            <div class="uso-item-val" id="uso-capacidade">—</div>
+                            <div class="uso-item-lbl">Capacidade usada</div>
+                        </div>
+                        <div class="uso-item">
+                            <div class="uso-item-val" id="uso-agend-hoje">—</div>
+                            <div class="uso-item-lbl">Agendamentos hoje</div>
+                        </div>
+                        <div class="uso-item">
+                            <div class="uso-item-val" id="uso-leituras">—</div>
+                            <div class="uso-item-lbl">Leituras est./dia</div>
+                        </div>
+                    </div>
+                    <div class="uso-barra-wrap">
+                        <div class="uso-barra-label">
+                            <span>Capacidade do plano gratuito</span>
+                            <span id="uso-barra-pct">0%</span>
+                        </div>
+                        <div class="uso-barra-bg">
+                            <div class="uso-barra-fill" id="uso-barra-fill" style="width:0%;background:var(--green)"></div>
+                        </div>
+                    </div>
+                    <div class="uso-aviso verde" id="uso-aviso">
+                        ✅ Sistema operando normalmente dentro dos limites do plano gratuito.
+                    </div>
+                </div>
+
+                <div class="section-title">Configurações</div>
+        <div class="config-card">
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+                <div class="input-group" style="flex:1;min-width:180px;margin-bottom:0"><label>Sua chave PIX</label><input type="text" id="cfg-pix" placeholder="CPF, e-mail, telefone..."></div>
+                <div class="input-group" style="flex:1;min-width:160px;margin-bottom:0"><label>Seu WhatsApp (DDI+DDD+nº)</label><input type="text" id="cfg-wpp" placeholder="5521966190515"></div>
+                <div class="input-group" style="width:130px;margin-bottom:0"><label>Preço mensal (R$)</label><input type="number" id="cfg-preco" placeholder="49.90" step="0.01"></div>
+                <button class="btn-sm btn-ativar" style="padding:.55rem 1.1rem;font-size:.8rem" id="btn-salvar-cfg">Salvar</button>
+            </div>
+        </div>
+
+
+                <div class="section-title" style="margin-top:1.5rem">🔗 Links do Sistema</div>
+                <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
+                    <div style="display:flex;flex-direction:column;gap:.4rem">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;gap:.5rem;flex-wrap:wrap">
+                            <div style="min-width:0">
+                                <div style="font-size:.8rem;font-weight:700;color:var(--text)">🏠 Agendamento do Cliente</div>
+                                <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem;word-break:break-all">https://legendary-douhua-567efa.netlify.app/</div>
+                            </div>
+                            <div style="display:flex;gap:.4rem;flex-shrink:0">
+                                <a href="https://legendary-douhua-567efa.netlify.app/" target="_blank" class="btn-sm btn-ativar" style="text-decoration:none;font-size:.68rem">Abrir</a>
+                                <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('https://legendary-douhua-567efa.netlify.app/');toast('✓ Copiado!')">Copiar</button>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;gap:.5rem;flex-wrap:wrap">
+                            <div style="min-width:0">
+                                <div style="font-size:.8rem;font-weight:700;color:var(--text)">✂️ Painel do Barbeiro</div>
+                                <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem;word-break:break-all">https://legendary-douhua-567efa.netlify.app/barbeiro</div>
+                            </div>
+                            <div style="display:flex;gap:.4rem;flex-shrink:0">
+                                <a href="https://legendary-douhua-567efa.netlify.app/barbeiro" target="_blank" class="btn-sm btn-ativar" style="text-decoration:none;font-size:.68rem">Abrir</a>
+                                <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('https://legendary-douhua-567efa.netlify.app/barbeiro');toast('✓ Copiado!')">Copiar</button>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;gap:.5rem;flex-wrap:wrap">
+                            <div style="min-width:0">
+                                <div style="font-size:.8rem;font-weight:700;color:var(--text)">📺 Painel de Chamada (TV)</div>
+                                <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem;word-break:break-all">https://legendary-douhua-567efa.netlify.app/painel</div>
+                            </div>
+                            <div style="display:flex;gap:.4rem;flex-shrink:0">
+                                <a href="https://legendary-douhua-567efa.netlify.app/painel" target="_blank" class="btn-sm btn-ativar" style="text-decoration:none;font-size:.68rem">Abrir</a>
+                                <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('https://legendary-douhua-567efa.netlify.app/painel');toast('✓ Copiado!')">Copiar</button>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;gap:.5rem;flex-wrap:wrap">
+                            <div style="min-width:0">
+                                <div style="font-size:.8rem;font-weight:700;color:var(--text)">🎯 Demo Interativa</div>
+                                <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem;word-break:break-all">https://legendary-douhua-567efa.netlify.app/demo</div>
+                            </div>
+                            <div style="display:flex;gap:.4rem;flex-shrink:0">
+                                <a href="https://legendary-douhua-567efa.netlify.app/demo" target="_blank" class="btn-sm btn-ativar" style="text-decoration:none;font-size:.68rem">Abrir</a>
+                                <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('https://legendary-douhua-567efa.netlify.app/demo');toast('✓ Copiado!')">Copiar</button>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;gap:.5rem;flex-wrap:wrap">
+                            <div style="min-width:0">
+                                <div style="font-size:.8rem;font-weight:700;color:var(--text)">📋 Termos de Uso</div>
+                                <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem;word-break:break-all">https://legendary-douhua-567efa.netlify.app/termos</div>
+                            </div>
+                            <div style="display:flex;gap:.4rem;flex-shrink:0">
+                                <a href="https://legendary-douhua-567efa.netlify.app/termos" target="_blank" class="btn-sm btn-ativar" style="text-decoration:none;font-size:.68rem">Abrir</a>
+                                <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('https://legendary-douhua-567efa.netlify.app/termos');toast('✓ Copiado!')">Copiar</button>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;gap:.5rem;flex-wrap:wrap">
+                            <div style="min-width:0">
+                                <div style="font-size:.8rem;font-weight:700;color:var(--text)">🔒 Política de Privacidade</div>
+                                <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem;word-break:break-all">https://legendary-douhua-567efa.netlify.app/privacidade</div>
+                            </div>
+                            <div style="display:flex;gap:.4rem;flex-shrink:0">
+                                <a href="https://legendary-douhua-567efa.netlify.app/privacidade" target="_blank" class="btn-sm btn-ativar" style="text-decoration:none;font-size:.68rem">Abrir</a>
+                                <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('https://legendary-douhua-567efa.netlify.app/privacidade');toast('✓ Copiado!')">Copiar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title">Barbeiros cadastrados</div>
+        <input type="text" class="search-bar" id="search" placeholder="Buscar por nome ou e-mail...">
+        <div class="filter-row">
+            <button class="btn-sm btn-ativar" data-filtro="todos" onclick="filtrar('todos',this)">Todos</button>
+            <button class="btn-sm" style="border-color:var(--blue);color:var(--blue)" data-filtro="trial" onclick="filtrar('trial',this)">Trial</button>
+            <button class="filter-btn" onclick="filtrar('pendente',this)" style="border-color:rgba(245,166,35,.4);color:var(--yellow)">⏳ Pendentes</button>
+            <button class="btn-sm btn-renovar" data-filtro="ativo" onclick="filtrar('ativo',this)">Ativos</button>
+            <button class="btn-sm" style="border-color:var(--yellow);color:var(--yellow)" data-filtro="vencendo" onclick="filtrar('vencendo',this)">Vencendo</button>
+            <button class="btn-sm btn-bloquear" data-filtro="expirado" onclick="filtrar('expirado',this)">Expirados</button>
+        </div>
+        <div id="lista-barbeiros"><div class="empty">Carregando...</div></div>
+    </div>
+</div>
+
+<!-- MODAL Renovar Assinatura -->
+<div id="modal-renovar" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:var(--card);border-radius:16px;padding:1.5rem;width:100%;max-width:380px;border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+            <div style="font-size:1rem;font-weight:700;color:var(--green)">Renovar Assinatura</div>
+            <button onclick="document.getElementById('modal-renovar').style.display='none'" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
+        </div>
+        <p style="font-size:.82rem;color:var(--text);margin-bottom:1.2rem">Cliente: <strong id="ren-nome-cliente" style="color:var(--blue)"></strong></p>
+
+        <div class="input-group">
+            <label>Plano</label>
+            <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+                <button class="plano-btn active" data-dias="30" data-plano="Mensal" style="flex:1;padding:.6rem;background:var(--card2);border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-size:.78rem;cursor:pointer">Mensal<br><span style="font-size:.65rem;opacity:.7">30 dias</span></button>
+                <button class="plano-btn" data-dias="90" data-plano="Trimestral" style="flex:1;padding:.6rem;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer">Trimestral<br><span style="font-size:.65rem;opacity:.7">90 dias</span></button>
+                <button class="plano-btn" data-dias="365" data-plano="Anual" style="flex:1;padding:.6rem;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer">Anual<br><span style="font-size:.65rem;opacity:.7">365 dias</span></button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Valor cobrado deste cliente (R$)</label>
+            <input type="number" id="ren-valor" placeholder="49.90" step="0.01" min="0" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:1rem;outline:none;">
+        </div>
+
+        <div style="font-size:.74rem;color:var(--muted);margin:.75rem 0 1.2rem;padding:.6rem .75rem;background:var(--card2);border-radius:8px;border:1px solid var(--border)">
+            Nova validade: <strong id="ren-preview-data" style="color:var(--text)"></strong>
+        </div>
+
+        <button id="btn-confirmar-renovacao" style="width:100%;padding:.85rem;background:transparent;border:2px solid var(--green);border-radius:8px;color:var(--green);font-weight:700;cursor:pointer;font-size:.9rem">
+            Confirmar Renovação
+        </button>
+    </div>
+</div>
+
+<!-- Modal Histórico de Pagamentos -->
+<div id="modal-historico">
+    <div class="hist-sheet">
+        <div class="hist-header">
+            <div class="hist-titulo">💳 Histórico de Pagamentos</div>
+            <button class="hist-close" onclick="document.getElementById('modal-historico').style.display='none'">✕</button>
+        </div>
+        <div class="hist-lista" id="hist-lista"></div>
+        <div class="hist-total" id="hist-total"></div>
+        <button onclick="exportarHistorico()" style="margin-top:.75rem;width:100%;padding:.65rem;background:transparent;border:1.5px solid rgba(0,212,255,.35);border-radius:8px;color:var(--blue);font-size:.8rem;font-weight:600;cursor:pointer">📥 Exportar CSV</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, getDocs, collection, deleteDoc, query, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const firebaseConfig = PROB_CONFIG.firebase;
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+// ─── COLE SEU UID AQUI ───
+const ADMIN_UID = PROB_CONFIG.admin.uid;
+
+const $=id=>document.getElementById(id);
+let todos=[];
+let totalAgend=0;
+let filtroAtual='todos';
+let cfg={};
+
+function toast(msg,cor='var(--green)'){const t=$('toast');t.textContent=msg;t.style.borderColor=cor;t.style.color=cor;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function dias(str){if(!str)return 0;return Math.ceil((new Date(str)-new Date())/(1000*60*60*24));}
+function status(ac){
+    if(!ac)return 'sem acesso';
+    if(ac.status==='pendente')return 'pendente';
+    if(ac.status==='bloqueado')return 'bloqueado';
+    if(ac.status==='excluido')return 'excluido';
+    const d=dias(ac.expira);
+    if(d<=0)return 'expirado';
+    if(ac.status==='trial')return 'trial';
+    return 'ativo';
+}
+
+onAuthStateChanged(auth,async user=>{
+    if(user&&user.uid===ADMIN_UID){
+        $('page-login').style.display='none';
+        $('page-dash').style.display='block';
+        await carregarCfg();
+        await carregarBarbeiros();
+    } else if(user){
+        await signOut(auth);
+        $('err-adm').style.display='block';
+    }
+});
+
+$('btn-adm-login').addEventListener('click',async()=>{
+    $('err-adm').style.display='none';
+    try{await signInWithEmailAndPassword(auth,$('adm-email').value.trim(),$('adm-senha').value);}
+    catch(e){$('err-adm').style.display='block';}
+});
+$('btn-adm-logout').addEventListener('click',()=>signOut(auth).then(()=>{$('page-dash').style.display='none';$('page-login').style.display='flex';}));
+
+async function carregarCfg(){
+    const snap=await getDoc(doc(db,'config','admin'));
+    if(snap.exists()){cfg=snap.data();$('cfg-pix').value=cfg.pix||'';$('cfg-wpp').value=cfg.wpp||'';$('cfg-preco').value=cfg.preco||'';}
+}
+$('btn-salvar-cfg').addEventListener('click',async()=>{
+    cfg={pix:$('cfg-pix').value.trim(),wpp:$('cfg-wpp').value.trim(),preco:parseFloat($('cfg-preco').value)||0};
+    await setDoc(doc(db,'config','admin'),cfg);
+    toast('Configurações salvas!');
+    atualizarKPIs();
+});
+
+let unsubAdmin=null;
+let agendPorBarbearia={};
+
+async function carregarBarbeiros(){
+    if(unsubAdmin)unsubAdmin();
+
+    // Busca todos os agendamentos para contar por barbearia
+    try{
+        const agSnap=await getDocs(collection(db,'agendamentos'));
+        agendPorBarbearia={};
+        const hoje=new Date().toISOString().split('T')[0];
+        const mes=hoje.slice(0,7);
+        agSnap.forEach(d=>{
+            const a=d.data();
+            if(!a.barbeiroId)return;
+            if(!agendPorBarbearia[a.barbeiroId])agendPorBarbearia[a.barbeiroId]={total:0,hoje:0,mes:0,concluidos:0};
+            agendPorBarbearia[a.barbeiroId].total++;
+            if(a.data===hoje)agendPorBarbearia[a.barbeiroId].hoje++;
+            if(a.data&&a.data.startsWith(mes))agendPorBarbearia[a.barbeiroId].mes++;
+            if(a.status==='concluido')agendPorBarbearia[a.barbeiroId].concluidos++;
+        });
+    }catch(e){}
+
+    onSnapshot(collection(db,'barbeiros'),async bs=>{
+        const asSnap=await getDocs(collection(db,'acessos'));
+        const ac={};asSnap.forEach(d=>ac[d.id]=d.data());
+        todos=[];
+        bs.forEach(d=>{if(d.id===ADMIN_UID)return;todos.push({uid:d.id,...d.data(),acesso:ac[d.id]||null});});
+        atualizarKPIs();
+        renderLista();
+    });
+}
+
+async function atualizarUso(){
+    try{
+        // Coleta dados do Firestore
+        const hoje = new Date().toISOString().split('T')[0];
+        const ativos   = todos.filter(b=>b.acesso?.status==='ativo'||b.acesso?.status==='trial').length;
+        const pendentes= todos.filter(b=>b.acesso?.status==='pendente').length;
+        const totalBarb= todos.length;
+
+        const agHoje = totalAgend || 0;
+
+        // Estimativa de leituras/dia
+        // onSnapshot: ~10/hora * 8h * ativos
+        // Clientes: ~5 leituras * (agHoje * 3)
+        // Admin: ~50 leituras
+        const leiturasOnSnapshot = ativos * 10 * 8;
+        const leiturasClientes   = agHoje * 15;
+        const leiturasAdmin      = 50;
+        const totalLeituras      = leiturasOnSnapshot + leiturasClientes + leiturasAdmin;
+        const limiteGratuito     = 50000;
+        const pct                = Math.min(100, Math.round((totalLeituras / limiteGratuito) * 100));
+        const capacidadeMax      = 150;
+        const capPct             = Math.round((ativos / capacidadeMax) * 100);
+
+        // Atualiza UI
+        document.getElementById('uso-barbearias').textContent  = `${ativos} / ${capacidadeMax}`;
+        document.getElementById('uso-capacidade').textContent  = `${capPct}%`;
+        document.getElementById('uso-agend-hoje').textContent  = totalAgend;
+        document.getElementById('uso-leituras').textContent    = totalLeituras.toLocaleString('pt-BR');
+        document.getElementById('uso-barra-pct').textContent   = `${pct}%`;
+
+        const fill = document.getElementById('uso-barra-fill');
+        fill.style.width = pct + '%';
+
+        // Define status
+        let cor, statusTxt, aviso, dotCor;
+        if(pct < 50 && capPct < 50){
+            cor='verde'; statusTxt='NORMAL'; dotCor='var(--green)';
+            aviso='✅ Sistema operando normalmente dentro dos limites do plano gratuito.';
+        } else if(pct < 75 || capPct < 75){
+            cor='amarelo'; statusTxt='ATENÇÃO'; dotCor='var(--yellow)';
+            aviso='⚠️ Uso moderado. Monitore o crescimento — considere o plano Blaze ao passar de 100 barbearias.';
+        } else {
+            cor='vermelho'; statusTxt='CRÍTICO'; dotCor='var(--red)';
+            aviso='🔴 Uso elevado! Risco de atingir o limite gratuito. Ative o plano Blaze no Firebase imediatamente.';
+        }
+
+        fill.style.background = cor==='verde'?'var(--green)':cor==='amarelo'?'var(--yellow)':'var(--red)';
+
+        const badge = document.getElementById('uso-status-badge');
+        badge.className = `uso-status ${cor}`;
+        badge.querySelector('.uso-dot').style.background = dotCor;
+        document.getElementById('uso-status-txt').textContent = statusTxt;
+        document.getElementById('uso-aviso').className = `uso-aviso ${cor}`;
+        document.getElementById('uso-aviso').textContent = aviso;
+
+    }catch(e){ console.error('atualizarUso erro:', e); }
+}
+
+function atualizarKPIs(){
+    let at=0,tr=0,vc=0,ex=0;
+    todos.forEach(b=>{
+        const s=status(b.acesso);const d=dias(b.acesso?.expira);
+        if(s==='ativo')at++;if(s==='trial')tr++;if(s==='expirado')ex++;
+        if((s==='ativo'||s==='trial')&&d>0&&d<=7)vc++;
+    });
+    $('k-ativos').textContent=at;$('k-trial').textContent=tr;$('k-vencendo').textContent=vc;$('k-exp').textContent=ex;
+
+    // Receita real do mês atual, baseada no histórico de pagamentos
+    const mesAtual=new Date().toISOString().slice(0,7);
+    let receitaMes=0;
+    todos.forEach(b=>{
+        const hist=b.acesso?.historicoPagamentos||[];
+        hist.forEach(p=>{ if(p.data&&p.data.startsWith(mesAtual)) receitaMes+=Number(p.valor||0); });
+    });
+    $('k-mrr').textContent='R$'+receitaMes.toFixed(0);
+
+    totalAgend =Object.values(agendPorBarbearia).reduce((s,a)=>s+a.total,0);
+    $('k-agend').textContent=totalAgend;
+    atualizarUso();
+    const pendentes=todos.filter(b=>status(b.acesso)==='pendente').length;
+    const kPend=document.getElementById('k-pend-val');
+    if(kPend)kPend.textContent=pendentes;
+    const badgePend=document.getElementById('badge-pendentes');
+    if(badgePend){badgePend.textContent=pendentes>0?`${pendentes} aguardando`:'';badgePend.style.display=pendentes>0?'inline-block':'none';}
+
+    // Gráfico de receita — últimos 6 meses
+    const meses={};
+    todos.forEach(b=>{
+        const hist=b.acesso?.historicoPagamentos||[];
+        hist.forEach(p=>{
+            if(!p.data)return;
+            const mes=p.data.slice(0,7);
+            meses[mes]=(meses[mes]||0)+Number(p.valor||0);
+        });
+    });
+    const chavesMeses=Object.keys(meses).sort().slice(-6);
+    if(chavesMeses.length>0){
+        document.getElementById('chart-wrap').style.display='block';
+        const maxVal=Math.max(...chavesMeses.map(m=>meses[m]),1);
+        const totalAno=Object.values(meses).reduce((s,v)=>s+v,0);
+        document.getElementById('chart-total-ano').textContent=`Total histórico: R$ ${totalAno.toFixed(0)}`;
+        document.getElementById('chart-bars').innerHTML=chavesMeses.map(m=>{
+            const v=meses[m];
+            const h=Math.max(4,Math.round((v/maxVal)*72));
+            const [y,mo]=m.split('-');
+            const nomeMes=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][Number(mo)-1];
+            return `<div class="chart-bar-col">
+                <div class="chart-val">R$${v.toFixed(0)}</div>
+                <div class="chart-bar" style="height:${h}px" title="${nomeMes}/${y}: R$ ${v.toFixed(2)}"></div>
+                <div class="chart-label">${nomeMes}</div>
+            </div>`;
+        }).join('');
+    }
+}
+
+function renderLista(){
+    const busca=$('search').value.toLowerCase();
+    let lista=todos.filter(b=>{
+        const s=status(b.acesso);const d=dias(b.acesso?.expira);
+        if(filtroAtual==='trial'&&s!=='trial')return false;
+        if(filtroAtual==='ativo'&&s!=='ativo')return false;
+        if(filtroAtual==='vencendo'&&!(d>0&&d<=7))return false;
+        if(filtroAtual==='expirado'&&s!=='expirado')return false;
+        if(filtroAtual==='pendente'&&s!=='pendente')return false;
+        if(busca&&!(b.nome||'').toLowerCase().includes(busca)&&!(b.email||'').toLowerCase().includes(busca))return false;
+        return true;
+    });
+    lista.sort((a,b)=>dias(a.acesso?.expira)-dias(b.acesso?.expira));
+
+    const c=$('lista-barbeiros');
+    if(!lista.length){c.innerHTML='<div class="empty">Nenhum barbeiro encontrado.</div>';return;}
+    c.innerHTML=`<div style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem;padding:.4rem .6rem;background:var(--card2);border-radius:6px;border:1px solid var(--border)">
+        Exibindo <strong style="color:var(--text)">${lista.length}</strong> de <strong style="color:var(--text)">${todos.length}</strong> cadastros
+    </div>`+lista.map(b=>{
+        const s=status(b.acesso);
+        const d=dias(b.acesso?.expira);
+        const exp=b.acesso?.expira?new Date(b.acesso.expira).toLocaleDateString('pt-BR'):'—';
+        const bc={ativo:'badge-ativo',trial:'badge-trial',expirado:'badge-exp',bloqueado:'badge-bloq',pendente:'badge-pendente','sem acesso':'badge-bloq',excluido:'badge-bloq'}[s]||'badge-bloq';
+        const dc=d>7?'dias-ok':d>3?'dias-warn':'dias-crit';
+        const ds=s==='pendente'
+            ? '<span class="dias-badge" style="color:var(--yellow);border-color:rgba(245,166,35,.3)">aguardando aprovação</span>'
+            : d>0
+                ? `<span class="dias-badge ${dc}">${d}d restantes</span>`
+                : '<span class="dias-badge dias-crit">expirado</span>';
+        const btn2=s!=='bloqueado'
+            ?`<button class="btn-sm btn-bloquear" onclick="bloquear('${b.uid}')">Bloquear</button>`
+            :`<button class="btn-sm btn-ativar" onclick="ativar('${b.uid}')">Reativar</button>`;
+        const criadoEm=b.criadoEm?new Date(b.criadoEm).toLocaleDateString('pt-BR'):'—';
+        const wpp=b.whatsapp?`(${b.whatsapp.slice(0,2)}) ${b.whatsapp.slice(2,7)}-${b.whatsapp.slice(7)}`:'—';
+        const ag=agendPorBarbearia[b.uid]||{total:0,hoje:0,mes:0,concluidos:0};
+
+        const hist=b.acesso?.historicoPagamentos||[];
+        const ultimoPag=hist.length?hist[hist.length-1]:null;
+        const totalPagoHist=hist.reduce((s,p)=>s+Number(p.valor||0),0);
+        const planoTag=ultimoPag
+            ?`<span style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:5px;padding:.15rem .5rem;color:var(--yellow)">💳 ${ultimoPag.plano} · R$${Number(ultimoPag.valor).toFixed(2)}</span>
+              <span style="background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);border-radius:5px;padding:.15rem .5rem;color:var(--green)">Total pago: R$${totalPagoHist.toFixed(2)}</span>`
+            :`<span style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:5px;padding:.15rem .5rem;color:var(--muted)">Nenhum pagamento registrado</span>`;
+
+        const isVencendo=(s==='ativo'||s==='trial')&&d>0&&d<=7;
+        return `<div class="barb-card ${isVencendo?'vencendo-alerta':''}">
+            <div class="barb-info">
+                <div class="barb-nome">${b.nome||'Sem nome'}</div>
+                <div class="barb-email">${b.email||b.uid}</div>
+                <div class="barb-meta">
+                    📱 ${wpp} · 
+                    📅 Cadastro: ${criadoEm} · 
+                    Expira: ${exp} · ${ds}
+                </div>
+                <div class="barb-meta" style="margin-top:.3rem;display:flex;gap:.6rem;flex-wrap:wrap">
+                    ${planoTag}
+                </div>
+                <div class="barb-meta" style="margin-top:.3rem;display:flex;gap:.6rem;flex-wrap:wrap">
+                    <span style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:5px;padding:.15rem .5rem;color:var(--blue)">📋 ${ag.total} agendamentos</span>
+                    <span style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.1);border-radius:5px;padding:.15rem .5rem;color:var(--muted)">Hoje: ${ag.hoje}</span>
+                    <span style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.1);border-radius:5px;padding:.15rem .5rem;color:var(--muted)">Mês: ${ag.mes}</span>
+                    <span style="background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);border-radius:5px;padding:.15rem .5rem;color:var(--green)">✓ ${ag.concluidos} concluídos</span>
+                </div>
+                ${hist.length>1?`<button class="btn-sm" style="margin-top:.4rem;border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="verHistoricoPagamentos('${b.uid}','${(b.nome||'barbeiro').replace(/'/g,'')}')">Ver histórico completo (${hist.length} pagamentos)</button>`:''}
+                <div class="barb-meta" style="margin-top:.15rem;color:var(--muted);font-size:.68rem;font-family:'Courier New',monospace">${b.uid}</div>
+            </div>
+            <span class="badge ${bc}">${s}</span>
+            <div class="barb-actions">
+                ${s==='pendente'?`<button class="btn-sm btn-ativar-trial" onclick="ativarTrial('${b.uid}','${(b.nome||'barbeiro').replace(/'/g,'')}')">🎁 Ativar Trial</button>`:''}
+                <button class="btn-sm btn-renovar" onclick="abrirModalRenovar('${b.uid}','${(b.nome||'barbeiro').replace(/'/g,'')}')">Renovar</button>
+                ${b.whatsapp?`<a class="btn-sm btn-wpp-cobrar" href="https://wa.me/55${b.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent('Olá '+( b.nome||'')+'! Seu acesso Pro\'B vence em breve. Para renovar, entre em contato.')}" target="_blank" style="text-decoration:none">💬 WPP</a>`:''}
+                ${btn2}
+                <a class="btn-sm btn-ativar" href="/cliente.html?b=${b.uid}" target="_blank" style="text-decoration:none;font-size:.68rem" title="Abrir link de agendamento do cliente">🔗 Agendamento</a>
+                <button class="btn-sm" style="border-color:rgba(245,166,35,.4);color:var(--yellow);font-size:.68rem" onclick="gerarContratoPDF('${b.uid}')" title="Baixar contrato em PDF">📄 PDF</button>
+                <a class="btn-sm" style="border-color:rgba(0,212,255,.35);color:rgba(0,212,255,.7);text-decoration:none;font-size:.68rem" href="painel-chamada.html?b=${b.uid}" target="_blank" title="Abrir painel de chamada">📺 Painel</a>
+                <button class="btn-sm" style="border-color:rgba(255,75,43,.4);color:var(--red)" onclick="excluir('${b.uid}','${(b.nome||'barbeiro').replace(/'/g,'')}')">Excluir</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+let renUid=null, renNome=null, renDias=30, renPlano='Mensal';
+
+window.abrirModalRenovar=(uid,nome)=>{
+    renUid=uid;renNome=nome;renDias=30;renPlano='Mensal';
+    document.getElementById('ren-nome-cliente').textContent=nome;
+    document.getElementById('ren-valor').value=cfg.preco||'';
+    document.querySelectorAll('.plano-btn').forEach(b=>{
+        b.classList.toggle('active',b.dataset.dias==='30');
+        b.style.borderColor=b.dataset.dias==='30'?'var(--blue)':'var(--border)';
+        b.style.color=b.dataset.dias==='30'?'var(--blue)':'var(--muted)';
+    });
+    atualizarPreviewRenovacao();
+    document.getElementById('modal-renovar').style.display='flex';
+};
+
+document.querySelectorAll('.plano-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        document.querySelectorAll('.plano-btn').forEach(b=>{
+            b.classList.remove('active');
+            b.style.borderColor='var(--border)';b.style.color='var(--muted)';
+        });
+        btn.classList.add('active');
+        btn.style.borderColor='var(--blue)';btn.style.color='var(--blue)';
+        renDias=Number(btn.dataset.dias);
+        renPlano=btn.dataset.plano;
+        atualizarPreviewRenovacao();
+    });
+});
+
+async function atualizarPreviewRenovacao(){
+    const snap=await getDoc(doc(db,'acessos',renUid));
+    let base=new Date();
+    if(snap.exists()){const exp=new Date(snap.data().expira);if(exp>base)base=exp;}
+    base.setDate(base.getDate()+renDias);
+    document.getElementById('ren-preview-data').textContent=base.toLocaleDateString('pt-BR');
+}
+
+document.getElementById('btn-confirmar-renovacao').addEventListener('click',async()=>{
+    const valor=parseFloat(document.getElementById('ren-valor').value);
+    if(!valor||valor<=0){toast('Informe um valor válido','var(--red)');return;}
+
+    const btn=document.getElementById('btn-confirmar-renovacao');
+    btn.disabled=true;btn.textContent='Salvando...';
+
+    const snap=await getDoc(doc(db,'acessos',renUid));
+    let base=new Date();
+    let historico=[];
+    if(snap.exists()){
+        const d=snap.data();
+        const exp=new Date(d.expira);
+        if(exp>base)base=exp;
+        historico=d.historicoPagamentos||[];
+    }
+    base.setDate(base.getDate()+renDias);
+
+    historico.push({
+        data:new Date().toISOString(),
+        plano:renPlano,
+        dias:renDias,
+        valor:valor
+    });
+
+    await setDoc(doc(db,'acessos',renUid),{
+        status:'ativo',
+        expira:base.toISOString(),
+        renovadoEm:new Date().toISOString(),
+        ultimoPlano:renPlano,
+        ultimoValor:valor,
+        historicoPagamentos:historico
+    },{merge:true});
+
+    toast(`✓ ${renNome} renovado — ${renPlano} (R$${valor.toFixed(2)})`);
+    document.getElementById('modal-renovar').style.display='none';
+    btn.disabled=false;btn.textContent='Confirmar Renovação';
+    await carregarBarbeiros();
+});
+
+window.bloquear=async uid=>{
+    if(!confirm('Bloquear acesso?'))return;
+    await setDoc(doc(db,'acessos',uid),{status:'bloqueado',bloqueadoEm:new Date().toISOString()},{merge:true});
+    toast('Bloqueado','var(--red)');await carregarBarbeiros();
+};
+
+let histAtual=[];
+window.verHistoricoPagamentos=(uid,nome)=>{
+    const b=todos.find(x=>x.uid===uid);
+    if(!b)return;
+    histAtual=(b.acesso?.historicoPagamentos||[]).slice().reverse();
+    const lista=document.getElementById('hist-lista');
+    const totalEl=document.getElementById('hist-total');
+    if(!histAtual.length){lista.innerHTML='<div style="text-align:center;color:var(--muted);padding:1rem">Nenhum pagamento registrado.</div>';totalEl.textContent='';}
+    else{
+        lista.innerHTML=histAtual.map(p=>{
+            const data=new Date(p.data).toLocaleDateString('pt-BR');
+            return `<div class="hist-item">
+                <span style="color:var(--muted)">${data}</span>
+                <span style="color:var(--text)">${p.plano} · ${p.dias}d</span>
+                <span style="color:var(--green);font-weight:700">R$ ${Number(p.valor).toFixed(2)}</span>
+            </div>`;
+        }).join('');
+        const total=histAtual.reduce((s,p)=>s+Number(p.valor||0),0);
+        totalEl.textContent=`Total pago por ${nome}: R$ ${total.toFixed(2)}`;
+    }
+    document.getElementById('modal-historico').style.display='flex';
+};
+
+window.exportarHistorico=()=>{
+    if(!histAtual.length)return;
+    const linhas=['Data,Plano,Dias,Valor',...histAtual.map(p=>`${new Date(p.data).toLocaleDateString('pt-BR')},${p.plano},${p.dias},${Number(p.valor).toFixed(2)}`)];
+    const blob=new Blob([linhas.join('\n')],{type:'text/csv'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='historico-pagamentos.csv';a.click();
+};
+window.ativar=async uid=>{
+    const exp=new Date();exp.setDate(exp.getDate()+30);
+    await setDoc(doc(db,'acessos',uid),{status:'ativo',expira:exp.toISOString()},{merge:true});
+    toast('Reativado!');await carregarBarbeiros();
+};
+
+window.gerarContratoPDF = (uid) => {
+    const b = todos.find(x => x.uid === uid);
+    if(!b){ toast('Barbeiro não encontrado','var(--red)'); return; }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+
+    const W = 210, M = 20;
+    let y = 20;
+
+    const addText = (txt, size=10, bold=false, color=[50,50,50], align='left', maxW=170) => {
+        doc.setFontSize(size);
+        doc.setFont('helvetica', bold?'bold':'normal');
+        doc.setTextColor(...color);
+        const lines = doc.splitTextToSize(txt, maxW);
+        if(align==='center') doc.text(lines, W/2, y, {align:'center'});
+        else doc.text(lines, M, y);
+        y += lines.length * (size * 0.45) + 1;
+    };
+
+    const addLine = () => {
+        doc.setDrawColor(200,200,200);
+        doc.line(M, y, W-M, y);
+        y += 5;
+    };
+
+    const addSpace = (n=5) => { y += n; };
+
+    // Cabeçalho
+    doc.setFillColor(10, 14, 20);
+    doc.rect(0, 0, W, 35, 'F');
+    doc.setFontSize(22);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(0, 212, 255);
+    doc.text("PRO'B", W/2, 15, {align:'center'});
+    doc.setFontSize(9);
+    doc.setTextColor(180,180,180);
+    doc.text('CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE SOFTWARE', W/2, 22, {align:'center'});
+    doc.setFontSize(8);
+    doc.setTextColor(120,120,120);
+    doc.text(`Versão 1.0  ·  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, W/2, 29, {align:'center'});
+    y = 45;
+
+    // Seção 1 — Contratante
+    addText('1. IDENTIFICAÇÃO DO CONTRATANTE', 11, true, [0,100,180]);
+    addLine();
+    addSpace(2);
+    addText('Nome:', 9, true, [80,80,80]); y -= 4;
+    doc.text('Alexandre de Lima', M+25, y); y += 5;
+    addText('E-mail:', 9, true, [80,80,80]); y -= 4;
+    doc.text('ale.sh4rk@gmail.com', M+25, y); y += 5;
+    addText('WhatsApp:', 9, true, [80,80,80]); y -= 4;
+    doc.text('(21) 96619-0515', M+25, y); y += 8;
+
+    // Seção 2 — Contratado
+    addText('2. IDENTIFICAÇÃO DO CONTRATADO', 11, true, [0,100,180]);
+    addLine();
+    addSpace(2);
+
+    const campos = [
+        ['Nome / Barbearia:', b.nome || '___________________'],
+        ['E-mail:', b.email || '___________________'],
+        ['WhatsApp:', b.whatsapp ? `(${b.whatsapp.slice(0,2)}) ${b.whatsapp.slice(2,7)}-${b.whatsapp.slice(7)}` : '___________________'],
+        ['CPF / CNPJ:', '___________________'],
+        ['Endereço:', '___________________'],
+    ];
+    campos.forEach(([label, val]) => {
+        doc.setFontSize(9);
+        doc.setFont('helvetica','bold'); doc.setTextColor(80,80,80);
+        doc.text(label, M, y);
+        doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+        doc.text(val, M+40, y);
+        y += 6;
+    });
+    addSpace(3);
+
+    // Seção 3 — Plano
+    addText('3. PLANO CONTRATADO', 11, true, [0,100,180]);
+    addLine();
+    addSpace(2);
+
+    const planoValor = b.planoValor || PROB_CONFIG.sistema.precoMensal;
+    const planoTipo  = b.planoTipo  || 'mensal';
+    const valorFmt   = `R$ ${Number(planoValor).toFixed(2)}`;
+    const periodoFmt = planoTipo === 'anual' ? 'Anual' : 'Mensal';
+
+    // Box do plano
+    doc.setFillColor(240,248,255);
+    doc.setDrawColor(0,150,200);
+    doc.roundedRect(M, y, W-2*M, 22, 3, 3, 'FD');
+    doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(0,100,180);
+    doc.text(`Plano ${periodoFmt}`, W/2, y+8, {align:'center'});
+    doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.setTextColor(0,150,50);
+    doc.text(`${valorFmt}/${planoTipo==='anual'?'ano':'mês'}`, W/2, y+17, {align:'center'});
+    y += 28;
+
+    addText('Forma de pagamento:', 9, true, [80,80,80]); y -= 4;
+    doc.text('PIX (21966190515) ou Dinheiro', M+45, y); y += 6;
+    addText('Vencimento:', 9, true, [80,80,80]); y -= 4;
+    doc.text('Todo dia ___ de cada mês', M+45, y); y += 10;
+
+    // Seção 4 — Cláusulas resumidas
+    addText('4. CONDIÇÕES GERAIS', 11, true, [0,100,180]);
+    addLine();
+    addSpace(2);
+
+    const clausulas = [
+        '• Acesso ao sistema Pro\'B com todas as funcionalidades descritas no contrato online.',
+        '• Período de teste gratuito de 7 dias a partir da ativação pelo contratante.',
+        '• O não pagamento na data de vencimento suspende automaticamente o acesso.',
+        '• Suporte via WhatsApp (21) 96619-0515 conforme disponibilidade.',
+        '• Rescisão mediante aviso prévio de 30 dias por qualquer das partes.',
+        '• Contrato completo disponível em: legendary-douhua-567efa.netlify.app/termos',
+    ];
+    clausulas.forEach(c => { addText(c, 9, false, [60,60,60]); addSpace(1); });
+    addSpace(5);
+
+    // Aceite eletrônico
+    if(b.contratoAceite && b.contratoDataAceite){
+        doc.setFillColor(240,255,245);
+        doc.setDrawColor(0,180,80);
+        doc.roundedRect(M, y, W-2*M, 14, 2, 2, 'FD');
+        doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(0,130,60);
+        doc.text('✓ ACEITE ELETRÔNICO REGISTRADO', M+5, y+6);
+        doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+        doc.text(`Data: ${new Date(b.contratoDataAceite).toLocaleString('pt-BR')}  ·  Versão: ${b.contratoVersao||'1.0'}`, M+5, y+11);
+        y += 20;
+    }
+
+    // Assinaturas
+    addSpace(10);
+    addText('5. ASSINATURAS', 11, true, [0,100,180]);
+    addLine();
+    addSpace(8);
+
+    const colW = (W - 2*M - 10) / 2;
+    // Linha esquerda
+    doc.setDrawColor(100,100,100);
+    doc.line(M, y, M+colW, y);
+    // Linha direita
+    doc.line(M+colW+10, y, W-M, y);
+    y += 5;
+
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(50,50,50);
+    doc.text('Alexandre de Lima', M, y);
+    doc.text(b.nome || 'CONTRATADO', M+colW+10, y);
+    y += 4;
+    doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+    doc.text("CONTRATANTE — Pro'B Sistemas", M, y);
+    doc.text(`E-mail: ${b.email||''}`, M+colW+10, y);
+    y += 8;
+
+    doc.text(`Data: ___/___/______`, M, y);
+    doc.text(`Data: ___/___/______`, M+colW+10, y);
+
+    // Rodapé
+    const totalPages = doc.getNumberOfPages();
+    for(let i=1; i<=totalPages; i++){
+        doc.setPage(i);
+        doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(150,150,150);
+        doc.text(`Pro\'B Sistemas · ale.sh4rk@gmail.com · Página ${i}/${totalPages}`, W/2, 290, {align:'center'});
+    }
+
+    // Salva
+    const nomeArq = `contrato_${(b.nome||'barbeiro').replace(/[^a-z0-9]/gi,'_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(nomeArq);
+    toast(`✓ Contrato de ${b.nome||'barbeiro'} baixado!`);
+};
+
+window.ativarTrial=async(uid,nome)=>{
+    if(!confirm(`Ativar 7 dias de trial gratuito para "${nome}"?`))return;
+    try{
+        const expira=new Date();
+        expira.setDate(expira.getDate()+7);
+        await setDoc(doc(db,'acessos',uid),{
+            status:'trial',
+            expira:expira.toISOString(),
+            criadoEm:new Date().toISOString(),
+            trialInicio:new Date().toISOString(),
+            ativadoPor:ADMIN_UID
+        });
+        toast(`✓ Trial de 7 dias ativado para ${nome}!`);
+        renderLista();
+    }catch(e){toast('Erro: '+e.message,'var(--red)');}
+};
+
+window.excluir=async(uid,nome)=>{
+    if(!confirm(`⚠️ EXCLUIR "${nome}" permanentemente?\n\nIsso vai remover:\n- Dados da barbearia\n- Histórico de acesso\n- Todos os agendamentos\n\nEssa ação NÃO pode ser desfeita!`))return;
+    if(!confirm(`Tem certeza? Digite OK para confirmar a exclusão de "${nome}".`))return;
+    try{
+        // 1. Primeiro salva bloqueio permanente — impede reacesso mesmo após exclusão
+        await setDoc(doc(db,'acessos',uid),{
+            status:'excluido',
+            expira: new Date(2000,0,1).toISOString(), // data no passado
+            excluidoEm: new Date().toISOString(),
+            excluidoPor: ADMIN_UID
+        });
+        // 2. Deleta dados da barbearia
+        await deleteDoc(doc(db,'barbeiros',uid));
+        toast(`${nome} excluído permanentemente`,'var(--red)');
+        await carregarBarbeiros();
+    }catch(e){
+        toast('Erro ao excluir: '+e.message,'var(--red)');
+    }
+};
+
+$('search').addEventListener('input',renderLista);
+window.filtrar=(f,btn)=>{filtroAtual=f;document.querySelectorAll('[data-filtro]').forEach(b=>b.style.opacity='.5');btn.style.opacity='1';renderLista();};
+</script>
+</body>
+</html>

@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro'B — Demo Interativa</title>
+    <style>
+        :root{
+            --bg:#0a0e14;--card:#1A1A1E;--card2:#12161c;--border:#2a3f5f;
+            --blue:#00d4ff;--green:#00ff88;--red:#ff4b2b;--yellow:#f5a623;
+            --text:#e8f4f8;--muted:#7a9fb5;
+            --font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+
+        /* ── DEMO BANNER ── */
+        .demo-banner{
+            position:fixed;top:0;left:0;right:0;z-index:9999;
+            background:linear-gradient(90deg,rgba(0,212,255,.15),rgba(0,255,136,.1),rgba(0,212,255,.15));
+            border-bottom:1px solid rgba(0,212,255,.3);
+            padding:.45rem 1.5rem;
+            display:flex;align-items:center;justify-content:space-between;
+            backdrop-filter:blur(8px);
+            font-size:.75rem;font-weight:700;letter-spacing:.5px;
+        }
+        .demo-badge{
+            background:rgba(0,212,255,.15);border:1px solid rgba(0,212,255,.4);
+            border-radius:20px;padding:.2rem .75rem;color:var(--blue);
+            text-transform:uppercase;letter-spacing:1px;font-size:.68rem;
+        }
+        .demo-msg{color:rgba(255,255,255,.6);font-size:.72rem;font-weight:400;}
+        .demo-cta{
+            padding:.35rem .85rem;background:rgba(0,255,136,.1);
+            border:1px solid rgba(0,255,136,.4);border-radius:20px;
+            color:var(--green);font-size:.72rem;font-weight:700;
+            cursor:pointer;transition:all .2s;white-space:nowrap;
+        }
+        .demo-cta:hover{background:rgba(0,255,136,.2);}
+
+        /* ── TOPBAR ── */
+        .topbar{
+            background:rgba(10,14,20,.96);border-bottom:1px solid var(--border);
+            padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+            position:sticky;top:36px;z-index:100;backdrop-filter:blur(12px);
+        }
+        .topbar-logo-wrap{display:flex;align-items:center;gap:.6rem;}
+        .topbar-logo-wrap svg{width:32px;height:32px;}
+        .topbar-logo{font-size:1.4rem;font-weight:900;letter-spacing:3px;color:var(--blue);text-shadow:0 0 12px rgba(0,212,255,.4);}
+        .topbar-user{display:flex;align-items:center;gap:.75rem;}
+        .user-avatar{width:34px;height:34px;border-radius:50%;background:rgba(0,212,255,.15);border:1.5px solid rgba(0,212,255,.4);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--blue);}
+        .btn-logout{padding:.4rem .85rem;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:.78rem;cursor:pointer;transition:all .2s;}
+        .btn-logout:hover{border-color:var(--red);color:var(--red);}
+
+        /* ── TABS ── */
+        .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--card2);padding:0 1.5rem;overflow-x:auto;}
+        .tab{padding:.9rem 1.25rem;font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
+        .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+        .tab:hover:not(.active){color:var(--text);}
+        .tab-content{display:none;padding:1.5rem;max-width:900px;margin:0 auto;}
+        .tab-content.active{display:block;}
+
+        /* ── BASE ── */
+        .section-title{font-size:1rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin-bottom:1.2rem;display:flex;align-items:center;gap:.6rem;}
+        .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+        .input-group{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;}
+        .input-group label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+        .input-group input,.input-group select,.input-group textarea{background:rgba(26,35,50,.85);border:1.5px solid var(--border);border-radius:8px;padding:.85rem 1rem;color:var(--text);font-size:.9rem;font-family:var(--font);outline:none;transition:all .3s;width:100%;}
+        .input-group input:focus,.input-group select:focus{border-color:var(--blue);box-shadow:0 0 16px rgba(0,212,255,.2);}
+        .btn-add{padding:.8rem 1.5rem;background:transparent;border:1.5px solid var(--green);border-radius:8px;color:var(--green);font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all .3s;}
+        .btn-add:hover{background:rgba(0,255,136,.1);box-shadow:0 0 16px rgba(0,255,136,.3);}
+        .btn-save{padding:.85rem 1.5rem;background:transparent;border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-size:.9rem;font-weight:700;cursor:pointer;transition:all .3s;}
+        .btn-save:hover{background:rgba(0,212,255,.1);}
+        .btn-del{padding:.3rem .65rem;background:transparent;border:1px solid rgba(255,75,43,.4);border-radius:5px;color:var(--red);font-size:.75rem;cursor:pointer;transition:all .2s;}
+        .btn-del:hover{background:rgba(255,75,43,.1);}
+        .btn-edit{padding:.3rem .65rem;background:transparent;border:1px solid rgba(0,212,255,.35);border-radius:5px;color:var(--blue);font-size:.75rem;cursor:pointer;transition:all .2s;}
+        .empty-state{text-align:center;padding:2.5rem;color:var(--muted);}
+        .empty-state .icon{font-size:2rem;margin-bottom:.75rem;}
+
+        /* ── STATS ── */
+        .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.5rem;}
+        .stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;}
+        .stat-val{font-family:'Courier New',monospace;font-size:1.6rem;font-weight:900;color:var(--blue);text-shadow:0 0 10px rgba(0,212,255,.3);}
+        .stat-lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:.25rem;}
+
+        /* ── APPT CARD ── */
+        .appt-card{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:.45rem .85rem;margin-bottom:.3rem;display:flex;align-items:center;gap:.6rem;transition:border-color .2s;flex-wrap:wrap;}
+        .appt-card:hover{border-color:rgba(0,212,255,.3);}
+        .appt-card.appt-done{opacity:.55;border-color:transparent;}
+        .appt-card.appt-canceled{opacity:.4;border-color:transparent;}
+        .appt-time{font-family:'Courier New',monospace;font-size:.9rem;font-weight:700;color:var(--blue);min-width:40px;}
+        .appt-info{flex:1;display:flex;align-items:center;flex-wrap:wrap;gap:.35rem;min-width:0;}
+        .appt-name{font-weight:700;font-size:.9rem;}
+        .appt-sep{color:var(--border);}
+        .appt-corte{font-size:.82rem;color:var(--muted);}
+        .appt-barber-tag{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);border-radius:20px;padding:.15rem .55rem;font-size:.68rem;color:var(--blue);font-weight:600;}
+        .appt-price{font-family:'Courier New',monospace;font-size:.85rem;color:var(--green);font-weight:700;flex-shrink:0;}
+        .badge{padding:.2rem .55rem;border-radius:20px;font-size:.68rem;font-weight:700;flex-shrink:0;}
+        .badge-pend{background:rgba(245,166,35,.15);color:var(--yellow);border:1px solid rgba(245,166,35,.3);}
+        .badge-ok{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2);}
+        .badge-cancel{background:rgba(255,75,43,.1);color:var(--red);border:1px solid rgba(255,75,43,.3);}
+        .btn-concluir{padding:.25rem .6rem;background:transparent;border:1px solid rgba(0,255,136,.4);border-radius:5px;color:var(--green);font-size:.75rem;cursor:pointer;transition:all .2s;}
+        .btn-concluir:hover{background:rgba(0,255,136,.1);}
+        .btn-cancelar-ag{padding:.25rem .6rem;background:transparent;border:1px solid rgba(255,75,43,.4);border-radius:5px;color:var(--red);font-size:.75rem;cursor:pointer;transition:all .2s;}
+        .btn-wpp{padding:.2rem .5rem;background:transparent;border:1px solid #25d366;border-radius:5px;color:#25d366;font-size:.68rem;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block;}
+        .btn-wpp:hover{background:rgba(37,211,102,.1);}
+
+        /* ── FILA ── */
+        .fila-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.85rem;}
+        .fila-pos{width:36px;height:36px;border-radius:50%;background:rgba(0,212,255,.1);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.9rem;color:var(--blue);flex-shrink:0;}
+        .fila-info{flex:1;}
+        .fila-nome{font-weight:700;font-size:.95rem;}
+        .fila-meta{font-size:.75rem;color:var(--muted);margin-top:.15rem;}
+        .fila-actions{display:flex;gap:.4rem;flex-shrink:0;}
+
+        /* ── SERVIÇOS ── */
+        .service-item{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:.85rem 1.1rem;margin-bottom:.6rem;display:flex;align-items:center;gap:1rem;}
+        .service-name{font-weight:700;font-size:.9rem;}
+        .service-price{font-family:'Courier New',monospace;font-size:.85rem;color:var(--green);font-weight:700;flex-shrink:0;}
+        .service-foto-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1.5px solid rgba(0,212,255,.25);flex-shrink:0;}
+
+        /* ── EQUIPE ── */
+        .equipe-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:.6rem;display:flex;align-items:center;gap:1rem;}
+        .eq-avatar{width:42px;height:42px;border-radius:50%;background:rgba(0,212,255,.12);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:var(--blue);flex-shrink:0;}
+        .eq-info{flex:1;}
+        .eq-nome{font-weight:700;font-size:.95rem;}
+        .eq-meta{font-size:.75rem;color:var(--muted);margin-top:.2rem;}
+
+        /* ── HORÁRIOS ── */
+        .dia-row{display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+        .dia-nome{font-size:.85rem;font-weight:600;width:90px;flex-shrink:0;}
+        .toggle-aberto{display:flex;align-items:center;gap:.35rem;font-size:.8rem;cursor:pointer;color:var(--muted);}
+        .toggle-aberto input{accent-color:var(--blue);}
+
+        /* ── VISUAL ── */
+        .tema-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.6rem;margin-bottom:1rem;}
+        .tema-btn{background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:.6rem;cursor:pointer;text-align:center;font-size:.75rem;color:var(--muted);transition:all .2s;}
+        .tema-btn:hover,.tema-btn.active{border-color:var(--blue);color:var(--blue);}
+        .tema-preview{height:40px;border-radius:6px;margin-bottom:.4rem;display:flex;align-items:center;justify-content:center;}
+
+        /* ── GESTÃO ── */
+        .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1.5rem;}
+        .kpi-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center;}
+        .kpi-val{font-family:'Courier New',monospace;font-size:1.5rem;font-weight:900;color:var(--blue);}
+        .kpi-lbl{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:.25rem;}
+        .kpi-box.green .kpi-val{color:var(--green);}
+        .kpi-box.yellow .kpi-val{color:var(--yellow);}
+
+        /* ── MODO-ATEND ── */
+        .modo-atend-opt{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;}
+        .modo-atend-opt:hover{border-color:rgba(0,212,255,.3);}
+        .modo-atend-opt input{margin-top:.15rem;accent-color:var(--blue);}
+
+        /* ── SESSAO BTNS ── */
+        .sessao-btn{padding:.45rem .9rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.3rem;}
+        .sessao-btn:hover{border-color:var(--blue);color:var(--blue);}
+        .sessao-btn.sel{background:rgba(0,212,255,.12);border-color:var(--blue);color:var(--blue);}
+
+        /* ── TOAST ── */
+        .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--green);border-radius:8px;padding:.7rem 1.25rem;font-size:.85rem;color:var(--green);transition:transform .3s;z-index:9998;white-space:nowrap;box-shadow:0 0 20px rgba(0,255,136,.2);}
+        .toast.show{transform:translateX(-50%) translateY(0);}
+        .toast.red{border-color:var(--red);color:var(--red);}
+
+        /* ── MODAL DEMO (contato) ── */
+        #modal-contato{display:none;position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem;}
+        .contato-box{background:var(--card);border:1px solid rgba(0,212,255,.3);border-radius:20px;padding:2rem;width:100%;max-width:420px;text-align:center;box-shadow:0 0 60px rgba(0,212,255,.15);}
+        .contato-logo{font-size:2rem;font-weight:900;letter-spacing:4px;color:var(--blue);text-shadow:0 0 20px rgba(0,212,255,.5);margin-bottom:.5rem;}
+        .contato-sub{font-size:.8rem;color:var(--muted);margin-bottom:1.5rem;}
+        .contato-btn{display:block;width:100%;padding:.9rem;margin-bottom:.6rem;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;}
+        .contato-wpp{background:rgba(37,211,102,.12);border:1.5px solid #25d366;color:#25d366;}
+        .contato-wpp:hover{background:rgba(37,211,102,.22);}
+        .contato-fechar{background:transparent;border:1px solid var(--border);color:var(--muted);margin-top:.25rem;}
+        .contato-fechar:hover{border-color:var(--red);color:var(--red);}
+    </style>
+</head>
+<body>
+
+<!-- Banner Demo -->
+<div class="demo-banner">
+    <span class="demo-badge">🎯 Modo Demo</span>
+    <span class="demo-msg">Explore todas as funcionalidades — nada é salvo de verdade</span>
+    <button class="demo-cta" onclick="abrirContato()">💬 Quero contratar</button>
+</div>
+
+<!-- Topbar -->
+<div class="topbar" style="margin-top:36px">
+    <div class="topbar-logo-wrap">
+        <svg viewBox="0 0 80 80" fill="none">
+            <polygon points="40,4 74,22 74,58 40,76 6,58 6,22" fill="none" stroke="#00d4ff" stroke-width="2" opacity="0.5"/>
+            <text x="40" y="32" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="14" fill="#00d4ff">Pro'</text>
+            <text x="40" y="52" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="18" fill="#00d4ff">B</text>
+        </svg>
+        <div class="topbar-logo">PRO'B</div>
+    </div>
+    <div class="topbar-user">
+        <div class="user-avatar">P</div>
+        <span style="font-size:.82rem;color:var(--muted)">Pro'Barbearia</span>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs" id="tabs">
+    <div class="tab active" data-tab="agendamentos">📋 Agendamentos</div>
+    <div class="tab" data-tab="fila">🪑 Fila de Espera</div>
+    <div class="tab" data-tab="cortes">✂️ Cortes</div>
+    <div class="tab" data-tab="equipe">👥 Equipe</div>
+    <div class="tab" data-tab="horarios">🕐 Horários</div>
+    <div class="tab" data-tab="visual">🎨 Visual</div>
+    <div class="tab" data-tab="gestao">💼 Gestão</div>
+    <div class="tab" data-tab="perfil">⚙️ Perfil</div>
+</div>
+
+<!-- ══ TAB AGENDAMENTOS ══ -->
+<div class="tab-content active" id="tab-agendamentos">
+    <div class="stats-row">
+        <div class="stat-card"><div class="stat-val" id="st-hoje">0</div><div class="stat-lbl">Hoje</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-semana">8</div><div class="stat-lbl">Esta semana</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-receita">R$0</div><div class="stat-lbl">Receita hoje</div></div>
+        <div class="stat-card" style="border-color:rgba(255,75,43,.3)"><div class="stat-val" id="st-cancel" style="color:var(--red)">0</div><div class="stat-lbl">Cancelados</div></div>
+    </div>
+
+    <button onclick="abrirModalPresencial()" style="width:100%;padding:.75rem;margin-bottom:1rem;background:rgba(0,255,136,.08);border:1.5px dashed rgba(0,255,136,.4);border-radius:10px;color:var(--green);font-size:.85rem;font-weight:700;cursor:pointer">
+        ➕ Agendamento Presencial
+    </button>
+
+    <div class="section-title">Agendamentos de Hoje</div>
+    <div id="lista-agendamentos"></div>
+    <div class="section-title" style="margin-top:1.5rem">Próximos dias</div>
+    <div id="lista-proximos"></div>
+</div>
+
+<!-- ══ TAB FILA ══ -->
+<div class="tab-content" id="tab-fila">
+    <div class="card" style="border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04);margin-bottom:1rem">
+        <p style="font-size:.78rem;font-weight:700;color:var(--blue);margin-bottom:.35rem">📺 Painel de Chamada para Monitor/TV</p>
+        <p style="font-size:.75rem;color:var(--muted)">Deixe aberto numa TV na barbearia. Mostra o próximo cliente em tempo real.</p>
+    </div>
+    <div class="card" style="margin-bottom:1rem">
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem">
+            <input type="text" id="fila-nome" placeholder="Nome do cliente" style="flex:2;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
+            <select id="fila-corte" style="flex:1;min-width:120px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
+                <option value="">Corte (opcional)</option>
+            </select>
+            <button onclick="addFila()" style="padding:.75rem 1.2rem;background:rgba(0,255,136,.1);border:1.5px solid var(--green);border-radius:8px;color:var(--green);font-weight:700;cursor:pointer;white-space:nowrap">+ Entrar na fila</button>
+        </div>
+    </div>
+    <div class="section-title">Aguardando</div>
+    <div id="lista-fila"></div>
+</div>
+
+<!-- ══ TAB CORTES ══ -->
+<div class="tab-content" id="tab-cortes">
+    <div class="section-title">Adicionar Serviço</div>
+    <div class="card">
+        <div class="input-group" style="margin-bottom:.85rem">
+            <label>Categoria</label>
+            <div style="display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.5rem" id="sessao-btns">
+                <button class="sessao-btn sel" data-s="Corte de Cabelo" onclick="selSessao(this)">✂️ Corte de Cabelo</button>
+                <button class="sessao-btn" data-s="Barba" onclick="selSessao(this)">🪒 Barba</button>
+                <button class="sessao-btn" data-s="Sobrancelha" onclick="selSessao(this)">👁️ Sobrancelha</button>
+            </div>
+            <input type="hidden" id="corte-sessao" value="Corte de Cabelo">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.85rem">
+            <div class="input-group" style="margin-bottom:0"><label>Nome</label><input type="text" id="corte-nome" placeholder="Ex: Degradê"></div>
+            <div class="input-group" style="margin-bottom:0"><label>Preço (R$)</label><input type="number" id="corte-preco" placeholder="45.00" min="0" step="0.01"></div>
+        </div>
+        <div class="input-group" style="margin-bottom:.85rem"><label>Duração (min)</label><input type="number" id="corte-duracao" placeholder="30" value="30"></div>
+        <div class="input-group" style="margin-bottom:.85rem"><label>Observação</label><input type="text" id="corte-obs" placeholder="Ex: Inclui lavagem..."></div>
+        <button class="btn-add" style="width:100%" onclick="addCorte()">+ Adicionar Serviço</button>
+    </div>
+    <div class="section-title" style="margin-top:1rem">Serviços cadastrados</div>
+    <div id="lista-cortes"></div>
+</div>
+
+<!-- ══ TAB EQUIPE ══ -->
+<div class="tab-content" id="tab-equipe">
+    <div class="section-title">Adicionar Barbeiro</div>
+    <div class="card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.85rem">
+            <div class="input-group" style="margin-bottom:0"><label>Nome</label><input type="text" id="eq-nome" placeholder="Ex: João Silva"></div>
+            <div class="input-group" style="margin-bottom:0"><label>% Comissão</label><input type="number" id="eq-porc" placeholder="50" min="0" max="100"></div>
+        </div>
+        <button class="btn-add" style="width:100%;margin-top:.5rem" onclick="addEquipe()">+ Adicionar Barbeiro</button>
+    </div>
+    <div class="section-title" style="margin-top:1rem">Equipe</div>
+    <div id="lista-equipe"></div>
+</div>
+
+<!-- ══ TAB HORÁRIOS ══ -->
+<div class="tab-content" id="tab-horarios">
+    <div class="section-title">Funcionamento</div>
+    <div class="card" id="lista-horarios"></div>
+</div>
+
+<!-- ══ TAB VISUAL ══ -->
+<div class="tab-content" id="tab-visual">
+    <div class="section-title">Temas Prontos</div>
+    <div class="card">
+        <div class="tema-grid" id="tema-grid"></div>
+        <button class="btn-save" onclick="toast('✓ Tema aplicado! (demo)')">Aplicar Tema</button>
+    </div>
+    <div class="section-title" style="margin-top:1rem">Nome na Tela do Cliente</div>
+    <div class="card">
+        <div class="input-group"><label>Como o cliente verá sua barbearia</label><input type="text" id="vis-nome" value="Pro'Barbearia"></div>
+        <button class="btn-save" onclick="toast('✓ Nome salvo! (demo)')">Salvar</button>
+    </div>
+</div>
+
+<!-- ══ TAB GESTÃO ══ -->
+<div class="tab-content" id="tab-gestao">
+    <div class="section-title">Resumo do Mês</div>
+    <div class="kpi-row" id="kpi-gestao"></div>
+    <div class="section-title">Últimas Movimentações</div>
+    <div id="lista-gestao"></div>
+</div>
+
+<!-- ══ TAB PERFIL ══ -->
+<div class="tab-content" id="tab-perfil">
+    <div class="section-title">Modo de Atendimento</div>
+    <div class="card" style="margin-bottom:1.2rem">
+        <div style="display:flex;flex-direction:column;gap:.6rem">
+            <label class="modo-atend-opt"><input type="radio" name="modo" value="agendamento" checked><div><div style="font-weight:700;font-size:.88rem">📅 Só Agendamento Online</div><div style="font-size:.72rem;color:var(--muted)">Cliente escolhe data e hora pelo link.</div></div></label>
+            <label class="modo-atend-opt"><input type="radio" name="modo" value="fila"><div><div style="font-weight:700;font-size:.88rem">🪑 Só Fila de Espera</div><div style="font-size:.72rem;color:var(--muted)">Atendimento por ordem de chegada.</div></div></label>
+            <label class="modo-atend-opt"><input type="radio" name="modo" value="ambos"><div><div style="font-weight:700;font-size:.88rem">📅🪑 Os Dois</div><div style="font-size:.72rem;color:var(--muted)">Cliente escolhe: agenda ou entra na fila.</div></div></label>
+        </div>
+        <button class="btn-save" style="margin-top:1rem;width:100%" onclick="toast('✓ Modo salvo! (demo)')">Salvar Modo</button>
+    </div>
+    <div class="section-title">Informações da Barbearia</div>
+    <div class="card">
+        <div class="input-group"><label>Nome da barbearia</label><input type="text" value="Pro'Barbearia"></div>
+        <div class="input-group"><label>WhatsApp</label><input type="tel" value="21999990000"></div>
+        <div class="input-group"><label>Endereço</label><input type="text" value="Rua das Flores, 123 - Rio de Janeiro"></div>
+        <div class="input-group"><label>Chave PIX</label><input type="text" value="probarbearia@pix.com"></div>
+        <button class="btn-save" onclick="toast('✓ Perfil salvo! (demo)')">Salvar</button>
+    </div>
+    <div class="section-title" style="margin-top:1rem">Link para Clientes</div>
+    <div class="card">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:.75rem">Seu link de agendamento para compartilhar com clientes:</p>
+        <code style="display:block;background:var(--card2);padding:.65rem .85rem;border-radius:6px;font-size:.8rem;color:var(--blue);border:1px solid var(--border);word-break:break-all">https://legendary-douhua-567efa.netlify.app/cliente.html?b=DEMO</code>
+        <button class="btn-add" style="margin-top:.75rem;font-size:.8rem;padding:.5rem 1rem" onclick="toast('📋 Link copiado! (demo)')">Copiar Link</button>
+    </div>
+</div>
+
+<!-- Modal Agendamento Presencial -->
+<div id="modal-presencial" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:var(--card);border-radius:16px;padding:1.5rem;width:100%;max-width:400px;border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+            <div style="font-size:1rem;font-weight:700;color:var(--green)">➕ Agendamento Presencial</div>
+            <button onclick="fecharPresencial()" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer">✕</button>
+        </div>
+        <div class="input-group"><label>Nome do cliente</label><input type="text" id="pres-nome" placeholder="Digite o nome"></div>
+        <div class="input-group"><label>WhatsApp (opcional)</label><input type="tel" id="pres-wpp" placeholder="21999990000"></div>
+        <div class="input-group">
+            <label>Corte</label>
+            <select id="pres-corte" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;width:100%;">
+                <option value="">Selecione...</option>
+            </select>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-bottom:1rem">
+            <div class="input-group" style="flex:1;margin-bottom:0"><label>Data</label><input type="date" id="pres-data"></div>
+            <div class="input-group" style="flex:1;margin-bottom:0"><label>Hora</label>
+                <select id="pres-hora" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;width:100%;">
+                    <option>08:00</option><option>08:30</option><option>09:00</option><option>09:30</option>
+                    <option>10:00</option><option>10:30</option><option>11:00</option><option>11:30</option>
+                    <option>13:00</option><option>13:30</option><option>14:00</option><option>14:30</option>
+                    <option>15:00</option><option>15:30</option><option>16:00</option><option>16:30</option>
+                    <option>17:00</option><option>17:30</option><option>18:00</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="confirmarPresencial()" style="width:100%;padding:.85rem;background:transparent;border:2px solid var(--green);border-radius:8px;color:var(--green);font-weight:700;cursor:pointer">Confirmar Agendamento</button>
+    </div>
+</div>
+
+<!-- Modal Contato -->
+<div id="modal-contato">
+    <div class="contato-box">
+        <div class="contato-logo">PRO'B</div>
+        <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:.35rem">Gostou do sistema?</div>
+        <div class="contato-sub">Entre em contato e comece a usar hoje mesmo na sua barbearia.</div>
+        <a class="contato-btn contato-wpp" href="https://wa.me/5521966190515?text=Olá! Vi a demo do Pro'B e quero saber mais sobre o sistema." target="_blank">💬 Falar pelo WhatsApp</a>
+        <button class="contato-btn contato-fechar" onclick="document.getElementById('modal-contato').style.display='none'">Voltar para a demo</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// DADOS DEMO — em memória, sem Firebase
+// ═══════════════════════════════════════════
+const GITHUB_BASE = 'https://raw.githubusercontent.com/alesh4rk-design/prob-fotos/main/';
+
+const hoje = new Date();
+const fmtHoje = () => hoje.toISOString().split('T')[0];
+const amanha = new Date(hoje); amanha.setDate(amanha.getDate()+1);
+const fmtAmanha = () => amanha.toISOString().split('T')[0];
+
+// Agendamentos demo
+let agendamentos = [
+    {id:'a1', clienteNome:'Rafael Costa',    corte:'Corte Do Jaca',    hora:'08:00', data:fmtHoje(),   preco:30,  barbeiro:'João Filho', status:'concluido', clienteWhatsapp:'21999990001'},
+    {id:'a2', clienteNome:'Lucas Mendes',    corte:'Low Fade',         hora:'09:00', data:fmtHoje(),   preco:35,  barbeiro:'Janaina',    status:'concluido', clienteWhatsapp:'21999990002'},
+    {id:'a3', clienteNome:'Pedro Alves',     corte:'Corte + Barba',    hora:'10:00', data:fmtHoje(),   preco:55,  barbeiro:'João Filho', status:'pendente',  clienteWhatsapp:'21999990003'},
+    {id:'a4', clienteNome:'Bruno Souza',     corte:'Mid Fade',         hora:'11:00', data:fmtHoje(),   preco:35,  barbeiro:'Janaina',    status:'pendente',  clienteWhatsapp:'21999990004'},
+    {id:'a5', clienteNome:'Carlos Lima',     corte:'Buzz Cut Militar', hora:'14:00', data:fmtHoje(),   preco:30,  barbeiro:'João Filho', status:'pendente',  clienteWhatsapp:'21999990005'},
+    {id:'a6', clienteNome:'Diego Ferreira',  corte:'Coque Samurai',    hora:'15:00', data:fmtHoje(),   preco:45,  barbeiro:'Janaina',    status:'pendente',  clienteWhatsapp:''},
+    {id:'a7', clienteNome:'Matheus Rocha',   corte:'Social',           hora:'09:00', data:fmtAmanha(), preco:25,  barbeiro:'João Filho', status:'pendente',  clienteWhatsapp:'21999990007'},
+    {id:'a8', clienteNome:'Felipe Gomes',    corte:'Loiro Pivete',     hora:'10:30', data:fmtAmanha(), preco:40,  barbeiro:'Janaina',    status:'pendente',  clienteWhatsapp:'21999990008'},
+];
+
+// Fila demo
+let fila = [
+    {id:'f1', clienteNome:'Anderson Silva', corte:'Low Fade',   barbeiro:'João Filho', criadoEm: new Date(Date.now()-8*60000).toISOString(), clienteWhatsapp:'21999990010'},
+    {id:'f2', clienteNome:'Ricardo Nunes',  corte:'Social',     barbeiro:'Janaina',    criadoEm: new Date(Date.now()-3*60000).toISOString(), clienteWhatsapp:''},
+];
+
+// Serviços demo
+let cortes = [
+    {id:'c1', sessao:'Corte de Cabelo', nome:'Social',           preco:25, duracao:30, obs:'',                          foto: GITHUB_BASE+'corte-social.png'},
+    {id:'c2', sessao:'Corte de Cabelo', nome:'Low Fade',         preco:35, duracao:40, obs:'',                          foto: GITHUB_BASE+'corte-low-fade.png'},
+    {id:'c3', sessao:'Corte de Cabelo', nome:'Mid Fade',         preco:35, duracao:40, obs:'',                          foto: GITHUB_BASE+'corte-mid-fade.png'},
+    {id:'c4', sessao:'Corte de Cabelo', nome:'Coque Samurai',    preco:45, duracao:45, obs:'',                          foto: GITHUB_BASE+'corte-coque-samurai.png'},
+    {id:'c5', sessao:'Corte de Cabelo', nome:'Buzz Cut Militar', preco:30, duracao:25, obs:'',                          foto: GITHUB_BASE+'corte-buzz-cut-militar.png'},
+    {id:'c6', sessao:'Corte de Cabelo', nome:'Corte Do Jaca',    preco:30, duracao:30, obs:'',                          foto: GITHUB_BASE+'corte-do-jaca.png'},
+    {id:'c7', sessao:'Barba',           nome:'Barba Completa',   preco:25, duracao:20, obs:'Inclui toalha quente',       foto: GITHUB_BASE+'barba1.png'},
+    {id:'c8', sessao:'Barba',           nome:'Barba Degradê',    preco:30, duracao:25, obs:'',                          foto:''},
+    {id:'c9', sessao:'Sobrancelha',     nome:'Design',           preco:15, duracao:15, obs:'',                          foto:''},
+];
+
+// Equipe demo
+let equipe = [
+    {id:'e1', nome:'João Filho', porcentagem:50},
+    {id:'e2', nome:'Janaina',    porcentagem:45},
+];
+
+// Horários demo
+const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+let horarios = [
+    {aberto:false, ini:'09:00', fim:'18:00'},
+    {aberto:true,  ini:'08:00', fim:'19:00'},
+    {aberto:true,  ini:'08:00', fim:'19:00'},
+    {aberto:true,  ini:'08:00', fim:'19:00'},
+    {aberto:true,  ini:'08:00', fim:'19:00'},
+    {aberto:true,  ini:'08:00', fim:'20:00'},
+    {aberto:true,  ini:'09:00', fim:'18:00'},
+];
+
+// Temas demo
+const TEMAS = [
+    {id:'nenhum',    nome:'Nenhum',      bg:'linear-gradient(135deg,#0a0e14,#0d1622)',       cor:'#00d4ff'},
+    {id:'cyberpunk', nome:'Cyberpunk',   bg:'linear-gradient(135deg,#0a0014,#00001a)',        cor:'#ff00ff'},
+    {id:'gold',      nome:'Gold',        bg:'linear-gradient(135deg,#1a1200,#0a0a00)',        cor:'#f5a623'},
+    {id:'verde',     nome:'Verde Neon',  bg:'linear-gradient(135deg,#001a0a,#000a05)',        cor:'#00ff88'},
+    {id:'midnight',  nome:'Midnight',    bg:'linear-gradient(135deg,#0d0d1a,#050510)',        cor:'#7c3aed'},
+    {id:'sunset',    nome:'Sunset',      bg:'linear-gradient(135deg,#1a0500,#0a0208)',        cor:'#ff6b35'},
+];
+
+let temaSel = 'nenhum';
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function toast(msg, cor='var(--green)'){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.borderColor = cor; t.style.color = cor;
+    t.className = 'toast show';
+    setTimeout(()=> t.className = 'toast', 2800);
+}
+
+function tempoStr(iso){
+    const min = Math.floor((Date.now() - new Date(iso))/60000);
+    if(min < 1) return 'agora';
+    if(min < 60) return min+'min';
+    return Math.floor(min/60)+'h'+min%60+'min';
+}
+
+function gerarId(){ return Math.random().toString(36).slice(2,9); }
+
+// ═══════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════
+document.getElementById('tabs').addEventListener('click', e => {
+    const tab = e.target.closest('.tab');
+    if(!tab) return;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    renderTab(tab.dataset.tab);
+});
+
+function renderTab(tab){
+    if(tab === 'agendamentos') renderAgendamentos();
+    if(tab === 'fila')         renderFila();
+    if(tab === 'cortes')       renderCortes();
+    if(tab === 'equipe')       renderEquipe();
+    if(tab === 'horarios')     renderHorarios();
+    if(tab === 'visual')       renderVisual();
+    if(tab === 'gestao')       renderGestao();
+}
+
+// ═══════════════════════════════════════════
+// AGENDAMENTOS
+// ═══════════════════════════════════════════
+function renderAgendamentos(){
+    const deHoje   = agendamentos.filter(a => a.data === fmtHoje());
+    const proximos = agendamentos.filter(a => a.data  > fmtHoje());
+
+    const concl = deHoje.filter(a => a.status === 'concluido');
+    const canc  = deHoje.filter(a => a.status === 'cancelado');
+    const receita = concl.reduce((s,a) => s + Number(a.preco||0), 0);
+
+    document.getElementById('st-hoje').textContent   = deHoje.length;
+    document.getElementById('st-receita').textContent= 'R$'+receita.toFixed(0);
+    document.getElementById('st-cancel').textContent = canc.length;
+
+    document.getElementById('lista-agendamentos').innerHTML = deHoje.length
+        ? deHoje.map(apptCard).join('') : '<div class="empty-state"><div class="icon">📅</div>Nenhum agendamento hoje.</div>';
+    document.getElementById('lista-proximos').innerHTML = proximos.length
+        ? proximos.map(apptCard).join('') : '<div class="empty-state"><div class="icon">📆</div>Nenhum agendamento futuro.</div>';
+
+    // Bind buttons
+    document.querySelectorAll('.btn-ag-concluir').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const ag = agendamentos.find(a => a.id === btn.dataset.id);
+            if(ag){ ag.status = 'concluido'; renderAgendamentos(); toast('✓ Corte concluído!'); }
+        });
+    });
+    document.querySelectorAll('.btn-ag-cancelar').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if(!confirm('Marcar como cancelado?')) return;
+            const ag = agendamentos.find(a => a.id === btn.dataset.id);
+            if(ag){ ag.status = 'cancelado'; renderAgendamentos(); toast('Cancelado','var(--red)'); }
+        });
+    });
+}
+
+function apptCard(a){
+    const concl = a.status === 'concluido';
+    const canc  = a.status === 'cancelado';
+    const wppMsg = encodeURIComponent(`Olá ${a.clienteNome}! Confirmando seu agendamento na Pro'Barbearia para ${a.data} às ${a.hora} — ${a.corte}.`);
+    const btnWpp = a.clienteWhatsapp
+        ? `<a class="btn-wpp" href="https://wa.me/55${a.clienteWhatsapp}?text=${wppMsg}" target="_blank">WPP</a>` : '';
+    const dataFmt = a.data === fmtHoje() ? 'Hoje' : a.data > fmtHoje()
+        ? new Date(a.data+'T12:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}) : a.data;
+    const acoes = concl ? `<span class="badge badge-ok">✓ feito</span>`
+        : canc ? `<span class="badge badge-cancel">✗ cancel.</span>`
+        : `<button class="btn-concluir btn-ag-concluir" data-id="${a.id}">✓</button>
+           <button class="btn-cancelar-ag btn-ag-cancelar" data-id="${a.id}">✗</button>`;
+    return `<div class="appt-card ${concl?'appt-done':canc?'appt-canceled':''}">
+        <div class="appt-time">${a.hora}</div>
+        <div class="appt-info">
+            <span class="appt-name">${a.clienteNome}</span>
+            <span class="appt-sep">·</span>
+            <span class="appt-corte">${a.corte}</span>
+            ${a.barbeiro?`<span class="appt-barber-tag">✂️ ${a.barbeiro}</span>`:''}
+            <span class="appt-sep">·</span>
+            <span style="font-size:.7rem;color:rgba(0,212,255,.75);font-weight:700">${dataFmt}</span>
+            ${!concl&&!canc?`<span class="badge badge-pend">pend</span>`:''}
+        </div>
+        <span class="appt-price">R$${Number(a.preco).toFixed(0)}</span>
+        ${btnWpp}
+        ${acoes}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// AGENDAMENTO PRESENCIAL
+// ═══════════════════════════════════════════
+function abrirModalPresencial(){
+    const sel = document.getElementById('pres-corte');
+    sel.innerHTML = '<option value="">Selecione...</option>' + cortes.map((c,i) =>
+        `<option value="${i}">${c.nome} — R$${Number(c.preco).toFixed(0)}</option>`).join('');
+    const d = new Date().toISOString().split('T')[0];
+    document.getElementById('pres-data').value = d;
+    document.getElementById('pres-data').min   = d;
+    document.getElementById('modal-presencial').style.display = 'flex';
+}
+function fecharPresencial(){ document.getElementById('modal-presencial').style.display = 'none'; }
+function confirmarPresencial(){
+    const nome = document.getElementById('pres-nome').value.trim();
+    const idx  = document.getElementById('pres-corte').value;
+    const data = document.getElementById('pres-data').value;
+    const hora = document.getElementById('pres-hora').value;
+    if(!nome || idx === '' || !data || !hora){ toast('Preencha todos os campos','var(--red)'); return; }
+    const c = cortes[Number(idx)];
+    agendamentos.push({
+        id: gerarId(), clienteNome: nome, corte: c.nome, hora, data,
+        preco: c.preco, barbeiro: equipe[0]?.nome||'', status:'pendente',
+        clienteWhatsapp: document.getElementById('pres-wpp').value.replace(/\D/g,'')
+    });
+    fecharPresencial();
+    renderAgendamentos();
+    toast('✓ Agendamento criado!');
+}
+
+// ═══════════════════════════════════════════
+// FILA
+// ═══════════════════════════════════════════
+function renderFila(){
+    const sel = document.getElementById('fila-corte');
+    sel.innerHTML = '<option value="">Corte (opcional)</option>' + cortes.map(c => `<option>${c.nome}</option>`).join('');
+    const cont = document.getElementById('lista-fila');
+    if(!fila.length){ cont.innerHTML = '<div class="empty-state"><div class="icon">🪑</div>Ninguém na fila.</div>'; return; }
+    cont.innerHTML = fila.map((item,i) => {
+        const wppMsg = encodeURIComponent(`Olá ${item.clienteNome}! É sua vez na fila da Pro'Barbearia.`);
+        const btnWpp = item.clienteWhatsapp
+            ? `<a class="btn-wpp" href="https://wa.me/55${item.clienteWhatsapp}?text=${wppMsg}" target="_blank" style="margin-right:.25rem">WPP</a>` : '';
+        const barb = item.barbeiro ? `<span style="background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);border-radius:20px;padding:.1rem .5rem;font-size:.68rem;color:rgba(0,212,255,.85);font-weight:600;margin-left:.3rem">✂️ ${item.barbeiro}</span>` : '';
+        return `<div class="fila-card">
+            <div class="fila-pos">${i+1}º</div>
+            <div class="fila-info">
+                <div class="fila-nome">${item.clienteNome}</div>
+                <div class="fila-meta">Aguardando há ${tempoStr(item.criadoEm)}${item.corte?' · '+item.corte:''}${barb}</div>
+            </div>
+            <div class="fila-actions">
+                ${btnWpp}
+                <button class="btn-concluir" onclick="atenderFila('${item.id}')">✓</button>
+                <button class="btn-cancelar-ag" onclick="removerFila('${item.id}')">✗</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function addFila(){
+    const nome = document.getElementById('fila-nome').value.trim();
+    if(!nome){ toast('Digite o nome do cliente','var(--red)'); return; }
+    const corte = document.getElementById('fila-corte').value;
+    fila.push({id:gerarId(), clienteNome:nome, corte, barbeiro:equipe[0]?.nome||'', criadoEm:new Date().toISOString(), clienteWhatsapp:''});
+    document.getElementById('fila-nome').value = '';
+    renderFila(); toast('✓ Cliente adicionado à fila!');
+}
+function atenderFila(id){ fila = fila.filter(f => f.id !== id); renderFila(); toast('✓ Cliente atendido!'); }
+function removerFila(id){ if(confirm('Remover da fila?')){ fila = fila.filter(f => f.id !== id); renderFila(); toast('Removido','var(--red)'); } }
+
+// ═══════════════════════════════════════════
+// CORTES
+// ═══════════════════════════════════════════
+function selSessao(btn){
+    document.querySelectorAll('.sessao-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    document.getElementById('corte-sessao').value = btn.dataset.s;
+}
+
+function renderCortes(){
+    const cont = document.getElementById('lista-cortes');
+    if(!cortes.length){ cont.innerHTML = '<div class="empty-state"><div class="icon">✂️</div>Nenhum serviço.</div>'; return; }
+    const por = {};
+    cortes.forEach((c,i) => { if(!por[c.sessao]) por[c.sessao]=[]; por[c.sessao].push({...c,_i:i}); });
+    cont.innerHTML = Object.entries(por).map(([s,itens]) => `
+        <div style="font-size:.78rem;color:var(--blue);font-weight:700;margin:1rem 0 .5rem;text-transform:uppercase;letter-spacing:.5px">
+            📁 ${s} <span style="color:var(--muted);font-weight:400">(${itens.length})</span>
+        </div>
+        ${itens.map(c => `<div class="service-item">
+            ${c.foto?`<img class="service-foto-thumb" src="${c.foto}" alt="${c.nome}" onerror="this.style.display='none'">`:''}
+            <div style="flex:1;min-width:0">
+                <div class="service-name">${c.nome}</div>
+                ${c.duracao?`<div style="font-size:.7rem;color:var(--muted);margin-top:.15rem">⏱️ ${c.duracao} min</div>`:''}
+                ${c.obs?`<div style="font-size:.7rem;color:var(--yellow);margin-top:.2rem">ℹ️ ${c.obs}</div>`:''}
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem;flex-shrink:0">
+                <div class="service-price">R$ ${Number(c.preco).toFixed(2)}</div>
+                <button class="btn-del" onclick="delCorte(${c._i})">Remover</button>
+            </div>
+        </div>`).join('')}`).join('');
+}
+
+function addCorte(){
+    const nome  = document.getElementById('corte-nome').value.trim();
+    const preco = parseFloat(document.getElementById('corte-preco').value);
+    const dur   = parseInt(document.getElementById('corte-duracao').value)||30;
+    const obs   = document.getElementById('corte-obs').value.trim();
+    const sessao= document.getElementById('corte-sessao').value || 'Corte de Cabelo';
+    if(!nome || isNaN(preco) || preco < 0){ toast('Preencha nome e preço','var(--red)'); return; }
+    cortes.push({id:gerarId(), sessao, nome, preco, duracao:dur, obs, foto:''});
+    document.getElementById('corte-nome').value = '';
+    document.getElementById('corte-preco').value = '';
+    document.getElementById('corte-obs').value = '';
+    renderCortes(); toast('✓ Serviço adicionado!');
+}
+function delCorte(i){ if(confirm('Remover serviço?')){ cortes.splice(i,1); renderCortes(); toast('Removido','var(--red)'); } }
+
+// ═══════════════════════════════════════════
+// EQUIPE
+// ═══════════════════════════════════════════
+function renderEquipe(){
+    const cont = document.getElementById('lista-equipe');
+    if(!equipe.length){ cont.innerHTML = '<div class="empty-state"><div class="icon">👥</div>Nenhum barbeiro cadastrado.</div>'; return; }
+    cont.innerHTML = equipe.map((e,i) => `<div class="equipe-card">
+        <div class="eq-avatar">${e.nome[0].toUpperCase()}</div>
+        <div class="eq-info">
+            <div class="eq-nome">${e.nome}</div>
+            <div class="eq-meta">💰 ${e.porcentagem}% de comissão</div>
+        </div>
+        <button class="btn-del" onclick="delEquipe(${i})">Remover</button>
+    </div>`).join('');
+}
+
+function addEquipe(){
+    const nome = document.getElementById('eq-nome').value.trim();
+    const porc = parseInt(document.getElementById('eq-porc').value)||50;
+    if(!nome){ toast('Digite o nome do barbeiro','var(--red)'); return; }
+    equipe.push({id:gerarId(), nome, porcentagem:porc});
+    document.getElementById('eq-nome').value = '';
+    document.getElementById('eq-porc').value = '';
+    renderEquipe(); toast('✓ Barbeiro adicionado!');
+}
+function delEquipe(i){ if(confirm('Remover barbeiro?')){ equipe.splice(i,1); renderEquipe(); toast('Removido','var(--red)'); } }
+
+// ═══════════════════════════════════════════
+// HORÁRIOS
+// ═══════════════════════════════════════════
+function renderHorarios(){
+    document.getElementById('lista-horarios').innerHTML = horarios.map((h,i) => `
+        <div class="dia-row">
+            <div class="dia-nome">${DIAS[i]}</div>
+            <label class="toggle-aberto">
+                <input type="checkbox" ${h.aberto?'checked':''} onchange="horarios[${i}].aberto=this.checked;renderHorarios()">
+                <span style="color:${h.aberto?'var(--green)':'var(--muted)'}">
+                    ${h.aberto?'Aberto':'Fechado'}
+                </span>
+            </label>
+            ${h.aberto?`
+                <input type="time" value="${h.ini}" onchange="horarios[${i}].ini=this.value"
+                    style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.3rem .6rem;color:var(--text);font-size:.8rem;">
+                <span style="color:var(--muted);font-size:.8rem">até</span>
+                <input type="time" value="${h.fim}" onchange="horarios[${i}].fim=this.value"
+                    style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.3rem .6rem;color:var(--text);font-size:.8rem;">
+            `:''}
+        </div>`).join('') + `<button class="btn-save" style="margin-top:1rem;width:100%" onclick="toast('✓ Horários salvos! (demo)')">Salvar Horários</button>`;
+}
+
+// ═══════════════════════════════════════════
+// VISUAL
+// ═══════════════════════════════════════════
+function renderVisual(){
+    document.getElementById('tema-grid').innerHTML = TEMAS.map(t => `
+        <div class="tema-btn ${temaSel===t.id?'active':''}" onclick="temaSel='${t.id}';renderVisual()">
+            <div class="tema-preview" style="background:${t.bg}">
+                <span style="color:${t.cor};font-size:.7rem;font-weight:900">${t.nome==='Nenhum'?'—':t.nome}</span>
+            </div>
+            <span>${t.nome}</span>
+        </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// GESTÃO
+// ═══════════════════════════════════════════
+function renderGestao(){
+    const todos = agendamentos;
+    const concl = todos.filter(a => a.status==='concluido');
+    const receita = concl.reduce((s,a)=>s+Number(a.preco||0),0);
+    const ticket  = concl.length ? receita/concl.length : 0;
+    const retorno = {};
+    todos.forEach(a=>{ retorno[a.clienteNome]=(retorno[a.clienteNome]||0)+1; });
+    const recorrentes = Object.values(retorno).filter(v=>v>1).length;
+
+    document.getElementById('kpi-gestao').innerHTML = `
+        <div class="kpi-box green"><div class="kpi-val">R$${receita.toFixed(0)}</div><div class="kpi-lbl">Receita total</div></div>
+        <div class="kpi-box"><div class="kpi-val">${concl.length}</div><div class="kpi-lbl">Concluídos</div></div>
+        <div class="kpi-box yellow"><div class="kpi-val">R$${ticket.toFixed(0)}</div><div class="kpi-lbl">Ticket médio</div></div>
+        <div class="kpi-box green"><div class="kpi-val">${recorrentes}</div><div class="kpi-lbl">Clientes recorrentes</div></div>`;
+
+    document.getElementById('lista-gestao').innerHTML = concl.slice().reverse().slice(0,8).map(a =>`
+        <div class="appt-card">
+            <div class="appt-time">${a.hora}</div>
+            <div class="appt-info">
+                <span class="appt-name">${a.clienteNome}</span>
+                <span class="appt-sep">·</span>
+                <span class="appt-corte">${a.corte}</span>
+                ${a.barbeiro?`<span class="appt-barber-tag">✂️ ${a.barbeiro}</span>`:''}
+            </div>
+            <span class="appt-price">R$${Number(a.preco).toFixed(0)}</span>
+            <span class="badge badge-ok">✓ feito</span>
+        </div>`).join('') || '<div class="empty-state"><div class="icon">💼</div>Nenhuma movimentação.</div>';
+}
+
+// ═══════════════════════════════════════════
+// MODAL CONTATO
+// ═══════════════════════════════════════════
+function abrirContato(){ document.getElementById('modal-contato').style.display='flex'; }
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+renderAgendamentos();
+renderFila();
+renderCortes();
+</script>
+</body>
+</html>

@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro'B — Agendamento</title>
+    <style>
+        :root {
+            --bg:    #0a0e14;
+            --card:  #1A1A1E;
+            --card2: #12161c;
+            --border:#2a3f5f;
+            --blue:  #00d4ff;
+            --green: #00ff88;
+            --red:   #ff4b2b;
+            --text:  #e8f4f8;
+            --muted: #7a9fb5;
+            --font:  'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1rem 3rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        svg.bg {
+            position:fixed;top:0;left:0;width:100%;height:100%;
+            z-index:0;opacity:.08;pointer-events:none;
+        }
+
+        .container {
+            width:100%;max-width:420px;
+            position:relative;z-index:1;
+        }
+
+        /* ── Hero logo ── */
+        .pro-b-hero {
+            display:flex;align-items:baseline;justify-content:center;gap:.25rem;
+            margin-bottom:.4rem;
+            position:relative;
+        }
+        .pro-hero {
+            font-size:3.8rem;font-weight:900;letter-spacing:6px;
+            color:#00d4ff;
+            text-shadow:0 0 20px rgba(0,212,255,0.9),0 0 40px rgba(0,212,255,0.5),0 0 80px rgba(0,212,255,0.25);
+            animation:flicker 4s infinite;
+        }
+        .b-hero {
+            font-size:3.8rem;font-weight:900;letter-spacing:2px;
+            color:#fff;
+            text-shadow:0 0 20px rgba(255,255,255,0.8),0 0 40px rgba(0,212,255,0.6),0 0 80px rgba(0,212,255,0.3);
+            animation:flicker 4s infinite 0.15s;
+        }
+        .apostrophe-b {
+            font-size:3.8rem;font-weight:900;letter-spacing:2px;
+            color:#fff;
+            text-shadow:0 0 20px rgba(255,255,255,0.8),0 0 40px rgba(0,212,255,0.6),0 0 80px rgba(0,212,255,0.3);
+            animation:flicker 4s infinite .15s;
+        }
+        .apos {
+            font-size:2.6rem;font-weight:900;
+            color:#00ff88;
+            text-shadow:0 0 14px rgba(0,255,136,0.95),0 0 30px rgba(0,255,136,0.5);
+            animation:flicker 4s infinite .08s;
+            margin:0 1px;
+            vertical-align:super;
+            font-size:1.8rem;
+        }
+        @keyframes flicker {
+            0%,92%,96%,100%{opacity:1;}
+            93%{opacity:0.85;}
+            94%{opacity:1;}
+            95%{opacity:0.7;}
+        }
+        .barber-name-hero {
+            font-size:1.1rem;font-weight:700;
+            color:rgba(255,255,255,0.92);
+            letter-spacing:3px;text-transform:uppercase;
+            text-align:center;
+            margin-bottom:.3rem;
+            text-shadow:0 0 12px rgba(0,212,255,0.6);
+            animation:fadeSlideUp .8s ease both;
+        }
+        @keyframes fadeSlideUp {
+            from{opacity:0;transform:translateY(12px);}
+            to{opacity:1;transform:translateY(0);}
+        }
+
+        /* ── Scan line overlay on hero ── */
+        .pro-b-hero::after {
+            content:'';
+            position:absolute;
+            left:-10%;width:120%;height:2px;
+            background:linear-gradient(90deg,transparent,rgba(0,212,255,0.7),transparent);
+            animation:scanline 3s ease-in-out infinite;
+            pointer-events:none;
+        }
+        @keyframes scanline {
+            0%{top:-10px;opacity:0;}
+            10%{opacity:1;}
+            90%{opacity:1;}
+            100%{top:calc(100% + 10px);opacity:0;}
+        }
+
+        /* ── Neon barber name (steps 1 & 2) ── */
+        .barber-neon-wrap {
+            display:flex;justify-content:center;align-items:center;
+            margin-bottom:1rem;
+            padding:.5rem 1.2rem;
+            position:relative;
+        }
+        .barber-neon {
+            font-size:1.5rem;font-weight:900;
+            letter-spacing:4px;text-transform:uppercase;
+            color:#fff;text-align:center;
+            text-shadow:
+                0 0 8px rgba(0,212,255,1),
+                0 0 20px rgba(0,212,255,0.8),
+                0 0 40px rgba(0,212,255,0.5),
+                0 0 80px rgba(0,212,255,0.3);
+            animation:neonPulse 2s ease-in-out infinite;
+            position:relative;z-index:1;
+        }
+        @keyframes neonPulse {
+            0%,100%{
+                text-shadow:0 0 8px rgba(0,212,255,1),0 0 20px rgba(0,212,255,0.8),0 0 40px rgba(0,212,255,0.5),0 0 80px rgba(0,212,255,0.3);
+                opacity:1;
+            }
+            50%{
+                text-shadow:0 0 4px rgba(0,212,255,0.7),0 0 12px rgba(0,212,255,0.5),0 0 25px rgba(0,212,255,0.3),0 0 50px rgba(0,212,255,0.15);
+                opacity:0.85;
+            }
+        }
+        /* Neon border pulsing around the name */
+        .barber-neon-wrap::before {
+            content:'';
+            position:absolute;inset:0;
+            border:1.5px solid rgba(0,212,255,0.4);
+            border-radius:10px;
+            box-shadow:
+                0 0 8px rgba(0,212,255,0.3),
+                inset 0 0 8px rgba(0,212,255,0.1);
+            animation:borderPulse 2s ease-in-out infinite;
+        }
+        @keyframes borderPulse {
+            0%,100%{
+                box-shadow:0 0 10px rgba(0,212,255,0.4),inset 0 0 10px rgba(0,212,255,0.12);
+                border-color:rgba(0,212,255,0.5);
+            }
+            50%{
+                box-shadow:0 0 20px rgba(0,212,255,0.7),inset 0 0 20px rgba(0,212,255,0.2);
+                border-color:rgba(0,212,255,0.9);
+            }
+        }
+        /* Corner accents */
+        .barber-neon-wrap::after {
+            content:'';
+            position:absolute;
+            top:-2px;left:-2px;
+            width:12px;height:12px;
+            border-top:2px solid var(--blue);
+            border-left:2px solid var(--blue);
+            border-radius:3px 0 0 0;
+        }
+
+        /* ── Nome principal da barbearia ── */
+        .barber-nome-principal {
+            font-size:2.6rem;font-weight:900;
+            letter-spacing:3px;text-transform:uppercase;
+            color:#00d4ff;
+            text-shadow:0 0 20px rgba(0,212,255,0.9),0 0 40px rgba(0,212,255,0.5);
+            animation:flicker 4s infinite;
+            display:inline-block;text-align:center;
+        }
+        .prob-assinatura{text-align:center;font-size:.72rem;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;margin-bottom:.5rem;line-height:1.9;}
+        .prob-marca{color:rgba(0,212,255,0.7);font-weight:700;}
+        .prob-dev{display:block;font-size:.58rem;color:rgba(255,255,255,0.2);letter-spacing:1.5px;margin-top:.1rem;}
+        .barberpole{width:22px;height:80px;border-radius:11px;overflow:hidden;position:relative;border:2px solid rgba(255,255,255,0.3);box-shadow:0 0 12px rgba(0,0,0,0.5);}
+        .pole-stripes{position:absolute;inset:0;background:repeating-linear-gradient(-45deg,#cc0000 0px,#cc0000 8px,#ffffff 8px,#ffffff 16px,#0044cc 16px,#0044cc 24px,#ffffff 24px,#ffffff 32px);background-size:100% 64px;animation:barberSpin 1.5s linear infinite;}
+        @keyframes barberSpin{0%{background-position:0 0;}100%{background-position:0 64px;}}
+
+        /* ── Steps header ── */
+        .steps-bar {
+            display:flex;align-items:center;justify-content:center;
+            gap:.4rem;margin-bottom:2rem;
+        }
+        .step-dot {
+            width:8px;height:8px;border-radius:50%;
+            background:var(--border);transition:all .3s;
+        }
+        .step-dot.active { background:var(--blue); box-shadow:0 0 8px rgba(0,212,255,.5); width:24px; border-radius:4px; }
+        .step-dot.done   { background:var(--green); }
+
+        /* ── Screen system ── */
+        .screen { display:none; flex-direction:column; gap:1.5rem; }
+        .screen.active { display:flex; }
+
+        /* ── Header ── */
+        .header { text-align:center; }
+        .logo-text {
+            font-size:2rem;font-weight:900;letter-spacing:4px;
+            color:var(--blue);
+            text-shadow:0 0 20px rgba(0,212,255,.5),0 0 40px rgba(0,212,255,.25);
+        }
+        .subtitle { font-size:.8rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:.3rem; }
+        .barber-name { font-size:.9rem;color:var(--text);margin-top:.4rem;font-weight:600; }
+
+        /* ── Form container ── */
+        /* ── Temas do card ── */
+        :root {
+            --card-bg:rgba(26,26,30,.85);
+            --card-border:#2a3f5f;
+            --card-accent:#00d4ff;
+            --card-accent-rgb:0,212,255;
+            --card-inp-bg:rgba(26,35,50,.85);
+            --card-inp-border:#2a3f5f;
+            --card-text:#e8f4f8;
+            --card-muted:#7a9fb5;
+            --card-btn-bg:transparent;
+            --card-btn-text:#00d4ff;
+            --card-btn-solid:0;
+        }
+        .form-box {
+            background:var(--card-bg);
+            border:1.5px solid var(--card-border);
+            border-radius:16px;
+            padding:2rem 1.5rem;
+            box-shadow:0 0 40px rgba(var(--card-accent-rgb),.1);
+            clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
+            position:relative;
+        }
+        .form-box::before {
+            content:'';position:absolute;top:0;left:0;
+            width:24px;height:24px;
+            border-top:2px solid var(--card-accent);border-left:2px solid var(--card-accent);
+            border-radius:6px 0 0 0;
+        }
+        .form-box::after {
+            content:'';position:absolute;bottom:0;right:0;
+            width:24px;height:24px;
+            border-bottom:2px solid var(--card-accent);border-right:2px solid var(--card-accent);
+            border-radius:0 0 6px 0;
+        }
+
+        .form-title {
+            font-size:.78rem;color:var(--card-muted);
+            text-transform:uppercase;letter-spacing:1.5px;
+            margin-bottom:1.2rem;
+            display:flex;align-items:center;gap:.5rem;
+        }
+        .form-title::after { content:'';flex:1;height:1px;background:var(--card-border); }
+
+        .input-group { display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem; }
+        .input-group label { font-size:.75rem;color:var(--card-muted);text-transform:uppercase;letter-spacing:.8px; }
+        .input-group input {
+            background:var(--card-inp-bg);
+            border:1.5px solid var(--card-inp-border);
+            border-radius:8px;
+            padding:.9rem 1rem;
+            color:var(--card-text);
+            font-size:1rem;font-family:var(--font);
+            outline:none;transition:all .3s;
+        }
+        .input-group input:focus { border-color:var(--card-accent);box-shadow:0 0 16px rgba(var(--card-accent-rgb),.3); }
+        .input-group input::placeholder { color:var(--card-muted);opacity:.6; }
+
+        .err { color:var(--red);font-size:.78rem;margin-top:.3rem;display:none; }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            width:100%;padding:1.1rem;
+            background:var(--card-btn-bg);
+            border:2px solid var(--card-accent);
+            border-radius:8px;
+            color:var(--card-btn-text);
+            font-size:.95rem;font-weight:700;
+            text-transform:uppercase;letter-spacing:1px;
+            cursor:pointer;transition:all .3s;
+            box-shadow:0 0 16px rgba(var(--card-accent-rgb),.2);
+            margin-top:.5rem;position:relative;overflow:hidden;
+        }
+        .btn-primary:hover { filter:brightness(1.15);box-shadow:0 0 30px rgba(var(--card-accent-rgb),.5); }
+        .btn-primary:disabled { opacity:.5;cursor:not-allowed; }
+
+        .btn-back {
+            background:transparent;border:none;
+            color:var(--muted);font-size:.85rem;cursor:pointer;
+            text-align:center;width:100%;padding:.5rem;
+            transition:color .2s;
+        }
+        .btn-back:hover { color:var(--text); }
+
+        /* ── Service cards ── */
+        .services-grid { display:flex;flex-direction:column;gap:.65rem; }
+
+        /* Card com foto — layout horizontal */
+        .service-card-foto{
+            width:82px;height:82px;
+            object-fit:cover;flex-shrink:0;
+            border-radius:8px;display:block;
+            border:1px solid rgba(255,255,255,.08);
+        }
+        .service-card.tem-foto{
+            padding:.75rem;gap:.85rem;
+            align-items:center;
+        }
+        .service-card.tem-foto .service-info{
+            flex:1;min-width:0;
+        }
+        .service-card.tem-foto .service-check{
+            flex-shrink:0;
+        }
+
+        .service-card {
+            background:var(--card2);
+            border:1.5px solid var(--border);
+            border-radius:10px;
+            padding:1rem 1.25rem;
+            cursor:pointer;
+            display:flex;align-items:center;justify-content:space-between;
+            transition:all .25s;
+        }
+        .service-card:hover,.service-card.selected {
+            border-color:var(--blue);
+            background:rgba(0,212,255,.06);
+            box-shadow:0 0 16px rgba(0,212,255,.2);
+        }
+        .service-card.selected .service-check { display:flex; }
+        .service-info .service-nome { font-size:.95rem;font-weight:600; }
+        .service-info .service-preco { font-size:1rem;font-weight:700;color:var(--green);font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(0,255,136,.3); }
+        .service-obs { font-size:.75rem;color:#f5a623;margin-top:.4rem;line-height:1.4;display:flex;align-items:flex-start;gap:.3rem; }
+        .service-check {
+            display:none;width:24px;height:24px;border-radius:50%;
+            background:var(--blue);align-items:center;justify-content:center;
+            font-size:.75rem;color:var(--bg);font-weight:900;flex-shrink:0;
+        }
+
+        /* ── Date selector ── */
+        .date-scroll {
+            display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.4rem;
+            scrollbar-width:none;
+        }
+        .date-scroll::-webkit-scrollbar { display:none; }
+        .date-chip {
+            padding:.55rem 1rem;
+            background:var(--card2);
+            border:1.5px solid var(--border);
+            border-radius:20px;
+            font-size:.8rem;cursor:pointer;
+            white-space:nowrap;transition:all .2s;flex-shrink:0;
+        }
+        .date-chip.active { border-color:var(--blue);color:var(--blue);background:rgba(0,212,255,.08); }
+
+        /* ── Time grid ── */
+        .hours-grid {
+            display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));
+            gap:.45rem;margin-top:1rem;
+        }
+        .hour-btn {
+            padding:.6rem .3rem;text-align:center;
+            border-radius:8px;font-size:.82rem;font-weight:600;
+            cursor:pointer;transition:all .2s;
+            border:1.5px solid var(--border);
+            background:var(--card2);color:var(--text);
+            font-family:'Courier New',monospace;
+        }
+        .hour-btn.livre { border-color:rgba(0,255,136,.35);color:var(--green);background:rgba(0,255,136,.04); }
+        .hour-btn.livre:hover,.hour-btn.selected { border-color:var(--blue);color:var(--blue);background:rgba(0,212,255,.08);box-shadow:0 0 10px rgba(0,212,255,.25); }
+        .hour-btn.ocupado { border-color:rgba(255,75,43,.2);color:rgba(255,75,43,.4);cursor:not-allowed;text-decoration:line-through; }
+
+        /* ── Ticket ── */
+        .ticket-wrap { width:100%;max-width:380px;margin:0 auto; }
+
+        .ticket-top {
+            background:var(--card);
+            border:1px solid #4b5563;
+            border-bottom:none;
+            border-radius:12px 12px 0 0;
+            overflow:hidden;
+        }
+        .ticket-top::before {
+            content:'';display:block;height:3px;
+            background:linear-gradient(90deg,transparent,var(--blue),transparent);
+            box-shadow:0 0 18px rgba(0,212,255,.8);
+        }
+        .check-zone {
+            display:flex;flex-direction:column;align-items:center;
+            gap:.75rem;padding:2rem 1.5rem 1.5rem;
+        }
+        .check-circle {
+            width:72px;height:72px;border-radius:50%;
+            border:2px solid var(--green);
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 0 16px rgba(0,255,136,.4);
+            animation:pulse 2.4s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100%{box-shadow:0 0 16px rgba(0,255,136,.4),0 0 40px rgba(0,255,136,.15);}
+            50%{box-shadow:0 0 28px rgba(0,255,136,.7),0 0 60px rgba(0,255,136,.3);}
+        }
+        @media(prefers-reduced-motion:reduce){.check-circle{animation:none;}}
+        .check-svg { width:34px;height:34px; }
+        .confirm-title {
+            font-family:'Courier New',monospace;font-size:1rem;font-weight:700;
+            letter-spacing:2.5px;text-transform:uppercase;
+            color:var(--green);text-align:center;
+            text-shadow:0 0 10px rgba(0,255,136,.4);
+        }
+        .divider { height:1px;background:linear-gradient(90deg,transparent,#4b5563,transparent);margin:0 1.5rem; }
+        .receipt-body { padding:1.5rem;display:flex;flex-direction:column;gap:1rem; }
+        .receipt-row { display:flex;justify-content:space-between;align-items:flex-start;gap:1rem; }
+        .r-label { font-family:'Courier New',monospace;font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding-top:.1rem;flex-shrink:0; }
+        .r-value { font-size:.95rem;font-weight:600;text-align:right;line-height:1.4; }
+        .r-value.blue { color:var(--blue);text-shadow:0 0 8px rgba(0,212,255,.4); }
+        .r-value.green { font-family:'Courier New',monospace;font-size:1.25rem;color:var(--green);text-shadow:0 0 8px rgba(0,255,136,.4); }
+        .currency { font-size:.8rem;vertical-align:super;opacity:.8; }
+
+        .ticket-stub {
+            background:var(--card);
+            border:1px solid #4b5563;
+            border-top:1px dashed #2e2e36;
+            border-radius:0 0 12px 12px;
+            padding:1.2rem 1.5rem 1.5rem;
+            position:relative;
+        }
+        .ticket-stub::before,.ticket-stub::after {
+            content:'';position:absolute;top:-10px;
+            width:20px;height:20px;background:var(--bg);
+            border-radius:50%;border:1px solid #4b5563;
+        }
+        .ticket-stub::before { left:-11px; }
+        .ticket-stub::after  { right:-11px; }
+
+        .tip-box {
+            display:flex;gap:.6rem;align-items:flex-start;
+            background:rgba(0,212,255,.06);
+            border:1px solid rgba(0,212,255,.15);
+            border-radius:8px;padding:.75rem .9rem;margin-bottom:1rem;
+        }
+        .tip-text { font-size:.8rem;line-height:1.5;color:#9ba3af; }
+        .tip-text strong { color:var(--blue); }
+
+        .btn-maps {
+            display:flex;align-items:center;justify-content:center;gap:.5rem;
+            width:100%;padding:.9rem 1rem;
+            background:transparent;border:1.5px solid #4b5563;
+            border-radius:8px;color:#9ba3af;
+            font-family:var(--font);font-size:.9rem;font-weight:600;
+            cursor:pointer;text-decoration:none;
+            transition:border-color .25s,color .25s;margin-bottom:.75rem;
+        }
+        .btn-maps:hover { border-color:#9ba3af;color:var(--text); }
+
+        .btn-novo {
+            display:block;width:100%;padding:.75rem;
+            background:transparent;border:1px solid var(--border);
+            border-radius:8px;color:var(--muted);
+            font-family:var(--font);font-size:.85rem;
+            cursor:pointer;text-align:center;transition:all .2s;
+        }
+        .btn-novo:hover { border-color:var(--blue);color:var(--blue); }
+
+        .ticket-id { text-align:center;margin-top:1.2rem;font-family:'Courier New',monospace;font-size:.65rem;letter-spacing:2px;color:#4b5563; }
+
+        .empty-state { text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem; }
+
+        .loading { text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem; }
+        .loading::after { content:'...';animation:dots 1.2s infinite; }
+        @keyframes dots { 0%{content:'.'} 50%{content:'..'} 100%{content:'...'} }
+
+        .toast {
+            position:fixed;bottom:1.5rem;left:50%;
+            transform:translateX(-50%) translateY(80px);
+            background:var(--card);border:1px solid var(--green);
+            border-radius:8px;padding:.7rem 1.25rem;
+            font-size:.85rem;color:var(--green);
+            transition:transform .3s;z-index:999;white-space:nowrap;
+        }
+        .toast.show { transform:translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<svg class="bg" viewBox="0 0 1000 1000" preserveAspectRatio="none" style="display:none">
+</svg>
+<canvas id="hex-canvas" style="display:none"></canvas>
+<div id="bg-image" style="
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    z-index:0;pointer-events:none;
+    background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,180,255,0.18) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 15% 85%, rgba(0,212,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 85%, rgba(0,150,220,0.10) 0%, transparent 60%),
+        linear-gradient(180deg, #060a12 0%, #0a1018 25%, #0d1622 50%, #081018 75%, #04070c 100%);
+    background-size:cover;
+"></div>
+<div id="bg-overlay" style="
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    z-index:0;pointer-events:none;
+    background: linear-gradient(
+        to bottom,
+        rgba(8,12,20,0.45) 0%,
+        rgba(8,12,20,0.60) 40%,
+        rgba(8,12,20,0.82) 70%,
+        rgba(8,12,20,0.95) 100%
+    );
+"></div>
+<canvas id="anim-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;display:none;"></canvas>
+<canvas id="anim-canvas-2" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;display:none;"></canvas>
+<canvas id="particles-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;display:none;"></canvas>
+
+<!-- ══ Carregando estado de login ══ -->
+<div id="auth-loading" style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#04070c;color:var(--blue,#00d4ff);font-size:.85rem;letter-spacing:1px;">
+    Carregando…
+</div>
+
+<div class="container">
+
+
+    <!-- Steps indicator -->
+    <div class="steps-bar">
+        <div class="step-dot active" id="dot-0"></div>
+        <div class="step-dot" id="dot-1"></div>
+        <div class="step-dot" id="dot-2"></div>
+        <div class="step-dot" id="dot-3"></div>
+        <div class="step-dot" id="dot-4"></div>
+    </div>
+
+    <!-- Tela de barbearia bloqueada/inativa -->
+    <div id="cli-barbearia-bloqueada" style="display:none;min-height:80vh;align-items:center;justify-content:center;padding:1.5rem;text-align:center;flex-direction:column;gap:1rem;">
+        <div style="font-size:3rem">🔒</div>
+        <div style="font-size:1.1rem;font-weight:800;color:#fff">Agendamento Indisponível</div>
+        <p style="font-size:.88rem;color:var(--muted);max-width:300px;line-height:1.65">
+            Esta barbearia está temporariamente fora do ar.<br>Entre em contato diretamente com o estabelecimento.
+        </p>
+    </div>
+
+    <!-- ══ STEP 0: Login (Google ou Email/Senha) ══ -->
+    <div class="screen active" id="s0">
+        <div class="header">
+            <!-- Layout lado a lado: ícone/barberpole + nome -->
+            <div id="hero-row" style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.2rem;">
+                <!-- Barberpole animado -->
+                <div id="barberpole-wrap" style="display:none;flex-shrink:0;">
+                    <div class="barberpole"><div class="pole-stripes"></div></div>
+                </div>
+                <!-- Emoji/ícone -->
+                <div id="barber-icon-wrap" style="font-size:2.2rem;display:none;flex-shrink:0;line-height:1"></div>
+                <!-- Nome da barbearia -->
+                <div id="barber-nome-hero">
+                    <span id="barber-name-0" class="barber-nome-principal">Carregando...</span>
+                </div>
+            </div>
+
+            <!-- Pro'B como assinatura embaixo -->
+            <div class="prob-assinatura">
+                Sistema de Agendamento <span class="prob-marca">Pro'B</span>
+            </div>
+            <!-- Mensagem de boas-vindas customizada -->
+            <div id="barber-msg-bv" style="display:none;text-align:center;font-size:.8rem;color:rgba(255,255,255,.6);letter-spacing:1px;margin-bottom:.3rem;font-style:italic"></div>
+        </div>
+
+        <div class="form-box">
+            <div class="form-title">🔐 Entrar para agendar</div>
+            <p style="font-size:.8rem;color:var(--muted);line-height:1.6;margin:-.4rem 0 1rem;">Pra continuar, entre com sua conta.</p>
+
+            <button id="btn-login-google" style="width:100%;display:flex;align-items:center;justify-content:center;gap:.65rem;padding:.85rem 1.5rem;background:#fff;border:none;border-radius:10px;color:#1f1f1f;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3);margin-bottom:.9rem;">
+                <svg width="20" height="20" viewBox="0 0 48 48" style="flex-shrink:0">
+                    <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.7 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
+                    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+                    <path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.3C29.4 35.2 26.8 36 24 36c-5.3 0-9.8-3.3-11.3-7.9l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/>
+                    <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.5 5.6-6.5 7.1l6.5 5.3C38.9 37.4 44 31.6 44 24c0-1.3-.1-2.7-.4-3.5z"/>
+                </svg>
+                Entrar com Google
+            </button>
+
+            <div style="display:flex;align-items:center;gap:.7rem;color:var(--muted);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:.9rem;">
+                <span style="flex:1;height:1px;background:var(--border);"></span> ou <span style="flex:1;height:1px;background:var(--border);"></span>
+            </div>
+
+            <div class="input-group">
+                <label>📧 E-mail</label>
+                <input type="email" id="login-email" placeholder="seuemail@exemplo.com" autocomplete="email">
+            </div>
+            <div class="input-group">
+                <label>🔒 Senha</label>
+                <input type="password" id="login-senha" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
+            </div>
+
+            <span class="err" id="login-err" style="display:none;margin-bottom:.6rem;"></span>
+
+            <button class="btn-primary" id="btn-email-entrar">Entrar</button>
+            <button id="btn-email-criar" type="button" style="width:100%;margin-top:.6rem;padding:.8rem;background:transparent;border:1.5px dashed var(--border);border-radius:8px;color:var(--blue);font-weight:700;font-size:.85rem;cursor:pointer;">
+                Criar conta com e-mail
+            </button>
+            <button id="btn-esqueci-senha" type="button" style="width:100%;background:transparent;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;text-decoration:underline;padding:.6rem .2rem .1rem;">
+                Esqueci minha senha
+            </button>
+        </div>
+
+        <!-- Crédito e contato -->
+        <a href="https://wa.me/5521966190515?text=Ol%C3%A1!%20Vi%20o%20sistema%20Pro'B%20e%20tenho%20interesse!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.4rem;margin-top:.75rem;text-decoration:none;opacity:.55;transition:opacity .2s;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='.55'">
+            <span style="font-size:.58rem;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase">Desenvolvido por Alexandre Lima</span>
+            <span style="font-size:.62rem;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:20px;padding:.15rem .5rem;color:#25d366;letter-spacing:.5px">📱 Contratar</span>
+        </a>
+    </div>
+
+    <!-- ══ Tela: verificação de e-mail pendente (não é um "step" numerado) ══ -->
+    <div class="screen" id="s-verify">
+        <div class="header">
+            <div class="barber-neon-wrap"><div class="barber-neon" id="barber-name-verify"></div></div>
+        </div>
+        <div class="form-box" style="text-align:center;">
+            <div style="font-size:2.4rem;line-height:1;margin-bottom:.6rem;">📩</div>
+            <div class="form-title" style="justify-content:center;">Confirme seu e-mail</div>
+            <p style="font-size:.83rem;color:var(--muted);line-height:1.65;margin:0 0 1.1rem;">
+                Enviamos um link de confirmação para <strong id="verify-email-alvo" style="color:#fff;">—</strong>.<br>
+                Abra o e-mail (confira o spam também) e clique no link antes de continuar.
+            </p>
+            <button id="btn-ja-verifiquei" class="btn-primary">Já confirmei, continuar</button>
+            <button id="btn-reenviar-verificacao" type="button" style="width:100%;margin-top:.7rem;background:transparent;border:none;color:var(--blue);font-size:.78rem;cursor:pointer;text-decoration:underline;">Reenviar e-mail</button>
+            <button id="btn-verify-sair" type="button" style="width:100%;background:transparent;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;margin-top:.5rem;">Sair / usar outra conta</button>
+            <p id="verify-msg" style="display:none;font-size:.76rem;color:var(--green);margin:.6rem 0 0;"></p>
+        </div>
+    </div>
+
+    <!-- ══ STEP 1: Identificação ══ -->
+    <div class="screen" id="s1">
+        <div class="header">
+            <div class="barber-neon-wrap"><div class="barber-neon" id="barber-name-1"></div></div>
+        </div>
+        <div class="form-box">
+            <div id="cli-conta-logada" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.9rem;padding:.5rem .65rem;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);border-radius:8px;">
+                <img id="cli-conta-foto" src="" alt="" style="width:26px;height:26px;border-radius:50%;display:none;flex-shrink:0;">
+                <span id="cli-conta-email" style="flex:1;font-size:.72rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+                <button id="btn-logout" type="button" style="background:transparent;border:none;color:var(--blue);font-size:.72rem;font-weight:700;cursor:pointer;flex-shrink:0;">Sair</button>
+            </div>
+            <div class="form-title">👤 Seus dados</div>
+            <div class="input-group">
+                <label>Nome ou apelido</label>
+                <input type="text" id="cli-nome" placeholder="Como quer ser chamado" autocomplete="name">
+                <span class="err" id="err-nome">Nome deve ter pelo menos 3 letras.</span>
+            </div>
+            <div class="input-group">
+                <label>📱 WhatsApp</label>
+                <input type="tel" id="cli-wpp" placeholder="(21) 9XXXX-XXXX" maxlength="15" inputmode="numeric">
+                <span class="err" id="err-wpp">Informe o WhatsApp completo (11 dígitos).</span>
+            </div>
+            <!-- LGPD — Aceite obrigatório -->
+        <div id="lgpd-wrap" style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem;background:rgba(0,212,255,.04);border:1.5px solid rgba(0,212,255,.2);border-radius:10px;margin-bottom:.85rem;cursor:pointer;">
+            <input type="checkbox" id="lgpd-check" style="width:18px;height:18px;flex-shrink:0;accent-color:var(--blue);margin-top:.1rem;cursor:pointer;">
+            <label for="lgpd-check" style="font-size:.78rem;color:rgba(232,244,248,.75);line-height:1.55;cursor:pointer;">
+                Li e concordo com os
+                <a href="docs/termos-de-uso.html" target="_blank" style="color:var(--blue)">Termos de Uso</a>
+                e a
+                <a href="docs/politica-privacidade.html" target="_blank" style="color:var(--blue)">Política de Privacidade</a>.
+                Autorizo o uso do meu nome e WhatsApp para fins de agendamento.
+            </label>
+        </div>
+
+        <button class="btn-primary" id="btn-s0">✂️ Escolher Corte →</button>
+        </div>
+
+        <!-- Crédito e contato -->
+        <a href="https://wa.me/5521966190515?text=Ol%C3%A1!%20Vi%20o%20sistema%20Pro'B%20e%20tenho%20interesse!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.4rem;margin-top:.75rem;text-decoration:none;opacity:.55;transition:opacity .2s;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='.55'">
+            <span style="font-size:.58rem;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase">Desenvolvido por Alexandre Lima</span>
+            <span style="font-size:.62rem;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:20px;padding:.15rem .5rem;color:#25d366;letter-spacing:.5px">📱 Contratar</span>
+        </a>
+    </div>
+
+    <!-- ══ STEP 2: Escolher corte ══ -->
+    <div class="screen" id="s2">
+        <!-- Banner de promoções ativas -->
+        <div id="banner-promocoes" style="display:none;margin-bottom:1rem"></div>
+        <div class="header">
+            <div class="barber-neon-wrap"><div class="barber-neon" id="barber-name-2"></div></div>
+        </div>
+        <div class="form-box">
+            <div class="form-title">✂️ Escolha o corte</div>
+            <div class="services-grid" id="services-grid">
+                <div class="loading">Carregando cortes</div>
+            </div>
+
+            <div id="equipe-section" style="display:none;margin-top:1.2rem">
+                <div class="form-title" style="margin-bottom:.75rem">👨‍🦱 Escolha o barbeiro</div>
+                <div class="services-grid" id="equipe-grid"></div>
+            </div>
+
+            <button class="btn-primary" id="btn-s1" style="margin-top:1.2rem" disabled>Escolher Horário →</button>
+            <button id="btn-entrar-fila" style="width:100%;margin-top:.6rem;padding:.85rem;background:rgba(0,255,136,.08);border:1.5px dashed rgba(0,255,136,.4);border-radius:8px;color:var(--green);font-weight:700;font-size:.85rem;cursor:pointer;display:none">
+                🪑 Prefiro entrar na fila (sem hora marcada)
+            </button>
+            <button class="btn-back" id="back-s1">← Voltar</button>
+        </div>
+    </div>
+
+    <!-- ══ STEP 3: Escolher data e hora ══ -->
+    <div class="screen" id="s3">
+        <div class="header">
+            <div class="barber-neon-wrap"><div class="barber-neon" id="barber-name-3"></div></div>
+        </div>
+        <div class="form-box">
+            <div class="form-title">📅 Escolha o dia</div>
+            <div class="date-scroll" id="date-scroll"></div>
+            <div class="form-title" style="margin-top:1.2rem">🕐 Horários disponíveis</div>
+            <div style="display:flex;justify-content:center;margin:.5rem 0 1rem;">
+                <canvas id="radar-canvas" width="160" height="160" style="display:block;"></canvas>
+            </div>
+            <div class="hours-grid" id="hours-grid">
+                <div class="loading">Carregando horários</div>
+            </div>
+            <button class="btn-primary" id="btn-s2" style="margin-top:1.2rem" disabled>Confirmar Agendamento →</button>
+            <button class="btn-back" id="back-s2">← Voltar</button>
+        </div>
+    </div>
+
+    <!-- ══ STEP 4: Ticket ══ -->
+    <div class="screen" id="s4">
+        <div class="ticket-wrap">
+            <div class="ticket-top">
+                <div class="check-zone">
+                    <div class="check-circle">
+                        <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+                    <p class="confirm-title">Agendamento Confirmado</p>
+                </div>
+                <div class="divider"></div>
+                <div class="receipt-body">
+                    <div class="receipt-row">
+                        <span class="r-label">Cliente</span>
+                        <span class="r-value" id="t-nome">—</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="receipt-row">
+                        <span class="r-label">Barbearia</span>
+                        <span class="r-value blue" id="t-barber">—</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="r-label">Serviço</span>
+                        <span class="r-value blue" id="t-corte">—</span>
+                    </div>
+                    <div id="t-obs-wrap" style="display:none;padding:.5rem .75rem;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:8px;margin:.5rem 0;font-size:.78rem;color:#f5a623;line-height:1.4;">
+                        ℹ️ <span id="t-obs"></span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="receipt-row">
+                        <span class="r-label">Data &amp; Hora</span>
+                        <span class="r-value blue" id="t-data">—</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="receipt-row">
+                        <span class="r-label">Total</span>
+                        <span class="r-value green" id="t-preco"><span class="currency">R$</span> —</span>
+                    </div>
+                </div>
+            </div>
+            <div class="ticket-stub">
+                <div class="tip-box">
+                    <span style="font-size:1rem;flex-shrink:0;line-height:1.5">📸</span>
+                    <p class="tip-text"><strong>Dica:</strong> Tire um <strong>PRINT</strong> desta tela para apresentar na barbearia.</p>
+                </div>
+
+                <!-- PIX do barbeiro -->
+                <div id="pix-section" style="display:none;margin-bottom:.85rem;">
+                    <div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem">Pague via PIX</div>
+                    <div style="display:flex;gap:.5rem;align-items:center;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:8px;padding:.6rem .85rem;">
+                        <div id="pix-key" style="flex:1;font-family:'Courier New',monospace;font-size:.85rem;color:var(--blue);word-break:break-all"></div>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('pix-key').textContent).then(()=>alert('PIX copiado!'))" style="padding:.3rem .6rem;background:transparent;border:1px solid rgba(0,212,255,.3);border-radius:6px;color:var(--blue);font-size:.72rem;cursor:pointer;white-space:nowrap;flex-shrink:0">Copiar</button>
+                    </div>
+                    <a id="pix-wpp" href="#" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.4rem;margin-top:.5rem;padding:.65rem;background:transparent;border:1px solid #25d366;border-radius:8px;color:#25d366;font-size:.82rem;font-weight:600;text-decoration:none;">
+                        📱 Enviar comprovante pelo WhatsApp
+                    </a>
+                </div>
+
+                <a id="btn-maps" href="#" target="_blank" class="btn-maps">📍 Ver Localização no Maps</a>
+                <button class="btn-novo" id="btn-novo">↩ Fazer Novo Agendamento</button>
+            </div>
+            <p class="ticket-id" id="ticket-id">PRO-B · #000000</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<script src="config.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+
+const firebaseConfig = PROB_CONFIG.firebase;
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const auth = getAuth(app);
+
+/* ── State ── */
+let barbeiroId   = '';
+let barbeiroInfo = {};
+let clienteNome  = '';
+let clienteWpp   = '';
+let clienteUid   = '';
+let clienteEmail = '';
+let clienteFoto  = '';
+let servicosEscolhidos = []; // array de objetos {nome,preco,duracao,obs,sessao}
+let barbeiroCortador = null; // barbeiro da equipe escolhido
+
+// Objeto "combo" computado a partir dos serviços escolhidos — mantém compatibilidade com código existente
+function getCorteEscolhido() {
+    if (!servicosEscolhidos.length) return null;
+    return {
+        nome: servicosEscolhidos.map(s => s.nome).join(' + '),
+        preco: servicosEscolhidos.reduce((s, x) => s + Number(x.preco || 0), 0),
+        duracao: servicosEscolhidos.reduce((s, x) => s + Number(x.duracao || 30), 0),
+        obs: servicosEscolhidos.filter(s => s.obs).map(s => s.obs).join(' · ') || ''
+    };
+}
+let dataEscolhida  = '';
+let horaEscolhida  = '';
+let currentStep    = 0;
+let currentScreenId = 's0';
+
+/* ── Util ── */
+const $   = id => document.getElementById(id);
+const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+
+function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ── Login obrigatório (Google ou Email/Senha verificado) ── */
+function mapAuthError(code) {
+    const map = {
+        'auth/email-already-in-use': 'Esse e-mail já está cadastrado. Tente entrar em vez de criar conta.',
+        'auth/invalid-email':        'E-mail inválido.',
+        'auth/weak-password':        'Senha muito fraca (mínimo 6 caracteres).',
+        'auth/wrong-password':       'Senha incorreta.',
+        'auth/invalid-credential':   'E-mail ou senha incorretos.',
+        'auth/user-not-found':       'Não encontramos uma conta com esse e-mail.',
+        'auth/missing-password':     'Digite a senha.',
+        'auth/too-many-requests':    'Muitas tentativas. Aguarde um pouco e tente de novo.',
+        'auth/popup-closed-by-user': 'Login cancelado.'
+    };
+    return map[code] || 'Algo deu errado. Tente novamente.';
+}
+
+function showLoginErr(msg, ok) {
+    const el = $('login-err');
+    el.textContent = msg;
+    el.style.color = ok ? 'var(--green)' : 'var(--red)';
+    el.style.display = 'block';
+}
+
+function unlockApp(user) {
+    clienteUid   = user.uid;
+    clienteEmail = user.email || '';
+    clienteFoto  = user.photoURL || '';
+
+    const inputNome = $('cli-nome');
+    if (inputNome && !inputNome.value) {
+        inputNome.value = user.displayName || '';
+    }
+
+    $('cli-conta-email').textContent = clienteEmail;
+    if (clienteFoto) {
+        $('cli-conta-foto').src = clienteFoto;
+        $('cli-conta-foto').style.display = 'block';
+    } else {
+        $('cli-conta-foto').style.display = 'none';
+    }
+
+    // Só avança pro step de dados se ainda estiver no login/verificação
+    if (currentStep === 0 || currentScreenId === 's-verify') {
+        goStep(1);
+    }
+}
+
+function showVerifyScreen(user) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $('s-verify').classList.add('active');
+    currentScreenId = 's-verify';
+    $('verify-email-alvo').textContent = user.email || '';
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function applyAuthState(user) {
+    if (user) {
+        const isPassword = user.providerData.some(p => p.providerId === 'password');
+        if (isPassword && !user.emailVerified) {
+            showVerifyScreen(user);
+            return;
+        }
+        unlockApp(user);
+    } else {
+        clienteUid = clienteEmail = clienteFoto = '';
+        goStep(0);
+    }
+}
+
+onAuthStateChanged(auth, (user) => {
+    $('auth-loading').style.display = 'none';
+    applyAuthState(user);
+});
+
+/* — Google — */
+$('btn-login-google').addEventListener('click', async () => {
+    $('login-err').style.display = 'none';
+    try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+        // onAuthStateChanged cuida do resto
+    } catch (e) {
+        console.error('Erro no login com Google:', e);
+        showLoginErr(mapAuthError(e.code));
+    }
+});
+
+/* — Email/Senha: entrar — */
+$('btn-email-entrar').addEventListener('click', async () => {
+    $('login-err').style.display = 'none';
+    const email = $('login-email').value.trim();
+    const senha = $('login-senha').value;
+    if (!email || !senha) { showLoginErr('Preencha e-mail e senha.'); return; }
+
+    try {
+        await signInWithEmailAndPassword(auth, email, senha);
+        // onAuthStateChanged cuida do resto (inclusive checar verificação)
+    } catch (e) {
+        console.error('Erro ao entrar:', e);
+        showLoginErr(mapAuthError(e.code));
+    }
+});
+
+/* — Email/Senha: criar conta — */
+$('btn-email-criar').addEventListener('click', async () => {
+    $('login-err').style.display = 'none';
+    const email = $('login-email').value.trim();
+    const senha = $('login-senha').value;
+    if (!email || !senha) { showLoginErr('Preencha e-mail e senha.'); return; }
+    if (senha.length < 6) { showLoginErr('A senha precisa ter pelo menos 6 caracteres.'); return; }
+
+    try {
+        const cred = await createUserWithEmailAndPassword(auth, email, senha);
+        await sendEmailVerification(cred.user);
+        // onAuthStateChanged detecta emailVerified=false e mostra a tela de verificação
+    } catch (e) {
+        console.error('Erro ao criar conta:', e);
+        showLoginErr(mapAuthError(e.code));
+    }
+});
+
+/* — Esqueci minha senha — */
+$('btn-esqueci-senha').addEventListener('click', async () => {
+    $('login-err').style.display = 'none';
+    const email = $('login-email').value.trim();
+    if (!email) { showLoginErr('Digite seu e-mail no campo acima para receber o link de redefinição.'); return; }
+
+    try {
+        await sendPasswordResetEmail(auth, email);
+        showLoginErr('Link de redefinição enviado! Verifique seu e-mail.', true);
+    } catch (e) {
+        console.error('Erro ao enviar redefinição de senha:', e);
+        showLoginErr(mapAuthError(e.code));
+    }
+});
+
+/* — Tela de verificação pendente — */
+$('btn-ja-verifiquei').addEventListener('click', async () => {
+    $('verify-msg').style.display = 'none';
+    if (!auth.currentUser) return;
+    try {
+        await auth.currentUser.reload();
+        if (auth.currentUser.emailVerified) {
+            unlockApp(auth.currentUser);
+        } else {
+            $('verify-msg').style.color = 'var(--red)';
+            $('verify-msg').textContent = 'Ainda não confirmado. Abra o e-mail e clique no link recebido.';
+            $('verify-msg').style.display = 'block';
+        }
+    } catch (e) {
+        console.error('Erro ao checar verificação:', e);
+    }
+});
+
+$('btn-reenviar-verificacao').addEventListener('click', async () => {
+    $('verify-msg').style.display = 'none';
+    if (!auth.currentUser) return;
+    try {
+        await sendEmailVerification(auth.currentUser);
+        $('verify-msg').style.color = 'var(--green)';
+        $('verify-msg').textContent = 'E-mail reenviado!';
+        $('verify-msg').style.display = 'block';
+    } catch (e) {
+        console.error('Erro ao reenviar verificação:', e);
+        $('verify-msg').style.color = 'var(--red)';
+        $('verify-msg').textContent = mapAuthError(e.code);
+        $('verify-msg').style.display = 'block';
+    }
+});
+
+$('btn-verify-sair').addEventListener('click', () => signOut(auth));
+
+$('btn-logout').addEventListener('click', () => {
+    signOut(auth);
+});
+
+
+function goStep(n) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(`s${n}`).classList.add('active');
+    document.querySelectorAll('.step-dot').forEach((d,i) => {
+        d.classList.remove('active','done');
+        if (i < n)  d.classList.add('done');
+        if (i === n) d.classList.add('active');
+    });
+    currentStep = n;
+    currentScreenId = `s${n}`;
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function mascaraWpp(v) {
+    v = v.replace(/\D/g,'').slice(0,11);
+    if (v.length > 10) return v.replace(/^(\d{2})(\d{5})(\d{4})$/,'($1) $2-$3');
+    if (v.length > 6)  return v.replace(/^(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');
+    if (v.length > 2)  return v.replace(/^(\d{2})(\d{0,5})/,'($1) $2');
+    if (v.length > 0)  return `(${v}`;
+    return v;
+}
+$('cli-wpp').addEventListener('input', e => { e.target.value = mascaraWpp(e.target.value); });
+
+/* ── Get barber ID from URL ── */
+function getBarbeiroId() {
+    // Tenta pegar da query string: ?b=UID
+    const params = new URLSearchParams(window.location.search);
+    if(params.get('b')) return params.get('b');
+
+    // Tenta pegar do path: /agendar/UID
+    const path = window.location.pathname;
+    const match = path.match(/\/agendar\/([^/]+)/);
+    if(match) return match[1];
+
+    return '';
+}
+
+function hexToRgb(hex){
+    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    return `${r},${g},${b}`;
+}
+
+/* ── Load barber info ── */
+function aplicarPersonalizacao(data) {
+    barbeiroInfo = data;
+    const p = barbeiroInfo.personalizacao || {};
+    const nomeExibido = (p.nomeCliente || barbeiroInfo.nome || 'Barbearia').toUpperCase();
+    const coresPorLetra = p.coresPorLetra || {};
+    const COR_PAD = '#00d4ff';
+
+    // Modo de atendimento — controla visibilidade do botão de hora marcada e fila
+    const modo = barbeiroInfo.modoAtendimento || 'agendamento';
+    const btnS1 = $('btn-s1');
+    const btnFila = $('btn-entrar-fila');
+    if(btnS1) btnS1.style.display = (modo==='agendamento'||modo==='ambos') ? 'block' : 'none';
+    if(btnFila) btnFila.style.display = (modo==='fila'||modo==='ambos') ? 'block' : 'none';
+
+    function montarNomeHTML(nome){
+        return [...nome].map((ch,i)=>{
+            if(ch===' ')return '<span style="display:inline-block;width:.35em"> </span>';
+            const cor=coresPorLetra[i]||COR_PAD;
+            return `<span style="color:${cor};text-shadow:0 0 15px ${cor}88">${ch}</span>`;
+        }).join('');
+    }
+
+    // Nome principal
+    const el0=$('barber-name-0');
+    if(el0){
+        el0.innerHTML=montarNomeHTML(nomeExibido);
+        el0.style.fontSize=Math.min(p.tamanho||2.6, 3.5)+'rem';
+    }
+
+    // Steps simples (Neon Name)
+    ['barber-name-1','barber-name-2','barber-name-3','barber-name-verify'].forEach(id=>{
+        const el=$(id);
+        if(el) {
+            el.innerHTML=montarNomeHTML(nomeExibido);
+            if(p.fonte) el.style.fontFamily=`'${p.fonte}',sans-serif`;
+        }
+    });
+
+    // Mensagem de boas-vindas
+    const msgEl=$('barber-msg-bv');
+    if(msgEl){msgEl.textContent=p.msgBoasVindas||'';msgEl.style.display=p.msgBoasVindas?'block':'none';}
+
+    // Fonte
+    if(p.fonte){
+        const linkId='font-cli-link';
+        let link=document.getElementById(linkId);
+        if(!link){link=document.createElement('link');link.id=linkId;link.rel='stylesheet';document.head.appendChild(link);}
+        link.href=`https://fonts.googleapis.com/css2?family=${p.fonte.replace(/ /g,'+')}:wght@700;900&display=swap`;
+        document.querySelectorAll('.barber-nome-principal,.barber-neon').forEach(el=>el.style.fontFamily=`'${p.fonte}',sans-serif`);
+    } else {
+        document.querySelectorAll('.barber-nome-principal,.barber-neon').forEach(el=>el.style.fontFamily='');
+    }
+
+    // Cor do botão principal
+    if(p.btnCor){
+        document.querySelectorAll('.btn-primary').forEach(btn=>{
+            btn.style.borderColor=p.btnCor;btn.style.color=p.btnCor;
+            btn.style.boxShadow=`0 0 16px ${p.btnCor}44`;
+        });
+    }
+
+    // Fundo
+    const bgEl=document.getElementById('bg-image');
+    const GRADIENTE_PADRAO='radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,180,255,0.18) 0%, transparent 55%),radial-gradient(ellipse 60% 40% at 15% 85%, rgba(0,212,255,0.12) 0%, transparent 60%),radial-gradient(ellipse 60% 40% at 85% 85%, rgba(0,150,220,0.10) 0%, transparent 60%),linear-gradient(180deg, #060a12 0%, #0a1018 25%, #0d1622 50%, #081018 75%, #04070c 100%)';
+    if(bgEl){
+        if(!p.fundo||p.fundo==='foto'){bgEl.style.backgroundImage='none';bgEl.style.background=GRADIENTE_PADRAO;}
+        else if(p.fundo==='cor'){bgEl.style.backgroundImage='none';bgEl.style.background=p.fundoCor1||'#0a0e14';}
+        else if(p.fundo==='gradiente'){bgEl.style.backgroundImage='none';bgEl.style.background=`linear-gradient(135deg,${p.fundoGrad1||'#0a0e14'},${p.fundoGrad2||'#1a2838'})`;}
+    }
+
+    const fundoTransparente=p.fundo==='cor'||p.fundo==='gradiente';
+
+    // Efeito 1
+    const animCv=document.getElementById('anim-canvas');
+    if(animCv){
+        const ef1=p.animacao&&p.animacao!=='nenhuma'&&p.animacao!=='particulas';
+        animCv.style.display=ef1?'block':'none';
+        if(ef1) iniciarAnimacao(animCv,p.animacao,p.animCor1||'#00d4ff',p.animCor2||'#00ff88',fundoTransparente);
+    }
+
+    // Efeito 2
+    const animCv2=document.getElementById('anim-canvas-2');
+    if(animCv2){
+        const ef2=p.animacao2&&p.animacao2!=='nenhuma'&&p.animacao2!=='particulas';
+        animCv2.style.display=ef2?'block':'none';
+        if(ef2) iniciarAnimacao(animCv2,p.animacao2,p.anim2Cor1||'#00d4ff',p.anim2Cor2||'#00ff88',true);
+    }
+
+    // Partículas — ativas se slot 1 ou 2 for 'particulas'
+    const partCv=document.getElementById('particles-canvas');
+    const usaParticulas=p.animacao==='particulas'||p.animacao2==='particulas';
+    if(partCv) partCv.style.display=usaParticulas?'block':'none';
+    // Cores das partículas: usa cores do slot que ativou partículas
+    const pCorSlot=p.animacao==='particulas'?{c1:p.animCor1,c2:p.animCor2}:{c1:p.anim2Cor1,c2:p.anim2Cor2};
+    if(window.setParticleColors) window.setParticleColors(pCorSlot.c1||'#00d4ff',pCorSlot.c2||'#00ff88');
+
+    // Tema do card
+    aplicarTemaCard(p.temaCard||'neon');
+
+    // Logo / Ícone / Barberpole
+    const iconWrap=$('barber-icon-wrap');
+    const poleWrap=$('barberpole-wrap');
+    if(p.logo){
+        if(iconWrap){iconWrap.innerHTML=`<img src="${p.logo}" style="width:60px;height:60px;object-fit:cover;border-radius:10px;border:1.5px solid rgba(255,255,255,.2)">`;iconWrap.style.display='flex';}
+        if(poleWrap)poleWrap.style.display='none';
+    } else {
+        if(iconWrap){iconWrap.textContent=p.icone||'';iconWrap.style.display=p.icone?'flex':'none';}
+        if(poleWrap){poleWrap.style.display=p.barberpole?'flex':'none';}
+        if(p.barberpole&&iconWrap)iconWrap.style.display='none';
+    }
+}
+
+function mostrarBarbeiroBloqueado(){
+    // Esconde TUDO e mostra só a mensagem de bloqueio
+    document.querySelectorAll('.screen, .steps-bar, .steps-wrap, #tutorial-btn').forEach(el => {
+        el.style.display = 'none';
+    });
+    const bloqDiv = document.getElementById('cli-barbearia-bloqueada');
+    if(bloqDiv){
+        bloqDiv.style.display = 'flex';
+        bloqDiv.style.position = 'fixed';
+        bloqDiv.style.inset = '0';
+        bloqDiv.style.zIndex = '9999';
+        bloqDiv.style.background = 'var(--bg)';
+    }
+}
+
+
+
+function carregarBarbeiro() {
+    barbeiroId = getBarbeiroId();
+    if (!barbeiroId) {
+        ['barber-name-0','barber-name-1','barber-name-2','barber-name-3'].forEach(id => {const el=$(id);if(el)el.textContent='Link inválido — contate o barbeiro';});
+        return;
+    }
+
+    // Verifica status de acesso do barbeiro em tempo real
+    onSnapshot(doc(db,'acessos',barbeiroId), snap => {
+        if(!snap.exists()) return;
+        const d = snap.data();
+        const bloqueado = d.status==='bloqueado' || d.status==='excluido' ||
+                          (d.expira && new Date(d.expira) < new Date() && d.status!=='ativo');
+        if(bloqueado) mostrarBarbeiroBloqueado();
+    });
+
+    // Listener em tempo real — atualiza assim que o barbeiro mudar qualquer coisa
+    onSnapshot(doc(db,'barbeiros',barbeiroId), snap => {
+        if (!snap.exists()) {
+            ['barber-name-0','barber-name-1','barber-name-2','barber-name-3'].forEach(id => {const el=$(id);if(el)el.textContent='Barbearia não encontrada';});
+            return;
+        }
+        aplicarPersonalizacao(snap.data());
+        carregarPromocoesCliente();
+        // Atualiza nome na tela de login
+
+    }, e => console.error('Erro barbeiro listener:', e));
+}
+
+/* ── STEP 0: Identificação ── */
+$('btn-s0').addEventListener('click', () => {
+    // Valida LGPD
+    const lgpdCheck = document.getElementById('lgpd-check');
+    const lgpdWrap  = document.getElementById('lgpd-wrap');
+    if(lgpdCheck && !lgpdCheck.checked){
+        if(lgpdWrap) lgpdWrap.style.borderColor = 'rgba(255,75,43,.5)';
+        lgpdWrap.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+    }
+    if(lgpdWrap) lgpdWrap.style.borderColor = 'rgba(0,212,255,.2)';
+
+    const nome = $('cli-nome').value.trim();
+    const wpp  = $('cli-wpp').value.replace(/\D/g,'');
+    let ok = true;
+
+    $('err-nome').style.display = 'none'; $('cli-nome').style.borderColor = 'var(--border)';
+    $('err-wpp').style.display  = 'none'; $('cli-wpp').style.borderColor  = 'var(--border)';
+
+    if (nome.length < 3) {
+        $('err-nome').style.display = 'block';
+        $('cli-nome').style.borderColor = 'var(--red)';
+        ok = false;
+    }
+    if (wpp.length !== 11) {
+        $('err-wpp').style.display = 'block';
+        $('cli-wpp').style.borderColor = 'var(--red)';
+        ok = false;
+    }
+    if (!ok) return;
+
+    clienteNome = nome;
+    clienteWpp  = wpp;
+    goStep(2);
+    carregarCortes();
+});
+
+/* ── STEP 1: Cortes (multi-seleção por sessão) ── */
+async function carregarCortes() {
+    const grid = $('services-grid');
+    const cortes = barbeiroInfo.cortes || [];
+    if (!cortes.length) {
+        grid.innerHTML = '<div class="empty-state">Nenhum serviço cadastrado ainda.<br>Peça ao barbeiro para adicionar.</div>';
+        return;
+    }
+
+    // Agrupa por sessão
+    const porSessao = {};
+    cortes.forEach((c,i) => {
+        const sessao = c.sessao || 'Geral';
+        if (!porSessao[sessao]) porSessao[sessao] = [];
+        porSessao[sessao].push({...c, _idx:i});
+    });
+
+    const temMultiplasSessoes = Object.keys(porSessao).length > 1;
+
+    grid.innerHTML = Object.entries(porSessao).map(([sessao, itens]) => `
+        ${temMultiplasSessoes ? `<div style="font-size:.78rem;color:var(--blue);font-weight:700;margin:.85rem 0 .5rem;text-transform:uppercase;letter-spacing:.5px">📁 ${sessao}</div>` : ''}
+        ${itens.map(c => `
+        <div class="service-card ${c.foto?'tem-foto':''}" data-idx="${c._idx}">
+            ${c.foto?`<img class="service-card-foto" src="${c.foto}" alt="${c.nome}" loading="lazy" onerror="this.style.display='none';this.closest('.service-card').classList.remove('tem-foto')">`:''}
+            <div class="service-info">
+                <div class="service-nome">${c.nome}</div>
+                <div class="service-preco">R$ ${Number(c.preco).toFixed(2)}</div>
+                ${c.obs ? `<div class="service-obs">ℹ️ ${c.obs}</div>` : ''}
+            </div>
+            <div class="service-check">✓</div>
+        </div>`).join('')}
+    `).join('') + `
+        <div id="combo-total-wrap" style="display:none;margin-top:.85rem;padding:.75rem 1rem;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);border-radius:10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.8rem;color:var(--muted)">Total selecionado:</span>
+            <span id="combo-total-valor" style="font-family:'Courier New',monospace;font-size:1.1rem;font-weight:700;color:var(--green)">R$ 0,00</span>
+        </div>`;
+
+    grid.querySelectorAll('.service-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const idx = Number(card.dataset.idx);
+            const jaSelecionado = servicosEscolhidos.find(s => s._idx === idx);
+            if (jaSelecionado) {
+                servicosEscolhidos = servicosEscolhidos.filter(s => s._idx !== idx);
+                card.classList.remove('selected');
+            } else {
+                servicosEscolhidos.push({...cortes[idx], _idx: idx});
+                card.classList.add('selected');
+            }
+            atualizarComboTotal();
+            verificarBtnS1();
+        });
+    });
+
+    // Equipe
+    const equipe = barbeiroInfo.equipe || [];
+    const eqSection = $('equipe-section');
+    const eqGrid = $('equipe-grid');
+    if (equipe.length > 0) {
+        eqSection.style.display = 'block';
+        eqGrid.innerHTML = equipe.map((b,i) => `
+            <div class="service-card" data-eq="${i}">
+                <div class="service-info">
+                    <div class="service-nome">✂️ ${b.nome}</div>
+                </div>
+                <div class="service-check">✓</div>
+            </div>`).join('');
+        eqGrid.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('click', () => {
+                eqGrid.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                barbeiroCortador = equipe[Number(card.dataset.eq)].nome;
+                verificarBtnS1();
+            });
+        });
+    } else {
+        eqSection.style.display = 'none';
+        barbeiroCortador = null;
+    }
+}
+
+function atualizarComboTotal() {
+    const wrap = $('combo-total-wrap');
+    const valorEl = $('combo-total-valor');
+    if (!wrap || !valorEl) return;
+    if (servicosEscolhidos.length > 1) {
+        const total = servicosEscolhidos.reduce((s,x) => s + Number(x.preco||0), 0);
+        valorEl.textContent = `R$ ${total.toFixed(2)}`;
+        wrap.style.display = 'flex';
+    } else {
+        wrap.style.display = 'none';
+    }
+}
+
+function verificarBtnS1() {
+    const equipe = barbeiroInfo.equipe || [];
+    const precisaEscolherBarbeiro = equipe.length > 0;
+    const ok = servicosEscolhidos.length > 0 && (!precisaEscolherBarbeiro || barbeiroCortador);
+    $('btn-s1').disabled = !ok;
+    const filaBtn = $('btn-entrar-fila');
+    if(filaBtn) filaBtn.style.opacity = ok ? '1' : '.5';
+}
+
+$('btn-s1').addEventListener('click', () => { goStep(3); carregarHorarios(); });
+$('btn-entrar-fila').addEventListener('click', entrarNaFila);
+$('back-s1').addEventListener('click', () => goStep(1));
+
+/* ── STEP 2: Data e Hora ── */
+function getTodayKey() { return new Date().toISOString().split('T')[0]; }
+
+async function carregarHorarios() {
+    const scroll = $('date-scroll');
+    scroll.innerHTML = '';
+    const hoje = new Date();
+    const chips = [];
+    for (let i = 0; i < 14; i++) {
+        const d = new Date(hoje);
+        d.setDate(hoje.getDate() + i);
+        const key = d.toISOString().split('T')[0];
+        const chip = document.createElement('div');
+        chip.className = 'date-chip' + (i===0?' active':'');
+        chip.textContent = i===0 ? 'Hoje' : fmt(key);
+        chip.dataset.date = key;
+        chip.addEventListener('click', () => {
+            chips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            dataEscolhida = key;
+            horaEscolhida = '';
+            $('btn-s2').disabled = true;
+            renderHours(key);
+        });
+        chips.push(chip);
+        scroll.appendChild(chip);
+    }
+    dataEscolhida = hoje.toISOString().split('T')[0];
+    renderHours(dataEscolhida);
+}
+
+function horaParaMin(h){const[hh,mm]=h.split(':').map(Number);return hh*60+mm;}
+
+async function renderHours(data) {
+    const grid = $('hours-grid');
+    grid.innerHTML = '<div class="loading">Carregando horários</div>';
+
+    // Funcionamento configurado pelo barbeiro
+    const fSnap = await getDoc(doc(db,'barbeiros',barbeiroId,'config','funcionamento'));
+    const funcData = fSnap.exists() ? fSnap.data() : {};
+    const dateObj = new Date(data+'T12:00:00');
+    const diaSemana = dateObj.getDay();
+    const func = funcData[diaSemana] || {aberto:true,inicio:'08:00',fim:'18:00'};
+
+    if(!func.aberto) {
+        grid.innerHTML = '<div class="empty-state">Barbearia fechada neste dia 🚫</div>';
+        return;
+    }
+
+    const iniMin = horaParaMin(func.inicio);
+    const fimMin = horaParaMin(func.fim);
+
+    // Hora atual — bloquear passados
+    const agora = new Date();
+    const isHoje = data === new Date().toISOString().split('T')[0];
+    const agoraMin = isHoje ? agora.getHours()*60+agora.getMinutes() : 0;
+
+    // Agendamentos filtrados por barbeiro da equipe (se escolhido)
+    // Se a barbearia tem equipe e cliente escolheu um barbeiro,
+    // só bloqueia os horários daquele barbeiro específico
+    const q = query(collection(db,'agendamentos'), where('barbeiroId','==',barbeiroId), where('data','==',data));
+    let snap; try { snap = await getDocs(q); } catch(e) { snap = {forEach:()=>{}}; }
+    const ocupados = new Set();
+    snap.forEach(d => {
+        const ag = d.data();
+        if(ag.status === 'cancelado') return; // cancelado libera o horário
+        const equipe = barbeiroInfo.equipe || [];
+        if (equipe.length > 0 && barbeiroCortador) {
+            if (ag.barbeiro === barbeiroCortador) ocupados.add(ag.hora);
+        } else {
+            ocupados.add(ag.hora);
+        }
+    });
+
+    // Bloqueios — também por barbeiro se houver equipe
+    const equipe = barbeiroInfo.equipe || [];
+    let bloqueados = [];
+    if (equipe.length > 0 && barbeiroCortador) {
+        // Bloqueios específicos do barbeiro da equipe
+        const bRef = doc(db,'barbeiros',barbeiroId,'bloqueios', `${data}_${barbeiroCortador}`);
+        const bSnap = await getDoc(bRef);
+        bloqueados = bSnap.exists() ? (bSnap.data().horas||[]) : [];
+    } else {
+        // Bloqueios gerais da barbearia
+        const bRef = doc(db,'barbeiros',barbeiroId,'bloqueios',data);
+        const bSnap = await getDoc(bRef);
+        bloqueados = bSnap.exists() ? (bSnap.data().horas||[]) : [];
+    }
+
+    // Gera slots dentro do horário de funcionamento
+    const intervaloMin = funcData.intervalo || 30;
+    const slots = [];
+    for (let min=iniMin; min<fimMin; min+=intervaloMin) {
+        const h = Math.floor(min/60), m = min%60;
+        slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+    }
+
+    const disponiveis = slots.filter(s => !ocupados.has(s) && !bloqueados.includes(s) && !(isHoje && horaParaMin(s)<=agoraMin));
+    if (!disponiveis.length) {
+        grid.innerHTML = '<div class="empty-state">Sem horários disponíveis neste dia.</div>';
+        return;
+    }
+
+    grid.innerHTML = slots.map(hora => {
+        const min = horaParaMin(hora);
+        const passado = isHoje && min <= agoraMin;
+        const ocp  = ocupados.has(hora);
+        const bloq = bloqueados.includes(hora);
+        const indisponivel = passado || ocp || bloq;
+        const cls  = passado ? 'ocupado' : ocp||bloq ? 'ocupado' : 'livre';
+        return `<button class="hour-btn ${cls}" data-hora="${hora}" ${indisponivel?'disabled':''}>${hora}</button>`;
+    }).join('');
+
+    // Feed radar with slot data
+    if(window.radarSetSlots){
+        const radarData=slots.map(hora=>{
+            const min=horaParaMin(hora);
+            const passado=isHoje&&min<=agoraMin;
+            const ocp=ocupados.has(hora)||bloqueados.includes(hora)||passado;
+            return{hora,ocupado:ocp};
+        });
+        window.radarSetSlots(radarData, horaEscolhida||null);
+    }
+
+    grid.querySelectorAll('.hour-btn.livre').forEach(btn => {
+        btn.addEventListener('click', () => {
+            grid.querySelectorAll('.hour-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            horaEscolhida = btn.dataset.hora;
+            $('btn-s2').disabled = false;
+            // Update radar highlight
+            if(window.radarSetSlots){
+                const radarData=Array.from(grid.querySelectorAll('.hour-btn')).map(b=>({
+                    hora:b.dataset.hora,ocupado:b.disabled&&!b.classList.contains('selected')
+                }));
+                window.radarSetSlots(radarData, horaEscolhida);
+            }
+        });
+    });
+}
+
+$('btn-s2').addEventListener('click', confirmarAgendamento);
+$('back-s2').addEventListener('click', () => goStep(2));
+
+/* ── STEP 3: Confirmar e salvar ── */
+async function entrarNaFila() {
+    const corteEscolhido = getCorteEscolhido();
+    if(!corteEscolhido){toast('Escolha ao menos um serviço primeiro');return;}
+    const equipe = barbeiroInfo.equipe || [];
+    if(equipe.length > 0 && !barbeiroCortador){
+        alert('Escolha um barbeiro antes de entrar na fila.');
+        return;
+    }
+
+    const btn = $('btn-entrar-fila');
+    btn.textContent = 'Entrando na fila...';
+    btn.disabled = true;
+
+    try {
+        await addDoc(collection(db,'fila'), {
+            barbeiroId,
+            clienteNome,
+            clienteWhatsapp: clienteWpp || '',
+            clienteUid: clienteUid || '',
+            clienteEmail: clienteEmail || '',
+            barbeiro: barbeiroCortador || '',
+            corte: corteEscolhido.nome,
+            preco: corteEscolhido.preco,
+            status: 'aguardando',
+            criadoEm: new Date().toISOString(),
+            origem: 'cliente'
+        });
+
+        // Preenche ticket (reaproveitando a tela de confirmação)
+        $('t-nome').textContent   = clienteNome;
+        $('t-barber').textContent = barbeiroInfo.nome || '';
+        $('t-corte').textContent  = corteEscolhido.nome;
+        $('t-data').textContent   = '🪑 Fila de espera (sem hora marcada)';
+        $('t-preco').innerHTML    = `<span class="currency">R$</span> ${Number(corteEscolhido.preco).toFixed(2)}`;
+        $('ticket-id').textContent = 'PRO-B · #' + Math.floor(100000 + Math.random()*900000);
+        if(corteEscolhido.obs){
+            $('t-obs').textContent = corteEscolhido.obs;
+            $('t-obs-wrap').style.display = 'block';
+        } else {
+            $('t-obs-wrap').style.display = 'none';
+        }
+        document.getElementById('pix-section').style.display='none';
+
+        if (barbeiroInfo.endereco) {
+            $('btn-maps').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(barbeiroInfo.endereco);
+        } else {
+            $('btn-maps').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(barbeiroInfo.nome || 'Barbearia');
+        }
+
+        if (barbeiroInfo.whatsapp) {
+            const msg = encodeURIComponent(`🪑 Cliente entrou na fila!\n\nCliente: ${clienteNome}\nWhatsApp: (${clienteWpp.slice(0,2)}) ${clienteWpp.slice(2,7)}-${clienteWpp.slice(7)}\nServiço(s): ${corteEscolhido.nome}${barbeiroCortador?'\nBarbeiro: '+barbeiroCortador:''}`);
+            setTimeout(() => window.open(`https://wa.me/55${barbeiroInfo.whatsapp}?text=${msg}`,'_blank'), 800);
+        }
+
+        goStep(4);
+    } catch(e) {
+        toast('Erro ao entrar na fila: ' + e.message);
+        btn.textContent = '🪑 Prefiro entrar na fila (sem hora marcada)';
+        btn.disabled = false;
+    }
+}
+
+async function confirmarAgendamento() {
+    const corteEscolhido = getCorteEscolhido();
+    if(!corteEscolhido){toast('Escolha ao menos um serviço');return;}
+    const btn = $('btn-s2');
+    btn.textContent = 'Salvando...';
+    btn.disabled = true;
+
+    try {
+        await addDoc(collection(db,'agendamentos'), {
+            barbeiroId,
+            clienteNome,
+            clienteWhatsapp: clienteWpp,
+            clienteUid: clienteUid || '',
+            clienteEmail: clienteEmail || '',
+            corte:  corteEscolhido.nome,
+            preco:  corteEscolhido.preco,
+            barbeiro: barbeiroCortador || '',
+            data:   dataEscolhida,
+            hora:   horaEscolhida,
+            status: 'pendente',
+            criadoEm: new Date().toISOString()
+        });
+
+        // Preenche ticket
+        $('t-nome').textContent   = clienteNome;
+        $('t-barber').textContent = barbeiroInfo.nome || '';
+        $('t-corte').textContent  = corteEscolhido.nome;
+        $('t-data').textContent   = `${fmt(dataEscolhida)} às ${horaEscolhida}`;
+        $('t-preco').innerHTML    = `<span class="currency">R$</span> ${Number(corteEscolhido.preco).toFixed(2)}`;
+        $('ticket-id').textContent = 'PRO-B · #' + Math.floor(100000 + Math.random()*900000);
+        if(corteEscolhido.obs){
+            $('t-obs').textContent = corteEscolhido.obs;
+            $('t-obs-wrap').style.display = 'block';
+        } else {
+            $('t-obs-wrap').style.display = 'none';
+        }
+
+        // PIX do barbeiro no ticket
+        if(barbeiroInfo.pix) {
+            document.getElementById('pix-section').style.display='block';
+            document.getElementById('pix-key').textContent=barbeiroInfo.pix;
+            if(barbeiroInfo.whatsapp) {
+                const pixMsg=encodeURIComponent(`Olá! Agendei um corte na ${barbeiroInfo.nome} para ${fmt(dataEscolhida)} às ${horaEscolhida}. Segue o comprovante do PIX:`);
+                document.getElementById('pix-wpp').href=`https://wa.me/55${barbeiroInfo.whatsapp}?text=${pixMsg}`;
+            } else {
+                document.getElementById('pix-wpp').style.display='none';
+            }
+        }
+        if (barbeiroInfo.endereco) {
+            $('btn-maps').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(barbeiroInfo.endereco);
+        } else {
+            $('btn-maps').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(barbeiroInfo.nome || 'Barbearia');
+        }
+
+        // WhatsApp para o barbeiro
+        if (barbeiroInfo.whatsapp) {
+            const msg = encodeURIComponent(`🔔 Novo agendamento!\n\nCliente: ${clienteNome}\nWhatsApp: (${clienteWpp.slice(0,2)}) ${clienteWpp.slice(2,7)}-${clienteWpp.slice(7)}\nServiço(s): ${corteEscolhido.nome}\nData: ${fmt(dataEscolhida)} às ${horaEscolhida}\nValor: R$ ${Number(corteEscolhido.preco).toFixed(2)}`);
+            setTimeout(() => window.open(`https://wa.me/55${barbeiroInfo.whatsapp}?text=${msg}`,'_blank'), 800);
+        }
+
+        goStep(4);
+
+    } catch(e) {
+        toast('Erro ao salvar. Tente novamente.');
+        btn.textContent = 'Confirmar Agendamento →';
+        btn.disabled = false;
+    }
+}
+
+/* ── Novo agendamento ── */
+$('btn-novo').addEventListener('click', () => {
+    $('cli-nome').value = auth.currentUser ? (auth.currentUser.displayName || '') : '';
+    $('cli-wpp').value  = '';
+    servicosEscolhidos = [];
+    barbeiroCortador   = null;
+    horaEscolhida      = '';
+    dataEscolhida      = '';
+    $('btn-s1').disabled = true;
+    $('btn-s2').disabled = true;
+    goStep(1);
+});
+
+/* ── Init ── */
+
+carregarBarbeiro();
+</script>
+
+<script>
+(function(){
+    const cv=document.getElementById('radar-canvas');
+    if(!cv)return;
+    const ctx=cv.getContext('2d');
+    const W=160,CX=80,CY=80,R=64;
+    let t=0,radarSlots=[],selectedHora=null;
+
+    // Called from main app to update radar with available slots
+    window.radarSetSlots=function(slots,chosen){
+        radarSlots=slots||[];
+        selectedHora=chosen||null;
+    };
+
+    function horaToAngle(hora){
+        const[hh,mm]=hora.split(':').map(Number);
+        const total=hh*60+mm;
+        const start=8*60,end=20*60;
+        return((total-start)/(end-start))*Math.PI*2-Math.PI/2;
+    }
+
+    function draw(){
+        ctx.clearRect(0,0,W,W);
+
+        // Background rings
+        for(let r=16;r<=R;r+=16){
+            ctx.beginPath();ctx.arc(CX,CY,r,0,Math.PI*2);
+            ctx.strokeStyle='rgba(0,212,255,0.08)';ctx.lineWidth=1;ctx.stroke();
+        }
+        // Cross lines
+        ctx.strokeStyle='rgba(0,212,255,0.06)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(CX-R,CY);ctx.lineTo(CX+R,CY);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(CX,CY-R);ctx.lineTo(CX,CY+R);ctx.stroke();
+
+        // Radar sweep
+        const sweepA=(t*0.03)%(Math.PI*2);
+        ctx.save();ctx.translate(CX,CY);
+        ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,sweepA-1.1,sweepA);ctx.closePath();
+        ctx.fillStyle='rgba(0,212,255,0.10)';ctx.fill();
+        ctx.restore();
+        // Sweep arm
+        ctx.beginPath();ctx.moveTo(CX,CY);
+        ctx.lineTo(CX+Math.cos(sweepA)*R,CY+Math.sin(sweepA)*R);
+        ctx.strokeStyle='rgba(0,212,255,0.7)';ctx.lineWidth=1.5;ctx.stroke();
+
+        // Slot dots
+        if(radarSlots.length){
+            radarSlots.forEach(s=>{
+                const a=horaToAngle(s.hora);
+                const rr=R-6;
+                const x=CX+Math.cos(a)*rr,y=CY+Math.sin(a)*rr;
+                const sweepDist=((sweepA-a+Math.PI*6)%(Math.PI*2));
+                const glow=sweepDist<0.4?Math.max(0,1-sweepDist/0.4):0;
+                const isSelected=selectedHora&&selectedHora===s.hora;
+                const col=s.ocupado?'rgba(255,75,43,0.7)':isSelected?'#00ff88':'rgba(0,212,255,0.6)';
+
+                ctx.beginPath();ctx.arc(x,y,isSelected?5:3+glow*3,0,Math.PI*2);
+                ctx.fillStyle=col;
+                if(glow>0.1||isSelected){ctx.shadowColor=isSelected?'#00ff88':'#00d4ff';ctx.shadowBlur=8+glow*6;}
+                ctx.fill();ctx.shadowBlur=0;
+
+                // Hour label on sweep hit
+                if(glow>0.4){
+                    ctx.font='bold 9px monospace';ctx.fillStyle='#00d4ff';
+                    ctx.textAlign='center';
+                    ctx.fillText(s.hora,x,y-10);
+                }
+            });
+        } else {
+            // Default clock dots when no slots loaded
+            for(let i=0;i<12;i++){
+                const a=(i/12)*Math.PI*2-Math.PI/2;
+                const x=CX+Math.cos(a)*(R-8),y=CY+Math.sin(a)*(R-8);
+                const sweepDist=((sweepA-a+Math.PI*6)%(Math.PI*2));
+                const glow=sweepDist<0.4?Math.max(0,1-sweepDist/0.4):0;
+                ctx.beginPath();ctx.arc(x,y,2+glow*2.5,0,Math.PI*2);
+                ctx.fillStyle=`rgba(0,212,255,${0.25+glow*0.6})`;
+                if(glow>0.2){ctx.shadowColor='#00d4ff';ctx.shadowBlur=6;}
+                ctx.fill();ctx.shadowBlur=0;
+            }
+        }
+
+        // Center dot
+        ctx.beginPath();ctx.arc(CX,CY,3,0,Math.PI*2);
+        ctx.fillStyle='#00d4ff';ctx.shadowColor='#00d4ff';ctx.shadowBlur=6;
+        ctx.fill();ctx.shadowBlur=0;
+
+        t++;requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
+<script>
+(function(){
+    const cv=document.getElementById('particles-canvas');
+    if(!cv)return;
+    const ctx=cv.getContext('2d');
+    let W,H;
+
+    function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+    window.addEventListener('resize',resize);resize();
+
+    // Particle colors from personalization
+    function hexToRgbStr(hex){try{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `${r},${g},${b}`;}catch(e){return '0,212,255';}}
+    let P_C1='0,212,255', P_C2='0,255,136';
+    // Will be updated by aplicarPersonalizacao
+    window.setParticleColors=function(c1,c2){P_C1=hexToRgbStr(c1||'#00d4ff');P_C2=hexToRgbStr(c2||'#00ff88');};
+
+    const particles=Array.from({length:55},()=>({
+        x:Math.random()*W,y:Math.random()*H,
+        vx:(Math.random()-.5)*0.3,vy:-Math.random()*0.5-0.1,
+        r:Math.random()*1.8+0.4,
+        alpha:Math.random()*0.5+0.1,
+        pri:Math.random()>0.5,
+        life:Math.random()
+    }));
+    const lines=Array.from({length:8},()=>({
+        x:Math.random()*W,y:Math.random()*H,
+        len:Math.random()*80+40,
+        angle:Math.floor(Math.random()*3)*(Math.PI/3),
+        alpha:Math.random()*0.18+0.04,
+        speed:Math.random()*0.003+0.001
+    }));
+
+    function draw(){
+        ctx.clearRect(0,0,W,H);
+        lines.forEach(l=>{
+            l.angle+=l.speed;
+            ctx.save();ctx.translate(l.x,l.y);ctx.rotate(l.angle);
+            ctx.strokeStyle=`rgba(${P_C1},${l.alpha})`;ctx.lineWidth=0.8;
+            ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(l.len,0);ctx.stroke();
+            ctx.beginPath();ctx.moveTo(l.len,0);ctx.lineTo(l.len,l.len*0.4);ctx.stroke();
+            ctx.beginPath();ctx.arc(l.len,0,1.5,0,Math.PI*2);
+            ctx.fillStyle=`rgba(${P_C1},${l.alpha*2})`;ctx.fill();
+            ctx.restore();
+        });
+        particles.forEach(p=>{
+            p.x+=p.vx;p.y+=p.vy;p.life+=0.005;
+            if(p.y<-5||p.life>1){p.x=Math.random()*W;p.y=H+5;p.life=0;p.alpha=Math.random()*0.5+0.1;}
+            const a=p.alpha*(1-p.life*0.5);
+            const col=p.pri?P_C1:P_C2;
+            ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+            ctx.fillStyle=`rgba(${col},${a})`;
+            ctx.shadowColor=`rgba(${col},0.8)`;ctx.shadowBlur=4;
+            ctx.fill();ctx.shadowBlur=0;
+        });
+        if(Math.random()<0.003){
+            const sy=Math.random()*H*0.6;
+            ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(W,sy);
+            ctx.strokeStyle=`rgba(${P_C1},0.12)`;ctx.lineWidth=1;ctx.stroke();
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
+
+<script>
+// ══ TEMAS DO CARD ══
+function aplicarTemaCard(tema){
+    const temas={
+        neon:{
+            bg:'rgba(26,26,30,.85)',border:'#2a3f5f',accent:'#00d4ff',accentRgb:'0,212,255',
+            inpBg:'rgba(26,35,50,.85)',inpBorder:'#2a3f5f',text:'#e8f4f8',muted:'#7a9fb5',
+            btnBg:'transparent',btnText:'#00d4ff',btnSolid:false
+        },
+        dourado:{
+            bg:'rgba(20,16,8,.88)',border:'#3a2a10',accent:'#c0a060',accentRgb:'192,160,96',
+            inpBg:'rgba(26,20,8,.88)',inpBorder:'#3a2a10',text:'#f0d898',muted:'#8a6840',
+            btnBg:'linear-gradient(135deg,#c0a060,#8a6020)',btnText:'#110e08',btnSolid:true
+        },
+        roxo:{
+            bg:'rgba(18,12,24,.88)',border:'#2d1a4a',accent:'#a855f7',accentRgb:'168,85,247',
+            inpBg:'rgba(26,16,40,.88)',inpBorder:'#2d1a4a',text:'#e8d4f8',muted:'#7a5a9f',
+            btnBg:'transparent',btnText:'#a855f7',btnSolid:false
+        },
+        fogo:{
+            bg:'rgba(20,10,6,.88)',border:'#3a1208',accent:'#ff4b2b',accentRgb:'255,75,43',
+            inpBg:'rgba(26,14,8,.88)',inpBorder:'#3a1208',text:'#f8d4c8',muted:'#9a4030',
+            btnBg:'linear-gradient(135deg,#ff4b2b,#cc1a00)',btnText:'#fff',btnSolid:true
+        },
+        natureza:{
+            bg:'rgba(8,16,10,.88)',border:'#0a2a14',accent:'#00ff88',accentRgb:'0,255,136',
+            inpBg:'rgba(10,26,14,.88)',inpBorder:'#0a2a14',text:'#c8f8d8',muted:'#4a9a60',
+            btnBg:'transparent',btnText:'#00ff88',btnSolid:false
+        },
+        minimalista:{
+            bg:'rgba(245,245,245,.95)',border:'#dddddd',accent:'#111111',accentRgb:'17,17,17',
+            inpBg:'rgba(255,255,255,.95)',inpBorder:'#dddddd',text:'#111111',muted:'#666666',
+            btnBg:'#111111',btnText:'#ffffff',btnSolid:true
+        },
+    };
+    const t=temas[tema]||temas.neon;
+    const r=document.documentElement;
+    r.style.setProperty('--card-bg',t.bg);
+    r.style.setProperty('--card-border',t.border);
+    r.style.setProperty('--card-accent',t.accent);
+    r.style.setProperty('--card-accent-rgb',t.accentRgb);
+    r.style.setProperty('--card-inp-bg',t.inpBg);
+    r.style.setProperty('--card-inp-border',t.inpBorder);
+    r.style.setProperty('--card-text',t.text);
+    r.style.setProperty('--card-muted',t.muted);
+    r.style.setProperty('--card-btn-bg',t.btnBg);
+    r.style.setProperty('--card-btn-text',t.btnText);
+    // Aplica cor do botão sólido ou outline
+    document.querySelectorAll('.btn-primary').forEach(btn=>{
+        btn.style.background=t.btnBg;
+        btn.style.color=t.btnText;
+        btn.style.borderColor=t.btnSolid?'transparent':t.accent;
+    });
+    // Aplica cor de foco nos inputs
+    const style=document.getElementById('tema-focus-style')||document.createElement('style');
+    style.id='tema-focus-style';
+    style.textContent=`.input-group input:focus{border-color:${t.accent}!important;box-shadow:0 0 16px rgba(${t.accentRgb},.3)!important;}`;
+    document.head.appendChild(style);
+    // Ajusta overlay do bg para tema minimalista
+    const ov=document.getElementById('bg-overlay');
+    if(ov) ov.style.opacity=tema==='minimalista'?'0.1':'1';
+}
+
+// ══ MOTOR DE ANIMAÇÕES ══
+let animFrame=null;
+function iniciarAnimacao(cv,nome,cor1='#00d4ff',cor2='#00ff88',transparente=false){
+    if(animFrame){cancelAnimationFrame(animFrame);animFrame=null;}
+    cv.width=window.innerWidth;cv.height=window.innerHeight;
+    window.addEventListener('resize',()=>{cv.width=window.innerWidth;cv.height=window.innerHeight;});
+    const ctx=cv.getContext('2d');let t=0;
+    const W=()=>cv.width,H=()=>cv.height;
+    function hr(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `${r},${g},${b}`;}
+    const C1=()=>hr(cor1), C2=()=>hr(cor2);
+    // BG fill: se fundo é cor/gradiente usa clearRect, senão usa fill escuro semi-transparente
+    const bgFill=()=>{
+        if(transparente){ctx.clearRect(0,0,W(),H());}
+        else{ctx.fillStyle='rgba(10,14,20,0.18)';ctx.fillRect(0,0,W(),H());}
+    };
+    const anims={
+        barberpole_rain:()=>{const ss=Array.from({length:22},()=>({x:Math.random()*W(),y:Math.random()*H()-H(),sp:1.5+Math.random()*2,w:6+Math.random()*8,h:Math.floor(Math.random()*3)}));const cols=[`rgba(${C1()},0.8)`,`rgba(255,255,255,0.7)`,`rgba(${C2()},0.8)`];return()=>{bgFill();ss.forEach(s=>{s.y+=s.sp;if(s.y>H()){s.y=-40;s.x=Math.random()*W();}const g=ctx.createLinearGradient(s.x,s.y,s.x+s.w,s.y+40);g.addColorStop(0,'transparent');g.addColorStop(0.5,cols[s.h]);g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(s.x,s.y,s.w,40);});};},
+        onda_plasma:()=>()=>{bgFill();for(let w=0;w<4;w++){const col=w%2===0?C1():C2();ctx.beginPath();for(let x=0;x<=W();x+=3){const y=H()/2+Math.sin(x*.015+t+w*.8)*H()*.15*Math.sin(t*.5+w)+Math.sin(x*.03+t*1.3+w*.8)*H()*.07;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.strokeStyle=`rgba(${col},${.3-w*.05})`;ctx.lineWidth=1.5-w*.2;ctx.stroke();}t+=.04;},
+        hexagonal:()=>{const S=Math.min(W(),H())*.045,HH=S*Math.sqrt(3);const hs=[];for(let c2=0;c2<Math.ceil(W()/(S*1.5))+1;c2++)for(let r=0;r<Math.ceil(H()/HH)+1;r++)hs.push({x:c2*S*1.5,y:r*HH+(c2%2?HH/2:0),lit:0,ti:Math.random()*200});const hp=(cx,cy,r)=>{ctx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));}ctx.closePath();};return()=>{bgFill();hs.forEach(h=>{h.ti--;if(h.ti<=0){h.lit=Math.random()>.85?1:0;h.ti=30+Math.random()*180;}if(h.lit>0)h.lit=Math.max(0,h.lit-.015);hp(h.x,h.y,S-1);ctx.fillStyle=`rgba(${C1()},${(0.05+h.lit*.4)*.3})`;ctx.fill();ctx.strokeStyle=`rgba(${C1()},${.05+h.lit*.4})`;ctx.lineWidth=.8;ctx.stroke();});};},
+        constelacao:()=>{const ss=Array.from({length:50},()=>({x:Math.random()*W(),y:Math.random()*H(),vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.8+.5,pu:Math.random()*Math.PI*2,pri:Math.random()>.3}));return()=>{bgFill();ss.forEach((s,i)=>{s.x+=s.vx;s.y+=s.vy;if(s.x<0)s.x=W();if(s.x>W())s.x=0;if(s.y<0)s.y=H();if(s.y>H())s.y=0;ss.forEach((s2,j)=>{if(j<=i)return;const d=Math.hypot(s.x-s2.x,s.y-s2.y);if(d<80){ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s2.x,s2.y);ctx.strokeStyle=`rgba(${C1()},${ (1-d/80)*.2})`;ctx.lineWidth=.7;ctx.stroke();}});const col=s.pri?C1():C2();const al=.4+Math.sin(t*1.5+s.pu)*.4;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(${col},${al})`;ctx.shadowColor=`rgba(${col},.8)`;ctx.shadowBlur=4;ctx.fill();ctx.shadowBlur=0;});t+=.03;};},
+        chamas:()=>{const ps=Array.from({length:70},()=>({x:Math.random()*W(),y:H()+Math.random()*20,vx:(Math.random()-.5)*1.2,vy:-(1.5+Math.random()*2.5),li:Math.random(),ml:.6+Math.random()*.4,sz:2+Math.random()*5,pri:Math.random()>.5}));return()=>{bgFill();ps.forEach(p=>{p.x+=p.vx+Math.sin(p.li*8)*.5;p.y+=p.vy;p.li+=.018;if(p.li>=p.ml){p.x=Math.random()*W();p.y=H()+5;p.li=0;p.vy=-(1.5+Math.random()*2.5);p.vx=(Math.random()-.5)*1.2;}const pr=p.li/p.ml,al=(1-pr)*.9,r=p.sz*(1-pr*.5);const col=p.pri?C1():C2();ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=`rgba(${col},${al})`;ctx.shadowColor=`rgba(${col},.8)`;ctx.shadowBlur=r*3;ctx.fill();ctx.shadowBlur=0;});};},
+        raios:()=>{let bs=[];setInterval(()=>bs.push({x:20+Math.random()*(W()-40),li:1,pri:Math.random()>.5}),1200);bs.push({x:W()/2,li:1,pri:true});const lg=(x1,y1,x2,y2,d)=>{if(d===0){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();return;}const mx=(x1+x2)/2+(Math.random()-.5)*40/d,my=(y1+y2)/2+(Math.random()-.5)*40/d;lg(x1,y1,mx,my,d-1);lg(mx,my,x2,y2,d-1);};return()=>{bgFill();bs=bs.filter(b=>b.li>0);bs.forEach(b=>{b.li-=.04;const col=b.pri?C1():C2();ctx.strokeStyle=`rgba(${col},${b.li*.9})`;ctx.lineWidth=b.li*1.5;ctx.shadowColor=`rgba(${col},${b.li})`;ctx.shadowBlur=8;lg(b.x,0,b.x+(Math.random()-.5)*30,H(),3);ctx.shadowBlur=0;});};},
+        galaxia:()=>{const ss=Array.from({length:200},(_,i)=>{const a=i%3;const d=10+Math.random()*Math.min(W(),H())*.42;const ba=a*(Math.PI*2/3)+d*.04;return{d,an:ba+Math.random()*.4,sp:.002+.008/d*10,sz:.5+Math.random()*2,pri:a!==2,al:.3+Math.random()*.7};});return()=>{bgFill();const CX=W()/2,CY=H()/2;ss.forEach(s=>{s.an+=s.sp;const x=CX+Math.cos(s.an)*s.d,y=CY+Math.sin(s.an)*s.d*.5;const col=s.pri?C1():C2();ctx.beginPath();ctx.arc(x,y,s.sz,0,Math.PI*2);ctx.fillStyle=`rgba(${col},${s.al})`;if(s.sz>1.5){ctx.shadowColor=`rgba(${col},.8)`;ctx.shadowBlur=4;}ctx.fill();ctx.shadowBlur=0;});};},
+    };
+    const fn=anims[nome]?.();
+    if(!fn)return;
+    function loop(){fn();animFrame=requestAnimationFrame(loop);}
+    loop();
+}
+</script>
+
+<!-- ══ TUTORIAL OVERLAY ══ -->
+<div id="tour-overlay" style="display:none;position:fixed;inset:0;z-index:9000;pointer-events:none;">
+    <!-- Fundo escuro com buraco no spotlight -->
+    <svg id="tour-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:all;" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <mask id="tour-mask">
+                <rect width="100%" height="100%" fill="white"/>
+                <rect id="tour-hole" rx="14" ry="14" fill="black"/>
+            </mask>
+        </defs>
+        <rect width="100%" height="100%" fill="rgba(0,0,0,0.72)" mask="url(#tour-mask)"/>
+        <!-- Borda brilhante ao redor do spotlight -->
+        <rect id="tour-border" rx="14" ry="14" fill="none" stroke="#00d4ff" stroke-width="2"
+              style="filter:drop-shadow(0 0 8px rgba(0,212,255,0.8))"/>
+    </svg>
+
+    <!-- Balão do passo -->
+    <div id="tour-balloon" style="
+        position:absolute;
+        background:rgba(10,16,28,0.97);
+        border:1.5px solid rgba(0,212,255,0.45);
+        border-radius:16px;
+        padding:1.1rem 1.3rem 1rem;
+        max-width:300px;
+        width:calc(100vw - 2.5rem);
+        box-shadow:0 0 32px rgba(0,212,255,0.18);
+        pointer-events:all;
+        z-index:9001;
+    ">
+        <!-- Seta do balão -->
+        <div id="tour-arrow" style="
+            position:absolute;
+            width:0;height:0;
+            border-left:9px solid transparent;
+            border-right:9px solid transparent;
+        "></div>
+
+        <!-- Cabeçalho -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;">
+            <div id="tour-step-label" style="font-size:.65rem;color:rgba(0,212,255,.6);font-weight:700;letter-spacing:1.5px;text-transform:uppercase"></div>
+            <button id="tour-skip" style="background:transparent;border:none;color:rgba(255,255,255,.3);font-size:.72rem;cursor:pointer;padding:0;line-height:1">Pular tutorial ✕</button>
+        </div>
+
+        <!-- Emoji grande + título -->
+        <div id="tour-emoji" style="font-size:2rem;line-height:1;margin-bottom:.4rem;text-align:center"></div>
+        <div id="tour-title" style="font-size:.98rem;font-weight:800;color:#fff;margin-bottom:.4rem;text-align:center"></div>
+        <div id="tour-desc"  style="font-size:.8rem;color:rgba(255,255,255,.65);line-height:1.55;text-align:center;margin-bottom:1rem"></div>
+
+        <!-- Dots de progresso -->
+        <div id="tour-dots" style="display:flex;justify-content:center;gap:.4rem;margin-bottom:.9rem"></div>
+
+        <!-- Botões -->
+        <div style="display:flex;gap:.5rem;">
+            <button id="tour-prev" style="
+                flex:1;padding:.6rem;
+                background:transparent;border:1.5px solid rgba(255,255,255,.15);
+                border-radius:8px;color:rgba(255,255,255,.5);
+                font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;
+            ">← Anterior</button>
+            <button id="tour-next" style="
+                flex:2;padding:.6rem;
+                background:rgba(0,212,255,.12);border:1.5px solid #00d4ff;
+                border-radius:8px;color:#00d4ff;
+                font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s;
+            ">Próximo →</button>
+        </div>
+    </div>
+</div>
+
+<style>
+#tour-next:hover{background:rgba(0,212,255,.22)!important;box-shadow:0 0 18px rgba(0,212,255,.35);}
+#tour-prev:hover{border-color:rgba(255,255,255,.35)!important;color:rgba(255,255,255,.8)!important;}
+#tour-skip:hover{color:rgba(255,255,255,.6)!important;}
+</style>
+
+<script>
+(function(){
+// ─── PASSOS DO TUTORIAL ───
+const PASSOS = [
+    {
+        emoji: '👋',
+        titulo: 'Bem-vindo ao agendamento!',
+        desc: 'Em poucos passos você marca seu horário sem precisar ligar. Vamos te guiar rapidinho!',
+        alvo: null, // sem spotlight no primeiro passo (tela toda)
+        step: 0,
+    },
+    {
+        emoji: '🪪',
+        titulo: 'Seu nome ou apelido',
+        desc: 'Digite como quer ser chamado na barbearia. Pode ser apelido mesmo — o barbeiro vai te chamar assim!',
+        alvo: 'cli-nome',
+        step: 0,
+    },
+    {
+        emoji: '📱',
+        titulo: 'Seu WhatsApp',
+        desc: 'O barbeiro pode te mandar uma mensagem confirmando o horário. Coloque com DDD.',
+        alvo: 'cli-wpp',
+        step: 0,
+    },
+    {
+        emoji: '✂️',
+        titulo: 'Escolha o serviço',
+        desc: 'Toque no serviço que quer fazer. Pode combinar mais de um — ex: Corte + Barba — o valor soma automaticamente!',
+        alvo: 'services-grid',
+        step: 1,
+    },
+    {
+        emoji: '📅',
+        titulo: 'Escolha o dia e horário',
+        desc: 'Deslize os dias para escolher a data. Os horários em 🟢 verde estão livres — toque para selecionar.',
+        alvo: 'date-scroll',
+        step: 2,
+    },
+    {
+        emoji: '🎟️',
+        titulo: 'Comprovante gerado!',
+        desc: 'Pronto! Tire um PRINT desta tela para apresentar na barbearia. Seu atendimento está garantido!',
+        alvo: null,
+        step: 3,
+    },
+];
+
+const CHAVE_LS = 'prob_tour_visto_v1';
+let passoAtual = 0;
+
+const overlay   = document.getElementById('tour-overlay');
+const balloon   = document.getElementById('tour-balloon');
+const arrow     = document.getElementById('tour-arrow');
+const hole      = document.getElementById('tour-hole');
+const border    = document.getElementById('tour-border');
+const emojiEl   = document.getElementById('tour-emoji');
+const titleEl   = document.getElementById('tour-title');
+const descEl    = document.getElementById('tour-desc');
+const labelEl   = document.getElementById('tour-step-label');
+const dotsEl    = document.getElementById('tour-dots');
+const nextBtn   = document.getElementById('tour-next');
+const prevBtn   = document.getElementById('tour-prev');
+const skipBtn   = document.getElementById('tour-skip');
+
+function fecharTour(){
+    overlay.style.display = 'none';
+    localStorage.setItem(CHAVE_LS, '1');
+}
+
+function atualizarDots(){
+    dotsEl.innerHTML = PASSOS.map((_,i) => `
+        <div style="
+            width:${i===passoAtual?'20px':'7px'};height:7px;border-radius:4px;
+            background:${i===passoAtual?'#00d4ff':'rgba(255,255,255,.2)'};
+            transition:all .3s;
+        "></div>
+    `).join('');
+}
+
+function posicionarBalao(rect){
+    const bW = Math.min(300, window.innerWidth - 40);
+    balloon.style.width = bW + 'px';
+
+    // Força layout para pegar altura real
+    balloon.style.visibility = 'hidden';
+    balloon.style.display = 'block';
+    const bH = balloon.offsetHeight;
+    balloon.style.visibility = '';
+
+    const GAP = 16;
+    const arrowH = 10;
+    let top, left, arrowStyle;
+
+    if(!rect){
+        // Sem spotlight: centraliza na tela
+        top  = window.innerHeight/2 - bH/2;
+        left = window.innerWidth/2 - bW/2;
+        arrow.style.display = 'none';
+    } else {
+        left = Math.max(12, Math.min(rect.left + rect.width/2 - bW/2, window.innerWidth - bW - 12));
+
+        const abaixo = rect.bottom + GAP + arrowH + bH + 12 < window.innerHeight;
+        if(abaixo){
+            top = rect.bottom + GAP + arrowH;
+            // Seta aponta pra cima
+            arrow.style.cssText = `
+                position:absolute;top:${-arrowH}px;
+                left:${Math.min(Math.max(rect.left+rect.width/2-left-9,12),bW-30)}px;
+                width:0;height:0;
+                border-left:9px solid transparent;
+                border-right:9px solid transparent;
+                border-bottom:${arrowH}px solid rgba(0,212,255,0.45);
+            `;
+        } else {
+            top = rect.top - GAP - arrowH - bH;
+            // Seta aponta pra baixo
+            arrow.style.cssText = `
+                position:absolute;bottom:${-arrowH}px;
+                left:${Math.min(Math.max(rect.left+rect.width/2-left-9,12),bW-30)}px;
+                width:0;height:0;
+                border-left:9px solid transparent;
+                border-right:9px solid transparent;
+                border-top:${arrowH}px solid rgba(0,212,255,0.45);
+            `;
+        }
+        top = Math.max(8, Math.min(top, window.innerHeight - bH - 8));
+        arrow.style.display = 'block';
+    }
+
+    balloon.style.top  = top + 'px';
+    balloon.style.left = left + 'px';
+}
+
+function mostrarPasso(idx){
+    const p = PASSOS[idx];
+    passoAtual = idx;
+
+    emojiEl.textContent = p.emoji;
+    titleEl.textContent = p.titulo;
+    descEl.textContent  = p.desc;
+    labelEl.textContent = `Passo ${idx + 1} de ${PASSOS.length}`;
+
+    prevBtn.style.display = idx === 0 ? 'none' : 'flex';
+    nextBtn.textContent   = idx === PASSOS.length - 1 ? '✅ Entendi!' : 'Próximo →';
+
+    atualizarDots();
+
+    // Spotlight
+    const PAD = 10;
+    if(p.alvo){
+        const el = document.getElementById(p.alvo);
+        if(el){
+            const r = el.getBoundingClientRect();
+            const x = r.left - PAD, y = r.top - PAD + window.scrollY;
+            const w = r.width + PAD*2, h = r.height + PAD*2;
+            hole.setAttribute('x', x); hole.setAttribute('y', y - window.scrollY);
+            hole.setAttribute('width', w); hole.setAttribute('height', h);
+            border.setAttribute('x', x); border.setAttribute('y', y - window.scrollY);
+            border.setAttribute('width', w); border.setAttribute('height', h);
+            hole.style.display = border.style.display = '';
+            posicionarBalao(r);
+        }
+    } else {
+        hole.style.display = border.style.display = 'none';
+        posicionarBalao(null);
+    }
+}
+
+function iniciarTour(){
+    // Garante que está no step correto do formulário
+    passoAtual = 0;
+    overlay.style.display = 'block';
+    mostrarPasso(0);
+}
+
+nextBtn.addEventListener('click', () => {
+    if(passoAtual >= PASSOS.length - 1){ fecharTour(); return; }
+
+    const proximoPasso = PASSOS[passoAtual + 1];
+
+    // Navega para o step correto do formulário se necessário
+    const stepAtual = PASSOS[passoAtual].step;
+    const stepProx  = proximoPasso.step;
+    if(stepProx !== stepAtual){
+        // Avança o formulário simulando o fluxo (sem validação — só visual)
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const screenEl = document.getElementById('s' + stepProx);
+        if(screenEl) screenEl.classList.add('active');
+        document.querySelectorAll('.step-dot').forEach((d,i) => {
+            d.classList.remove('active','done');
+            if(i < stepProx) d.classList.add('done');
+            if(i === stepProx) d.classList.add('active');
+        });
+        // Pequeno delay para o DOM renderizar antes de posicionar o balão
+        setTimeout(() => mostrarPasso(passoAtual + 1), 80);
+    } else {
+        mostrarPasso(passoAtual + 1);
+    }
+});
+
+prevBtn.addEventListener('click', () => {
+    if(passoAtual <= 0) return;
+    const stepAtual = PASSOS[passoAtual].step;
+    const stepAnterior = PASSOS[passoAtual - 1].step;
+    if(stepAnterior !== stepAtual){
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const screenEl = document.getElementById('s' + stepAnterior);
+        if(screenEl) screenEl.classList.add('active');
+        document.querySelectorAll('.step-dot').forEach((d,i) => {
+            d.classList.remove('active','done');
+            if(i < stepAnterior) d.classList.add('done');
+            if(i === stepAnterior) d.classList.add('active');
+        });
+        setTimeout(() => mostrarPasso(passoAtual - 1), 80);
+    } else {
+        mostrarPasso(passoAtual - 1);
+    }
+});
+
+skipBtn.addEventListener('click', () => {
+    // Volta para o step 0 ao pular
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('s0').classList.add('active');
+    document.querySelectorAll('.step-dot').forEach((d,i) => {
+        d.classList.remove('active','done');
+        if(i === 0) d.classList.add('active');
+    });
+    fecharTour();
+});
+
+// Repositiciona balão ao redimensionar
+window.addEventListener('resize', () => {
+    if(overlay.style.display !== 'none') mostrarPasso(passoAtual);
+});
+
+// ─── BOTÃO "Ver tutorial" no Step 0 ───
+const btnTutorial = document.createElement('button');
+btnTutorial.textContent = '❓ Como agendar?';
+btnTutorial.style.cssText = `
+    display:block;width:100%;margin-top:.5rem;
+    padding:.55rem;background:transparent;
+    border:1px solid rgba(0,212,255,.2);border-radius:8px;
+    color:rgba(0,212,255,.55);font-size:.78rem;
+    cursor:pointer;transition:all .2s;font-family:inherit;
+`;
+btnTutorial.onmouseover = () => { btnTutorial.style.borderColor='rgba(0,212,255,.5)'; btnTutorial.style.color='rgba(0,212,255,.9)'; };
+btnTutorial.onmouseout  = () => { btnTutorial.style.borderColor='rgba(0,212,255,.2)'; btnTutorial.style.color='rgba(0,212,255,.55)'; };
+btnTutorial.addEventListener('click', iniciarTour);
+
+// Insere o botão após o form-box do step 0, antes do crédito
+const s0 = document.getElementById('s0');
+const credito = s0 ? s0.querySelector('a[href*="wa.me"]') : null;
+if(credito) credito.parentNode.insertBefore(btnTutorial, credito);
+
+// ─── Disparo automático na primeira visita ───
+if(!localStorage.getItem(CHAVE_LS)){
+    // Aguarda o Firebase carregar o nome da barbearia
+    setTimeout(iniciarTour, 900);
+}
+
+})();
+</script>
+
+</body>
+</html>
