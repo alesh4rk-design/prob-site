@@ -1700,6 +1700,12 @@
     function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
     window.addEventListener('resize',resize);resize();
 
+    let particlesAtivas=true;
+    window.setParticlesVisible=(v)=>{
+        particlesAtivas=v;
+        cv.style.display=v?'block':'none';
+    };
+
     const particles=Array.from({length:55},()=>({
         x:Math.random()*W,y:Math.random()*H,
         vx:(Math.random()-.5)*0.3,vy:-Math.random()*0.5-0.1,
@@ -1716,6 +1722,7 @@
         speed:Math.random()*0.003+0.001
     }));
     function draw(){
+        if(!particlesAtivas){requestAnimationFrame(draw);return;}
         ctx.clearRect(0,0,W,H);
         lines.forEach(l=>{
             l.angle+=l.speed;
@@ -2064,10 +2071,12 @@ onAuthStateChanged(auth,async user=>{
         if(authInitialized){
             authLogoutTimer = setTimeout(()=>{
                 if(!auth.currentUser){
+                    if(window.setParticlesVisible) window.setParticlesVisible(true);
                     go('screen-login');
                 }
             }, 2000);
         } else {
+            if(window.setParticlesVisible) window.setParticlesVisible(true);
             go('screen-login');
         }
     }
@@ -2323,11 +2332,15 @@ function initDash(){
             document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
             tab.classList.add('active');
             $('tab-'+tab.dataset.tab).classList.add('active');
+            // Partículas de fundo: só ficam ligadas na aba Clientes
+            if(window.setParticlesVisible) window.setParticlesVisible(tab.dataset.tab==='clientes');
             // Carrega dados específicos ao abrir aba
             if(tab.dataset.tab==='cortes') carregarPromocoes();
             if(tab.dataset.tab==='clientes'){ carregarClientes(); carregarAvisos1h(); }
         });
     });
+    // Aba inicial (Agendamentos) não é a Clientes — desliga as partículas
+    if(window.setParticlesVisible) window.setParticlesVisible(false);
 
     // Aplica visibilidade da aba Fila imediatamente
     aplicarVisibilidadeAbaFila(barbeiroData.modoAtendimento||'agendamento');
@@ -4697,6 +4710,9 @@ async function initFuncionarioMode(){
     document.getElementById('screen-dash').appendChild(tabArea.firstElementChild);
     document.getElementById('screen-dash').appendChild(tabArea.firstElementChild);
     document.getElementById('screen-dash').appendChild(tabArea.firstElementChild);
+
+    // Modo funcionário não tem aba Clientes — partículas ficam sempre desligadas
+    if(window.setParticlesVisible) window.setParticlesVisible(false);
 
     // Tab switching for func tabs
     document.querySelectorAll('.tab').forEach(tab=>{
