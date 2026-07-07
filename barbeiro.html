@@ -124,9 +124,9 @@
         .btn-logout:hover{border-color:var(--red);color:var(--red);}
 
         .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--card2);padding:0 1.5rem;overflow-x:auto;}
-        .tab{padding:.9rem 1.25rem;font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
-        .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
-        .tab:hover:not(.active){color:var(--text);}
+        .tab{padding:.9rem 1.25rem;font-size:.85rem;font-weight:600;letter-spacing:.4px;color:var(--muted);cursor:pointer;border-left:3px solid transparent;white-space:nowrap;transition:all .2s;}
+        .tab.active{color:var(--blue);border-left-color:var(--blue);background:rgba(0,212,255,.07);}
+        .tab:hover:not(.active){color:var(--text);background:rgba(255,255,255,.03);}
 
         .tab-content{display:none;padding:1.5rem;max-width:900px;margin:0 auto;}
         .tab-content.active{display:block;}
@@ -728,8 +728,15 @@
 
     <div id="dash-content">
     <div class="topbar">
-        <div class="topbar-logo-wrap">
-            <div class="topbar-logo">PRO'<span style="color:#fff">B</span></div>
+        <div style="display:flex;align-items:center;gap:.75rem">
+            <button id="btn-menu-hamburger" aria-label="Abrir menu" style="background:transparent;border:1.5px solid var(--border);border-radius:8px;width:38px;height:38px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;flex-shrink:0">
+                <span style="width:18px;height:2px;background:var(--blue);border-radius:2px"></span>
+                <span style="width:18px;height:2px;background:var(--blue);border-radius:2px"></span>
+                <span style="width:18px;height:2px;background:var(--blue);border-radius:2px"></span>
+            </button>
+            <div class="topbar-logo-wrap">
+                <div class="topbar-logo">PRO'<span style="color:#fff">B</span></div>
+            </div>
         </div>
         <div class="topbar-user">
             <div class="user-avatar" id="avatar-initials" title="">?</div>
@@ -738,7 +745,16 @@
         </div>
     </div>
 
-    <div class="tabs">
+    <div id="menu-titulo-atual" style="padding:.7rem 1.5rem;font-size:.85rem;font-weight:700;color:var(--blue);border-bottom:1px solid var(--border);background:var(--card2);display:flex;align-items:center;gap:.5rem">📋 Agendamentos</div>
+
+    <div id="drawer-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:299;opacity:0;pointer-events:none;transition:opacity .25s;"></div>
+
+    <div class="tabs" id="drawer-menu" style="position:fixed;top:0;left:0;bottom:0;width:260px;max-width:80vw;flex-direction:column;background:var(--card2);border-right:1px solid var(--border);border-bottom:none;padding:0;overflow-x:hidden;overflow-y:auto;z-index:300;transform:translateX(-100%);transition:transform .25s;">
+        <div style="padding:1.1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <div class="topbar-logo" style="font-size:1.1rem">PRO'<span style="color:#fff">B</span></div>
+            <button id="btn-fechar-drawer" aria-label="Fechar menu" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;padding:.2rem .4rem">✕</button>
+        </div>
+        <div id="drawer-tab-items" style="display:flex;flex-direction:column">
         <div class="tab active" data-tab="agendamentos">📋 Agendamentos</div>
         <div class="tab" data-tab="fila">🪑 Fila de Espera</div>
         <div class="tab" data-tab="cortes">✂️ Cortes</div>
@@ -748,6 +764,7 @@
         <div class="tab" data-tab="perfil">⚙️ Configurações</div>
         <div class="tab" data-tab="visual">📱 Tela Cliente</div>
         <div class="tab" data-tab="gestao">💼 Gestão da Barbearia</div>
+        </div>
     </div>
 
     <!-- TAB Agendamentos -->
@@ -1827,6 +1844,11 @@ function toast(msg,color='var(--green)'){
     const t=$('toast');t.textContent=msg;t.style.borderColor=color;t.style.color=color;
     t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);
 }
+function fecharDrawer(){
+    const d=$('drawer-menu'), o=$('drawer-overlay');
+    if(d) d.style.transform='translateX(-100%)';
+    if(o){ o.style.opacity='0'; o.style.pointerEvents='none'; }
+}
 function fmtDate(d){return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});}
 function fmtHoje(){return new Date().toISOString().split('T')[0];}
 function horaParaMin(h){const[hh,mm]=h.split(':').map(Number);return hh*60+mm;}
@@ -2384,6 +2406,9 @@ function initDash(){
             document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
             tab.classList.add('active');
             $('tab-'+tab.dataset.tab).classList.add('active');
+            const tituloEl=$('menu-titulo-atual');
+            if(tituloEl) tituloEl.innerHTML=tab.innerHTML;
+            fecharDrawer();
             // Partículas de fundo: só ficam ligadas na aba Clientes
             if(window.setParticlesVisible) window.setParticlesVisible(tab.dataset.tab==='clientes');
             // Carrega dados específicos ao abrir aba
@@ -2393,6 +2418,21 @@ function initDash(){
     });
     // Aba inicial (Agendamentos) não é a Clientes — desliga as partículas
     if(window.setParticlesVisible) window.setParticlesVisible(false);
+
+    // Gaveta lateral de navegação — liga os botões só uma vez
+    if(!window.__drawerBound){
+        window.__drawerBound = true;
+        const abrirDrawer=()=>{
+            $('drawer-menu').style.transform='translateX(0)';
+            $('drawer-overlay').style.opacity='1';
+            $('drawer-overlay').style.pointerEvents='auto';
+        };
+        window.abrirDrawer = abrirDrawer;
+        window.fecharDrawer = fecharDrawer;
+        $('btn-menu-hamburger').addEventListener('click', abrirDrawer);
+        $('btn-fechar-drawer').addEventListener('click', fecharDrawer);
+        $('drawer-overlay').addEventListener('click', fecharDrawer);
+    }
 
     // Aplica visibilidade da aba Fila imediatamente
     aplicarVisibilidadeAbaFila(barbeiroData.modoAtendimento||'agendamento');
@@ -4838,11 +4878,12 @@ async function initFuncionarioMode(){
     if(!funcMembro)return false;
 
     // Show only employee view
-    document.querySelector('.tabs').innerHTML=`
+    document.getElementById('drawer-tab-items').innerHTML=`
         <div class="tab active" data-tab="func-agenda">📋 Meus Agendamentos</div>
         <div class="tab" data-tab="func-fila">🪑 Fila</div>
         <div class="tab" data-tab="func-ganhos">💰 Meus Ganhos</div>
         <div class="tab" data-tab="func-horarios">🕐 Meus Horários</div>`;
+    document.getElementById('menu-titulo-atual').innerHTML='📋 Meus Agendamentos';
 
     // Hide all tabs, show func tabs
     document.querySelectorAll('.tab-content').forEach(t=>{t.style.display='none';});
@@ -4914,8 +4955,24 @@ async function initFuncionarioMode(){
             const id='tab-'+tab.dataset.tab;
             const el=document.getElementById(id);
             if(el)el.classList.add('active');
+            const tituloEl=$('menu-titulo-atual');
+            if(tituloEl) tituloEl.innerHTML=tab.innerHTML;
+            fecharDrawer();
         });
     });
+
+    // Gaveta lateral — liga os botões só uma vez (mesmo mecanismo do painel do dono)
+    if(!window.__drawerBound){
+        window.__drawerBound = true;
+        const abrirDrawer=()=>{
+            $('drawer-menu').style.transform='translateX(0)';
+            $('drawer-overlay').style.opacity='1';
+            $('drawer-overlay').style.pointerEvents='auto';
+        };
+        $('btn-menu-hamburger').addEventListener('click', abrirDrawer);
+        $('btn-fechar-drawer').addEventListener('click', fecharDrawer);
+        $('drawer-overlay').addEventListener('click', fecharDrawer);
+    }
 
     // Load func agendamentos
     const hoje=new Date().toISOString().split('T')[0];
