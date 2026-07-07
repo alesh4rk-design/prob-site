@@ -184,12 +184,13 @@
 
         /* ── Nome principal da barbearia ── */
         .barber-nome-principal {
-            font-size:2.6rem;font-weight:900;
+            font-size:clamp(1.5rem, 7.5vw, 2.6rem);font-weight:900;
             letter-spacing:3px;text-transform:uppercase;
             color:#00d4ff;
             text-shadow:0 0 20px rgba(0,212,255,0.9),0 0 40px rgba(0,212,255,0.5);
             animation:flicker 4s infinite;
             display:inline-block;text-align:center;
+            max-width:100%;overflow-wrap:break-word;word-break:break-word;
         }
         .prob-assinatura{text-align:center;font-size:.72rem;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;margin-bottom:.5rem;line-height:1.9;}
         .prob-marca{color:rgba(0,212,255,0.7);font-weight:700;}
@@ -552,7 +553,7 @@
     <div class="screen active" id="s0">
         <div class="header">
             <!-- Layout lado a lado: ícone/barberpole + nome -->
-            <div id="hero-row" style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.2rem;">
+            <div id="hero-row" style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.2rem;flex-wrap:wrap;max-width:100%;">
                 <!-- Barberpole animado -->
                 <div id="barberpole-wrap" style="display:none;flex-shrink:0;">
                     <div class="barberpole"><div class="pole-stripes"></div></div>
@@ -905,7 +906,8 @@ function aplicarPersonalizacao(data) {
     const el0=$('barber-name-0');
     if(el0){
         el0.innerHTML=montarNomeHTML(nomeExibido);
-        el0.style.fontSize=Math.min(p.tamanho||2.6, 3.5)+'rem';
+        const tamanhoMax = Math.min(p.tamanho||2.6, 3.5);
+        el0.style.fontSize=`clamp(1.5rem, 7.5vw, ${tamanhoMax}rem)`;
     }
 
     // Steps simples (Neon Name)

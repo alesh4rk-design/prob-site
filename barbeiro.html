@@ -678,7 +678,7 @@
 <section class="screen" id="screen-dash">
 
     <!-- Banner de aviso de vencimento -->
-    <div id="expiry-banner" style="display:none;padding:.65rem 1.5rem;font-size:.82rem;font-weight:600;text-align:center;position:sticky;top:0;z-index:200;"></div>
+    <div id="expiry-banner" style="display:none;padding:.65rem 1.5rem;font-size:.82rem;font-weight:600;text-align:center;position:relative;z-index:50;"></div>
 
     <!-- Modal de aviso de vencimento -->
     <div id="modal-aviso" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;">
@@ -1458,7 +1458,7 @@
             <input type="text" id="cli-busca" placeholder="🔍 Nome ou WhatsApp..."
                 style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem 1rem;color:var(--text);font-size:.85rem;outline:none;width:200px">
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:1.2rem">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.85rem">
             <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem;text-align:center">
                 <div style="font-family:'Courier New',monospace;font-size:1.4rem;font-weight:900;color:var(--blue)" id="cli-kpi-total">0</div>
                 <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:.2rem">Clientes</div>
@@ -1471,6 +1471,17 @@
                 <div style="font-family:'Courier New',monospace;font-size:1.4rem;font-weight:900;color:var(--yellow)" id="cli-kpi-cortes">0</div>
                 <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:.2rem">Total Cortes</div>
             </div>
+            <div style="background:var(--card);border:1px solid rgba(255,140,66,.35);border-radius:10px;padding:.85rem;text-align:center">
+                <div style="font-family:'Courier New',monospace;font-size:1.4rem;font-weight:900;color:#ff8c42" id="cli-kpi-atencao">0</div>
+                <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:.2rem">Precisam atenção</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem" id="cli-filtro-ausencia">
+            <button class="filtro-ausencia-btn active" data-min="0" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--blue);background:rgba(0,212,255,.12);color:var(--blue);font-size:.72rem;cursor:pointer">Todos</button>
+            <button class="filtro-ausencia-btn" data-min="5" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">5+ dias sumido</button>
+            <button class="filtro-ausencia-btn" data-min="10" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">10+ dias</button>
+            <button class="filtro-ausencia-btn" data-min="15" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">15+ dias</button>
+            <button class="filtro-ausencia-btn" data-min="30" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">30+ dias (sumidos)</button>
         </div>
         <div id="lista-clientes-barb"><div class="empty-state"><div class="icon">👥</div>Nenhum cliente cadastrado ainda.</div></div>
     </div>
@@ -1954,7 +1965,7 @@ function mostrarBanner(dias){
     else if(dias<=3){cor='rgba(245,166,35,0.12)';cor2='var(--yellow)';msg=`⚠️ Seu acesso expira em ${dias} dias.`;}
     else{cor='rgba(0,212,255,0.08)';cor2='var(--blue)';msg=`ℹ️ Trial: ${dias} dias restantes.`;}
     const wppMsg=encodeURIComponent(`Olá! Estou usando o Pro'B e quero contratar o plano mensal. Pode me ajudar?`);
-    b.style.cssText=`display:flex;align-items:center;justify-content:center;gap:.75rem;padding:.5rem 1.5rem;font-size:.78rem;font-weight:600;position:sticky;top:0;z-index:200;background:${cor};border-bottom:1px solid ${cor2.replace('var(','').replace(')','')};flex-wrap:wrap;`;
+    b.style.cssText=`display:flex;align-items:center;justify-content:center;gap:.75rem;padding:.5rem 1.5rem;font-size:.78rem;font-weight:600;position:relative;z-index:50;background:${cor};border-bottom:1px solid ${cor2.replace('var(','').replace(')','')};flex-wrap:wrap;`;
     b.innerHTML=`<span style="color:${cor2}">${msg}</span>
         <a href="https://wa.me/${WPP_ADMIN}?text=${wppMsg}" target="_blank"
            style="display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .7rem;background:rgba(37,211,102,.15);border:1px solid #25d366;border-radius:20px;color:#25d366;font-size:.72rem;font-weight:700;text-decoration:none;white-space:nowrap;">
@@ -2854,7 +2865,8 @@ function carregarAgendamentos(){
 function renderAppts(container,lista,emptyMsg){
     if(!lista.length){container.innerHTML=`<div class="empty-state"><div class="icon">📅</div>${emptyMsg}</div>`;return;}
     container.innerHTML=lista.map(a=>{
-        const wppMsg=encodeURIComponent(`Olá ${a.clienteNome}! Confirmando seu agendamento na ${barbeiroData.nome} para ${a.data} às ${a.hora} — ${a.corte}. Qualquer dúvida, fala comigo!`);
+        const comBarbeiro = a.barbeiro ? ` com ${a.barbeiro}` : '';
+        const wppMsg=encodeURIComponent(`Olá ${a.clienteNome}! Confirmando seu agendamento na ${barbeiroData.nome} para ${a.data} às ${a.hora} — ${a.corte}${comBarbeiro}. Qualquer dúvida, fala comigo!`);
         const wppUrl=`https://wa.me/55${a.clienteWhatsapp}?text=${wppMsg}`;
         const btnWpp=a.clienteWhatsapp?`<a href="${wppUrl}" target="_blank" class="btn-wpp">WPP</a>`:'';
         const barberTag=a.barbeiro?`<span class="appt-barber-tag">✂️ ${a.barbeiro}</span>`:'';
@@ -3021,14 +3033,14 @@ function renderEquipe(){
     const container=$('lista-equipe');
     if(!lista.length){container.innerHTML=`<div class="empty-state"><div class="icon">👥</div>Nenhum barbeiro cadastrado ainda.</div>`;return;}
     container.innerHTML=lista.map((b,i)=>`
-        <div class="service-item">
-            <div style="flex:1">
-                <div class="service-name">✂️ ${b.nome}</div>
+        <div class="service-item" style="flex-wrap:wrap">
+            <div style="flex:1;min-width:140px">
+                <div class="service-name" style="padding-right:0">✂️ ${escapeHtml(b.nome)}</div>
                 <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
                     Comissão: <span style="color:var(--blue);font-weight:700">${b.pct||50}%</span> por corte
                 </div>
             </div>
-            <div style="display:flex;align-items:center;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
                 <input type="number" class="pct-input" data-idx="${i}" value="${b.pct||50}"
                     min="0" max="100" step="5"
                     style="width:58px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;color:var(--text);font-size:.85rem;text-align:center;">
@@ -3718,11 +3730,24 @@ async function carregarClientes(){
     }catch(e){ console.error('carregarClientes:',e); }
 }
 
+// Classifica o cliente pelo tempo sem aparecer — usado pra cor do card e pro aviso
+function nivelAusencia(dias){
+    if(dias>=30) return {cor:'255,75,43',  label:'⚠️ Sumiu há '+dias+' dias',        peso:4};
+    if(dias>=15) return {cor:'255,140,66', label:'😐 '+dias+' dias sem aparecer',    peso:3};
+    if(dias>=10) return {cor:'245,166,35', label:'🕐 '+dias+' dias sem aparecer',    peso:2};
+    if(dias>=5)  return {cor:'148,163,184',label:dias+' dias sem aparecer',          peso:1};
+    return null;
+}
+
 function renderClientes(lista){
     // KPIs
     document.getElementById('cli-kpi-total').textContent = lista.length;
     document.getElementById('cli-kpi-recorrentes').textContent = lista.filter(c=>c.totalCortes>1).length;
     document.getElementById('cli-kpi-cortes').textContent = lista.reduce((s,c)=>s+(c.totalCortes||0),0);
+    document.getElementById('cli-kpi-atencao').textContent = lista.filter(c=>{
+        const d = c.ultimaVisita ? Math.floor((new Date()-new Date(c.ultimaVisita))/(1000*60*60*24)) : 999;
+        return d>=5;
+    }).length;
 
     const cont = document.getElementById('lista-clientes-barb');
     if(!lista.length){ cont.innerHTML='<div class="empty-state"><div class="icon">👥</div>Nenhum cliente ainda.</div>'; return; }
@@ -3733,10 +3758,27 @@ function renderClientes(lista){
         const wppNum = (c.wpp||'').replace(/\D/g,'');
         const freq = c.totalCortes > 10 ? '🔥 VIP' : c.totalCortes > 5 ? '⭐ Frequente' : c.totalCortes > 1 ? '✅ Recorrente' : '🆕 Novo';
         const diasDesde = c.ultimaVisita ? Math.floor((new Date()-new Date(c.ultimaVisita))/(1000*60*60*24)) : 999;
-        const alertaSumiu = diasDesde > 30 ? '<span style="color:var(--red);font-size:.68rem">⚠️ Sumiu há '+diasDesde+'d</span>' : '';
-        const wppMsg = encodeURIComponent(`Olá ${c.nome}! Tá sumido(a) da ${barbeiroData.nome||'barbearia'}, tá? Quando vai aparecer para um corte? 😄`);
+        const ausencia = nivelAusencia(diasDesde);
+        const alertaSumiu = ausencia ? `<span style="color:rgb(${ausencia.cor});font-size:.68rem">${ausencia.label}</span>` : '';
 
-        return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+        // Cor do card: ausência tem prioridade sobre frequência; senão, novo vs recorrente
+        let corBorda = 'var(--border)', corFundo = 'var(--card2)';
+        if(ausencia){
+            corBorda = `rgba(${ausencia.cor},.45)`; corFundo = `rgba(${ausencia.cor},.05)`;
+        } else if(c.totalCortes > 1){
+            corBorda = 'rgba(0,255,136,.35)'; corFundo = 'rgba(0,255,136,.04)';
+        } else {
+            corBorda = 'rgba(0,212,255,.3)'; corFundo = 'rgba(0,212,255,.04)';
+        }
+
+        const diasTexto = diasDesde<999 ? diasDesde : null;
+        const wppMsg = encodeURIComponent(
+            diasTexto
+            ? `Oi ${c.nome}! Notei que já faz ${diasTexto} dias desde seu último corte na ${barbeiroData.nome||'barbearia'}. Bora marcar um horário? Tô te esperando! 💈`
+            : `Oi ${c.nome}! Faz tempo que você não aparece na ${barbeiroData.nome||'barbearia'}. Bora marcar um horário? Tô te esperando! 💈`
+        );
+
+        return `<div style="background:${corFundo};border:1px solid ${corBorda};border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
             <div style="width:38px;height:38px;border-radius:50%;background:rgba(0,212,255,.12);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:var(--blue);flex-shrink:0">${escapeHtml((c.nome||'?')[0].toUpperCase())}</div>
             <div style="flex:1;min-width:0">
                 <div style="font-weight:700;font-size:.9rem">${escapeHtml(c.nome||'—')} <span style="font-size:.7rem;font-weight:400;color:var(--muted)">${freq}</span></div>
@@ -3752,12 +3794,32 @@ function renderClientes(lista){
 }
 
 // Busca em tempo real
-document.getElementById('cli-busca').addEventListener('input', function(){
-    const q = this.value.toLowerCase();
-    const filtrado = todosClientes.filter(c =>
-        (c.nome||'').toLowerCase().includes(q) || (c.wpp||'').includes(q)
-    );
+let filtroAusenciaMin = 0;
+function aplicarFiltrosClientes(){
+    const q = document.getElementById('cli-busca').value.toLowerCase();
+    const filtrado = todosClientes.filter(c=>{
+        const bateBusca = (c.nome||'').toLowerCase().includes(q) || (c.wpp||'').includes(q);
+        if(!bateBusca) return false;
+        if(filtroAusenciaMin===0) return true;
+        const dias = c.ultimaVisita ? Math.floor((new Date()-new Date(c.ultimaVisita))/(1000*60*60*24)) : 999;
+        return dias >= filtroAusenciaMin;
+    });
     renderClientes(filtrado);
+}
+
+document.getElementById('cli-busca').addEventListener('input', aplicarFiltrosClientes);
+
+document.querySelectorAll('.filtro-ausencia-btn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+        document.querySelectorAll('.filtro-ausencia-btn').forEach(b=>{
+            b.classList.remove('active');
+            b.style.borderColor='var(--border)'; b.style.background='transparent'; b.style.color='var(--muted)';
+        });
+        this.classList.add('active');
+        this.style.borderColor='var(--blue)'; this.style.background='rgba(0,212,255,.12)'; this.style.color='var(--blue)';
+        filtroAusenciaMin = parseInt(this.dataset.min);
+        aplicarFiltrosClientes();
+    });
 });
 
 // Aviso 1h antes — painel de lembretes
@@ -3796,14 +3858,27 @@ async function carregarAvisos1h(){
         cont.innerHTML = avisos.map(ag=>{
             const wppNum = ag.clienteWhatsapp.replace(/\D/g,'');
             const msg = encodeURIComponent(`Olá ${ag.clienteNome}! Passando para lembrar do seu horário às ${ag.hora} hoje na ${barbeiroData.nome||'barbearia'}. Te esperamos! ✂️`);
+            const jaEnviado = !!ag.avisoEnviado;
             return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:8px;gap:.5rem;flex-wrap:wrap">
                 <div>
                     <div style="font-size:.82rem;font-weight:700">${escapeHtml(ag.clienteNome)}</div>
-                    <div style="font-size:.72rem;color:var(--muted)">⏰ ${ag.hora} · em ${ag.diff}min</div>
+                    <div style="font-size:.72rem;color:var(--muted)">⏰ ${ag.hora} · em ${ag.diff}min ${jaEnviado?'· <span style="color:var(--green)">✓ avisado</span>':''}</div>
                 </div>
-                <a href="https://wa.me/55${wppNum}?text=${msg}" target="_blank" class="btn-wpp">📱 Avisar</a>
+                <a href="https://wa.me/55${wppNum}?text=${msg}" target="_blank" class="btn-wpp aviso-1h-btn" data-id="${ag.id}" style="${jaEnviado?'opacity:.55':''}">${jaEnviado?'↻ Reenviar':'📱 Avisar'}</a>
             </div>`;
         }).join('');
+
+        cont.querySelectorAll('.aviso-1h-btn').forEach(btn=>{
+            btn.addEventListener('click',()=>{
+                updateDoc(doc(db,'agendamentos',btn.dataset.id),{avisoEnviado:true}).catch(e=>console.error(e));
+                btn.style.opacity='.55';
+                btn.textContent='↻ Reenviar';
+                const meta = btn.closest('div').querySelector('div > div:last-child');
+                if(meta && !meta.innerHTML.includes('avisado')){
+                    meta.innerHTML += ' · <span style="color:var(--green)">✓ avisado</span>';
+                }
+            });
+        });
     }catch(e){ console.error('avisos1h:',e); }
 }
 
