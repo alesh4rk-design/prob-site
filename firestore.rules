@@ -36,7 +36,13 @@ service cloud.firestore {
       }
       match /promocoes/{doc} {
         allow read: if true;
-        allow write: if isOwner(bId) || isAdmin();
+        allow create, delete: if isOwner(bId) || isAdmin();
+        // Dono edita qualquer campo. Cliente (sem login) só pode marcar um
+        // cupom de uso único como usado — nada além disso.
+        allow update: if isOwner(bId) || isAdmin()
+                      || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usado'])
+                          && request.resource.data.usado == true
+                          && resource.data.usado != true);
       }
       match /fidelidade/{doc} {
         allow read: if true;
@@ -44,7 +50,13 @@ service cloud.firestore {
       }
       match /clientes/{doc} {
         allow read: if true;
-        allow write: if isOwner(bId) || isAdmin();
+        // Criado/atualizado tanto pelo dono quanto pelo modo funcionário (sem
+        // login próprio) sempre que um corte é concluído — por isso não exige
+        // auth, só valida o formato dos campos.
+        allow write: if request.resource.data.nome is string
+                    && request.resource.data.nome.size() < 100
+                    && request.resource.data.wpp is string
+                    && request.resource.data.wpp.size() < 20;
       }
     }
 

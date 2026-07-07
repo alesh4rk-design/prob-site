@@ -575,6 +575,18 @@
 
         <div class="form-box">
             <div class="form-title">👤 Seus dados</div>
+
+            <!-- Aparece só quando já existe sessão salva nesse navegador -->
+            <div id="cliente-reconhecido" style="display:none;margin-bottom:1rem;padding:.85rem 1rem;background:rgba(0,255,136,.06);border:1.5px solid rgba(0,255,136,.25);border-radius:10px;">
+                <div style="font-size:.85rem;color:#fff">👋 Continuar como <strong id="reconhecido-nome">—</strong></div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem" id="reconhecido-email">—</div>
+                <div style="display:flex;gap:.6rem;margin-top:.6rem">
+                    <button type="button" id="btn-continuar-reconhecido" class="btn-primary" style="flex:1;padding:.6rem;font-size:.82rem;margin:0">✂️ Continuar →</button>
+                    <button type="button" id="btn-nao-sou-eu" style="flex-shrink:0;padding:.6rem .9rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer">Não sou eu</button>
+                </div>
+            </div>
+
+            <div id="form-dados-completo">
             <div class="input-group">
                 <label>Nome ou apelido</label>
                 <input type="text" id="cli-nome" placeholder="Como quer ser chamado" autocomplete="name">
@@ -585,6 +597,26 @@
                 <input type="tel" id="cli-wpp" placeholder="(21) 9XXXX-XXXX" maxlength="15" inputmode="numeric">
                 <span class="err" id="err-wpp">Informe o WhatsApp completo (11 dígitos).</span>
             </div>
+            <div class="input-group">
+                <label>📧 Email</label>
+                <input type="email" id="cli-email" placeholder="seuemail@exemplo.com" autocomplete="email">
+                <span class="err" id="err-email">Informe um email válido.</span>
+            </div>
+            <div class="input-group">
+                <label>🔒 Senha</label>
+                <input type="password" id="cli-senha" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
+                <span class="err" id="err-senha">Senha deve ter pelo menos 6 caracteres.</span>
+            </div>
+            <p id="cli-auth-msg" style="display:none;font-size:.76rem;margin:-.4rem 0 .85rem;"></p>
+            <p style="font-size:.68rem;color:var(--muted);margin:-.5rem 0 .85rem;line-height:1.5">
+                Já tem conta aqui? É só digitar o mesmo email e senha de novo — a gente reconhece você automaticamente.
+                <a href="#" id="link-esqueci-senha" style="color:var(--blue)">Esqueci minha senha</a>
+            </p>
+            <div class="input-group">
+                <label>🎁 Cupom de desconto (opcional)</label>
+                <input type="text" id="cli-cupom" placeholder="Ex: VOLTA10" style="text-transform:uppercase">
+            </div>
+            <div id="promo-cliente-banner" style="display:none;margin-bottom:.85rem;padding:.7rem .9rem;background:rgba(0,255,136,.08);border:1.5px solid rgba(0,255,136,.3);border-radius:10px;font-size:.8rem;color:var(--green);font-weight:600;text-align:center"></div>
             <!-- LGPD — Aceite obrigatório -->
         <div id="lgpd-wrap" style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem;background:rgba(0,212,255,.04);border:1.5px solid rgba(0,212,255,.2);border-radius:10px;margin-bottom:.85rem;cursor:pointer;">
             <input type="checkbox" id="lgpd-check" style="width:18px;height:18px;flex-shrink:0;accent-color:var(--blue);margin-top:.1rem;cursor:pointer;">
@@ -610,7 +642,8 @@
             <span class="err" id="err-captcha">Resposta incorreta. Tente novamente.</span>
         </div>
 
-        <button class="btn-primary" id="btn-s0">✂️ Escolher Corte →</button>
+        <button class="btn-primary" id="btn-s0">✂️ Entrar e Escolher Corte →</button>
+        </div>
         </div>
 
         <!-- Crédito e contato -->
@@ -742,12 +775,14 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 
 const firebaseConfig = PROB_CONFIG.firebase;
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
+const auth = getAuth(app);
 
 function escapeHtml(str){
     return String(str??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -758,17 +793,26 @@ let barbeiroId   = '';
 let barbeiroInfo = {};
 let clienteNome  = '';
 let clienteWpp   = '';
-const clienteUid   = ''; // sem login — mantido vazio por compatibilidade com o formato salvo no Firestore
-const clienteEmail = '';
+let clienteUid   = '';
+let clienteEmail = '';
 let servicosEscolhidos = []; // array de objetos {nome,preco,duracao,obs,sessao}
 let barbeiroCortador = null; // barbeiro da equipe escolhido
 
 // Objeto "combo" computado a partir dos serviços escolhidos — mantém compatibilidade com código existente
 function getCorteEscolhido() {
     if (!servicosEscolhidos.length) return null;
+    const precoOriginal = servicosEscolhidos.reduce((s, x) => s + Number(x.preco || 0), 0);
+    let precoFinal = precoOriginal;
+    if(promoAplicada){
+        precoFinal = promoAplicada.descontoTipo === 'percentual'
+            ? precoOriginal * (1 - promoAplicada.descontoValor/100)
+            : Math.max(0, precoOriginal - promoAplicada.descontoValor);
+    }
     return {
         nome: servicosEscolhidos.map(s => s.nome).join(' + '),
-        preco: servicosEscolhidos.reduce((s, x) => s + Number(x.preco || 0), 0),
+        preco: precoFinal,
+        precoOriginal,
+        temDesconto: !!promoAplicada && precoFinal < precoOriginal,
         duracao: servicosEscolhidos.reduce((s, x) => s + Number(x.duracao || 30), 0),
         obs: servicosEscolhidos.filter(s => s.obs).map(s => s.obs).join(' · ') || ''
     };
@@ -777,6 +821,8 @@ let dataEscolhida  = '';
 let horaEscolhida  = '';
 let currentStep    = 0;
 let currentScreenId = 's0';
+let promosIndividuais = []; // cache das promoções individuais/cupons ativos da barbearia
+let promoAplicada  = null;  // promoção que valeu pra esse cliente, se houver
 
 /* ── Util ── */
 const $   = id => document.getElementById(id);
@@ -945,6 +991,88 @@ function aplicarPersonalizacao(data) {
     }
 }
 
+// Busca promoções ativas da barbearia: gerais (mostra banner) e
+// individuais/cupons (guarda em cache pra conferir depois que o cliente
+// informar nome/WhatsApp/cupom).
+async function carregarPromocoesCliente(){
+    if(!barbeiroId) return;
+    try{
+        const snap = await getDocs(collection(db,'barbeiros',barbeiroId,'promocoes'));
+        const todas = [];
+        snap.forEach(d=>todas.push({id:d.id,...d.data()}));
+
+        const hoje = new Date().toISOString().split('T')[0];
+        const gerais = todas.filter(p=>{
+            if(p.tipo==='individual' || !p.ativo) return false;
+            if(p.periodo==='personalizado') return hoje>=p.dataInicio && hoje<=p.dataFim;
+            return true; // permanente, semanal, mensal — sempre exibida como ativa
+        });
+
+        promosIndividuais = todas.filter(p=>
+            p.tipo==='individual' && p.ativo && !p.usado && (!p.validoAte || hoje<=p.validoAte)
+        );
+
+        const banner = $('banner-promocoes');
+        if(banner){
+            if(!gerais.length){ banner.style.display='none'; }
+            else{
+                const icones={simples:'🏷️',pacote:'📦',desconto:'💰',fidelidade:'⭐'};
+                const linhas = gerais.map(p=>{
+                    let detalhe='';
+                    if(p.tipo==='simples')    detalhe=`${p.servicos} por R$${Number(p.valor).toFixed(2)}`;
+                    if(p.tipo==='pacote')     detalhe=`${p.qtdCortes} cortes por R$${Number(p.valor).toFixed(2)}`;
+                    if(p.tipo==='desconto')   detalhe=`${p.minCortes}+ cortes ${p.basePeriodo==='semana'?'na semana':'no mês'} = ${p.desconto}% off`;
+                    if(p.tipo==='fidelidade') detalhe=`A cada ${p.meta} cortes = ${p.brinde}`;
+                    return `<div style="display:flex;align-items:flex-start;gap:.5rem;padding:.5rem 0">
+                        <span>${icones[p.tipo]||'🎁'}</span>
+                        <div><strong>${escapeHtml(p.titulo)}</strong><div style="opacity:.8">${escapeHtml(detalhe)}</div></div>
+                    </div>`;
+                }).join('<div style="height:1px;background:rgba(0,212,255,.15)"></div>');
+                banner.innerHTML = `<div style="background:rgba(0,212,255,.05);border:1.5px solid rgba(0,212,255,.25);border-radius:12px;padding:.6rem .9rem;font-size:.8rem;color:#fff">${linhas}</div>`;
+                banner.style.display='block';
+            }
+        }
+    }catch(e){ console.error('carregarPromocoesCliente:', e); }
+}
+
+// Conferido depois que o cliente informa nome/WhatsApp/cupom no Step 0.
+// Prioridade: cupom digitado > cliente identificado por WhatsApp.
+function conferirPromoCliente(wppLimpo, cupomDigitado){
+    promoAplicada = null;
+    const cupom = (cupomDigitado||'').trim().toUpperCase();
+    if(cupom){
+        promoAplicada = promosIndividuais.find(p=>p.alvo==='codigo' && p.codigo===cupom) || null;
+    }
+    if(!promoAplicada && wppLimpo){
+        promoAplicada = promosIndividuais.find(p=>p.alvo==='cliente' && p.clienteWpp===wppLimpo) || null;
+    }
+
+    const banner = $('promo-cliente-banner');
+    if(!banner) return;
+    if(promoAplicada){
+        const valorFmt = promoAplicada.descontoTipo==='percentual'
+            ? `${promoAplicada.descontoValor}% de desconto`
+            : `R$${Number(promoAplicada.descontoValor).toFixed(2)} de desconto`;
+        banner.textContent = `🎉 Cupom aplicado! Você ganhou ${valorFmt} no seu próximo agendamento.`;
+        banner.style.display='block';
+    } else if(cupom){
+        banner.style.background='rgba(255,75,43,.08)';
+        banner.style.borderColor='rgba(255,75,43,.3)';
+        banner.style.color='var(--red)';
+        banner.textContent = '❌ Cupom inválido, expirado ou já utilizado.';
+        banner.style.display='block';
+    } else {
+        banner.style.display='none';
+    }
+}
+
+async function marcarPromoUsadaSeAplicavel(){
+    if(!promoAplicada || !promoAplicada.usoUnico) return;
+    try{
+        await updateDoc(doc(db,'barbeiros',barbeiroId,'promocoes',promoAplicada.id),{usado:true});
+    }catch(e){ console.error('marcarPromoUsadaSeAplicavel:', e); }
+}
+
 function mostrarBarbeiroBloqueado(){
     // Esconde TUDO e mostra só a mensagem de bloqueio
     document.querySelectorAll('.screen, .steps-bar, .steps-wrap, #tutorial-btn').forEach(el => {
@@ -1005,8 +1133,69 @@ function gerarCaptcha(){
 $('captcha-refresh').addEventListener('click', gerarCaptcha);
 gerarCaptcha();
 
-/* ── STEP 0: Identificação ── */
-$('btn-s0').addEventListener('click', () => {
+// ── Reconhece cliente que já entrou antes nesse navegador ──
+// Evita o cliente ter que preencher tudo de novo a cada visita: se o
+// Firebase ainda tem a sessão salva (não deslogou, não limpou o navegador)
+// e temos nome/whatsapp guardados localmente, pula direto pro "Continuar".
+let sessaoJaChecada = false;
+onAuthStateChanged(auth, (user) => {
+    if (sessaoJaChecada) return; // só processa a primeira vez que carrega
+    sessaoJaChecada = true;
+    if (!user) return;
+
+    let salvo = null;
+    try { salvo = JSON.parse(localStorage.getItem('probCliente') || 'null'); } catch(e) {}
+
+    if (salvo && salvo.nome && salvo.wpp) {
+        $('reconhecido-nome').textContent  = salvo.nome;
+        $('reconhecido-email').textContent = user.email || '';
+        $('cliente-reconhecido').style.display = 'block';
+        $('form-dados-completo').style.display = 'none';
+    }
+    // Se não tem nome/wpp salvos (ex: limpou cache mas Firebase manteve sessão),
+    // deixa o formulário completo aparecer normalmente — mais seguro que adivinhar.
+});
+
+$('btn-continuar-reconhecido').addEventListener('click', () => {
+    let salvo = null;
+    try { salvo = JSON.parse(localStorage.getItem('probCliente') || 'null'); } catch(e) {}
+    if (!salvo) return;
+
+    clienteUid   = auth.currentUser ? auth.currentUser.uid : '';
+    clienteEmail = auth.currentUser ? auth.currentUser.email : '';
+    clienteNome  = salvo.nome;
+    clienteWpp   = salvo.wpp;
+    conferirPromoCliente(salvo.wpp, '');
+    goStep(1);
+    carregarCortes();
+});
+
+$('btn-nao-sou-eu').addEventListener('click', async () => {
+    try { await signOut(auth); } catch(e) {}
+    try { localStorage.removeItem('probCliente'); } catch(e) {}
+    $('cliente-reconhecido').style.display = 'none';
+    $('form-dados-completo').style.display = 'block';
+    $('cli-nome').value = '';
+    $('cli-wpp').value  = '';
+    $('cli-email').value = '';
+    $('cli-senha').value = '';
+});
+
+/* ── Erros de autenticação traduzidos ── */
+function mapAuthError(code){
+    const mapa = {
+        'auth/wrong-password': 'Email já cadastrado, mas a senha está incorreta.',
+        'auth/invalid-credential': 'Email já cadastrado, mas a senha está incorreta.',
+        'auth/invalid-email': 'Email inválido.',
+        'auth/weak-password': 'Senha muito curta — use pelo menos 6 caracteres.',
+        'auth/too-many-requests': 'Muitas tentativas. Aguarde um instante e tente de novo.',
+        'auth/network-request-failed': 'Falha de conexão. Confira sua internet.',
+    };
+    return mapa[code] || 'Não foi possível continuar. Confira seus dados e tente de novo.';
+}
+
+/* ── STEP 0: Identificação + login (tudo numa tela só) ── */
+$('btn-s0').addEventListener('click', async () => {
     // Valida LGPD
     const lgpdCheck = document.getElementById('lgpd-check');
     const lgpdWrap  = document.getElementById('lgpd-wrap');
@@ -1017,12 +1206,17 @@ $('btn-s0').addEventListener('click', () => {
     }
     if(lgpdWrap) lgpdWrap.style.borderColor = 'rgba(0,212,255,.2)';
 
-    const nome = $('cli-nome').value.trim();
-    const wpp  = $('cli-wpp').value.replace(/\D/g,'');
+    const nome  = $('cli-nome').value.trim();
+    const wpp   = $('cli-wpp').value.replace(/\D/g,'');
+    const email = $('cli-email').value.trim();
+    const senha = $('cli-senha').value;
     let ok = true;
 
-    $('err-nome').style.display = 'none'; $('cli-nome').style.borderColor = 'var(--border)';
-    $('err-wpp').style.display  = 'none'; $('cli-wpp').style.borderColor  = 'var(--border)';
+    $('err-nome').style.display  = 'none'; $('cli-nome').style.borderColor  = 'var(--border)';
+    $('err-wpp').style.display   = 'none'; $('cli-wpp').style.borderColor   = 'var(--border)';
+    $('err-email').style.display = 'none'; $('cli-email').style.borderColor = 'var(--border)';
+    $('err-senha').style.display = 'none'; $('cli-senha').style.borderColor = 'var(--border)';
+    $('cli-auth-msg').style.display = 'none';
 
     if (nome.length < 3) {
         $('err-nome').style.display = 'block';
@@ -1032,6 +1226,16 @@ $('btn-s0').addEventListener('click', () => {
     if (wpp.length !== 11) {
         $('err-wpp').style.display = 'block';
         $('cli-wpp').style.borderColor = 'var(--red)';
+        ok = false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        $('err-email').style.display = 'block';
+        $('cli-email').style.borderColor = 'var(--red)';
+        ok = false;
+    }
+    if (senha.length < 6) {
+        $('err-senha').style.display = 'block';
+        $('cli-senha').style.borderColor = 'var(--red)';
         ok = false;
     }
     if (!ok) return;
@@ -1047,10 +1251,69 @@ $('btn-s0').addEventListener('click', () => {
         return;
     }
 
-    clienteNome = nome;
-    clienteWpp  = wpp;
-    goStep(1);
-    carregarCortes();
+    const btn = $('btn-s0');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+
+    try {
+        let cred;
+        try {
+            // Tenta criar conta nova
+            cred = await createUserWithEmailAndPassword(auth, email, senha);
+        } catch(e) {
+            if (e.code === 'auth/email-already-in-use') {
+                // Já existe conta com esse email — tenta logar
+                btn.textContent = 'Email já cadastrado, entrando...';
+                cred = await signInWithEmailAndPassword(auth, email, senha);
+            } else {
+                throw e;
+            }
+        }
+
+        clienteUid   = cred.user.uid;
+        clienteEmail = email;
+        clienteNome  = nome;
+        clienteWpp   = wpp;
+        try{ localStorage.setItem('probCliente', JSON.stringify({nome, wpp})); }catch(e){}
+        conferirPromoCliente(wpp, $('cli-cupom') ? $('cli-cupom').value : '');
+        goStep(1);
+        carregarCortes();
+
+    } catch(e) {
+        console.error('Auth erro:', e.code, e.message);
+        $('cli-auth-msg').textContent = mapAuthError(e.code);
+        $('cli-auth-msg').style.color = 'var(--red)';
+        $('cli-auth-msg').style.display = 'block';
+        if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+            $('cli-senha').style.borderColor = 'var(--red)';
+        }
+    } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+    }
+});
+
+// Esqueci minha senha
+$('link-esqueci-senha').addEventListener('click', async (ev) => {
+    ev.preventDefault();
+    const email = $('cli-email').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        $('err-email').style.display = 'block';
+        $('cli-email').style.borderColor = 'var(--red)';
+        $('cli-email').scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+    }
+    try {
+        await sendPasswordResetEmail(auth, email);
+        $('cli-auth-msg').textContent = '📩 Enviamos um link de redefinição de senha pro seu email.';
+        $('cli-auth-msg').style.color = 'var(--green)';
+        $('cli-auth-msg').style.display = 'block';
+    } catch(e) {
+        $('cli-auth-msg').textContent = mapAuthError(e.code);
+        $('cli-auth-msg').style.color = 'var(--red)';
+        $('cli-auth-msg').style.display = 'block';
+    }
 });
 
 /* ── STEP 1: Cortes (multi-seleção por sessão) ── */
@@ -1331,13 +1594,16 @@ async function entrarNaFila() {
             criadoEm: new Date().toISOString(),
             origem: 'cliente'
         });
+        await marcarPromoUsadaSeAplicavel();
 
         // Preenche ticket (reaproveitando a tela de confirmação)
         $('t-nome').textContent   = clienteNome;
         $('t-barber').textContent = barbeiroInfo.nome || '';
         $('t-corte').textContent  = corteEscolhido.nome;
         $('t-data').textContent   = '🪑 Fila de espera (sem hora marcada)';
-        $('t-preco').innerHTML    = `<span class="currency">R$</span> ${Number(corteEscolhido.preco).toFixed(2)}`;
+        $('t-preco').innerHTML    = corteEscolhido.temDesconto
+            ? `<span style="text-decoration:line-through;opacity:.5;font-size:.8em;margin-right:.4em">R$ ${Number(corteEscolhido.precoOriginal).toFixed(2)}</span><span class="currency">R$</span> ${Number(corteEscolhido.preco).toFixed(2)} <span style="font-size:.7em;color:var(--green)">🎁 desconto aplicado</span>`
+            : `<span class="currency">R$</span> ${Number(corteEscolhido.preco).toFixed(2)}`;
         $('ticket-id').textContent = 'PRO-B · #' + Math.floor(100000 + Math.random()*900000);
         if(corteEscolhido.obs){
             $('t-obs').textContent = corteEscolhido.obs;
@@ -1388,13 +1654,16 @@ async function confirmarAgendamento() {
             status: 'pendente',
             criadoEm: new Date().toISOString()
         });
+        await marcarPromoUsadaSeAplicavel();
 
         // Preenche ticket
         $('t-nome').textContent   = clienteNome;
         $('t-barber').textContent = barbeiroInfo.nome || '';
         $('t-corte').textContent  = corteEscolhido.nome;
         $('t-data').textContent   = `${fmt(dataEscolhida)} às ${horaEscolhida}`;
-        $('t-preco').innerHTML    = `<span class="currency">R$</span> ${Number(corteEscolhido.preco).toFixed(2)}`;
+        $('t-preco').innerHTML    = corteEscolhido.temDesconto
+            ? `<span style="text-decoration:line-through;opacity:.5;font-size:.8em;margin-right:.4em">R$ ${Number(corteEscolhido.precoOriginal).toFixed(2)}</span><span class="currency">R$</span> ${Number(corteEscolhido.preco).toFixed(2)} <span style="font-size:.7em;color:var(--green)">🎁 desconto aplicado</span>`
+            : `<span class="currency">R$</span> ${Number(corteEscolhido.preco).toFixed(2)}`;
         $('ticket-id').textContent = 'PRO-B · #' + Math.floor(100000 + Math.random()*900000);
         if(corteEscolhido.obs){
             $('t-obs').textContent = corteEscolhido.obs;
@@ -1437,14 +1706,20 @@ async function confirmarAgendamento() {
 
 /* ── Novo agendamento ── */
 $('btn-novo').addEventListener('click', () => {
-    $('cli-nome').value = '';
-    $('cli-wpp').value  = '';
     servicosEscolhidos = [];
     barbeiroCortador   = null;
     horaEscolhida      = '';
     dataEscolhida      = '';
     $('btn-s1').disabled = true;
     $('btn-s2').disabled = true;
+    // Ainda está logado nesse navegador — não precisa preencher tudo de novo
+    if (clienteNome && clienteWpp) {
+        goStep(1);
+        carregarCortes();
+        return;
+    }
+    $('cli-nome').value = '';
+    $('cli-wpp').value  = '';
     gerarCaptcha();
     goStep(0);
 });
