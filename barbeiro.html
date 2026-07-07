@@ -740,7 +740,6 @@
         </div>
         <div class="topbar-user">
             <div class="user-avatar" id="avatar-initials" title="">?</div>
-            <div id="topbar-email" style="font-size:.72rem;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none"></div>
             <button class="btn-logout" id="btn-logout">Sair</button>
         </div>
     </div>
@@ -755,14 +754,23 @@
             <button id="btn-fechar-drawer" aria-label="Fechar menu" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;padding:.2rem .4rem">✕</button>
         </div>
         <div id="drawer-tab-items" style="display:flex;flex-direction:column">
+        <div style="padding:.6rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase">Operação do dia</div>
         <div class="tab active" data-tab="agendamentos">📋 Agendamentos</div>
         <div class="tab" data-tab="fila">🪑 Fila de Espera</div>
+
+        <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Catálogo</div>
         <div class="tab" data-tab="cortes">✂️ Cortes</div>
+        <div class="tab" data-tab="promocoes">🎁 Promoções</div>
         <div class="tab" data-tab="horarios">🕐 Horários</div>
+
+        <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Pessoas</div>
         <div class="tab" data-tab="equipe">👥 Equipe</div>
         <div class="tab" data-tab="clientes">🧑 Clientes</div>
-        <div class="tab" data-tab="perfil">⚙️ Configurações</div>
         <div class="tab" data-tab="visual">📱 Tela Cliente</div>
+        <div class="tab" data-tab="painel-chamada">📺 Painel de Chamada</div>
+
+        <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Negócio</div>
+        <div class="tab" data-tab="perfil">⚙️ Configurações</div>
         <div class="tab" data-tab="gestao">💼 Gestão da Barbearia</div>
         </div>
     </div>
@@ -854,15 +862,6 @@
 
     <!-- TAB Fila de Espera -->
     <div class="tab-content" id="tab-fila">
-        <div class="card" style="margin-bottom:1.2rem;border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04)">
-            <p style="font-size:.78rem;font-weight:700;color:var(--blue);margin-bottom:.5rem">📺 Painel de Chamada para Monitor/TV</p>
-            <p style="font-size:.75rem;color:var(--muted);margin-bottom:.85rem">Deixe este link aberto numa TV ou monitor na barbearia. Mostra automaticamente o próximo cliente e a fila completa, atualizando em tempo real.</p>
-            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-                <code id="link-painel-chamada" style="background:var(--card2);padding:.5rem .85rem;border-radius:6px;font-size:.78rem;color:var(--blue);border:1px solid var(--border);flex:1;word-break:break-all;"></code>
-                <button class="btn-add" style="font-size:.78rem;padding:.5rem 1rem" id="btn-copy-painel">Copiar</button>
-                <a id="btn-abrir-painel" href="#" target="_blank" class="btn-add" style="font-size:.78rem;padding:.5rem 1rem;text-decoration:none;display:inline-block">Abrir ↗</a>
-            </div>
-        </div>
 
         <div class="card" style="margin-bottom:1.2rem">
             <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Use a fila para clientes que chegam sem agendamento. A ordem é por chegada — sem horário fixo.</p>
@@ -883,6 +882,27 @@
 
         <div class="section-title">Aguardando</div>
         <div id="lista-fila"><div class="empty-state"><div class="icon">🪑</div>Ninguém na fila no momento.</div></div>
+    </div>
+
+    <!-- TAB Painel de Chamada -->
+    <div class="tab-content" id="tab-painel-chamada">
+        <div class="card" style="margin-bottom:1.2rem;border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04)">
+            <p style="font-size:.78rem;font-weight:700;color:var(--blue);margin-bottom:.5rem">📺 Painel de Chamada para Monitor/TV</p>
+            <p style="font-size:.75rem;color:var(--muted);margin-bottom:.85rem">Deixe este link aberto numa TV ou monitor na barbearia. Mostra automaticamente o próximo cliente e a fila completa, atualizando em tempo real.</p>
+            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+                <code id="link-painel-chamada" style="background:var(--card2);padding:.5rem .85rem;border-radius:6px;font-size:.78rem;color:var(--blue);border:1px solid var(--border);flex:1;word-break:break-all;"></code>
+                <button class="btn-add" style="font-size:.78rem;padding:.5rem 1rem" id="btn-copy-painel">Copiar</button>
+                <a id="btn-abrir-painel" href="#" target="_blank" class="btn-add" style="font-size:.78rem;padding:.5rem 1rem;text-decoration:none;display:inline-block">Abrir ↗</a>
+            </div>
+        </div>
+
+        <div class="section-title">Pré-visualização ao vivo</div>
+        <div class="card" style="padding:.6rem">
+            <div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);background:#04070c">
+                <iframe id="preview-painel-chamada" src="" style="width:100%;height:340px;border:0;display:block" loading="lazy"></iframe>
+            </div>
+            <p style="font-size:.68rem;color:var(--muted);margin-top:.6rem;text-align:center">Isso é exatamente o que vai aparecer na TV/monitor.</p>
+        </div>
     </div>
 
     <!-- TAB Equipe -->
@@ -985,8 +1005,14 @@
             <button class="btn-add" id="btn-add-corte" style="margin-top:.85rem">+ Adicionar Serviço</button>
         </div>
 
+        <div class="section-title" style="margin-top:1.5rem">Seus Serviços</div>
+        <div id="lista-cortes"><div class="empty-state"><div class="icon">✂️</div>Nenhum corte cadastrado ainda.</div></div>
+    </div>
+
+    <!-- TAB Promoções -->
+    <div class="tab-content" id="tab-promocoes">
         <!-- ════ PROMOÇÕES ════ -->
-        <div style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem">
+        <div style="margin-top:0;border-top:none;padding-top:0">
             <div class="section-title" style="color:var(--yellow)">🎁 Promoções</div>
             <div class="card">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.75rem">
@@ -1094,9 +1120,6 @@
             <div class="section-title" style="font-size:.85rem;margin-top:1rem">Carteirinhas de Fidelidade</div>
             <div id="lista-fidelidade"><div class="empty-state"><div class="icon">⭐</div>Nenhum cliente no programa ainda.</div></div>
         </div>
-
-        <div class="section-title" style="margin-top:1.5rem">Seus Serviços</div>
-        <div id="lista-cortes"><div class="empty-state"><div class="icon">✂️</div>Nenhum corte cadastrado ainda.</div></div>
     </div>
 
     <div class="tab-content" id="tab-horarios">
@@ -1493,12 +1516,20 @@
                 <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:.2rem">Precisam atenção</div>
             </div>
         </div>
-        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem" id="cli-filtro-ausencia">
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.85rem" id="cli-filtro-ausencia">
             <button class="filtro-ausencia-btn active" data-min="0" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--blue);background:rgba(0,212,255,.12);color:var(--blue);font-size:.72rem;cursor:pointer">Todos</button>
             <button class="filtro-ausencia-btn" data-min="5" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">5+ dias sumido</button>
             <button class="filtro-ausencia-btn" data-min="10" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">10+ dias</button>
             <button class="filtro-ausencia-btn" data-min="15" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">15+ dias</button>
             <button class="filtro-ausencia-btn" data-min="30" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">30+ dias (sumidos)</button>
+        </div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.2rem;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:#00d4ff;display:inline-block"></span>Novo</div>
+            <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:#00ff88;display:inline-block"></span>Recorrente</div>
+            <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(148,163,184);display:inline-block"></span>5+ dias sumido</div>
+            <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(245,166,35);display:inline-block"></span>10+ dias</div>
+            <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(255,140,66);display:inline-block"></span>15+ dias</div>
+            <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(255,75,43);display:inline-block"></span>30+ dias (sumido)</div>
         </div>
         <div id="lista-clientes-barb"><div class="empty-state"><div class="icon">👥</div>Nenhum cliente cadastrado ainda.</div></div>
     </div>
@@ -2384,9 +2415,7 @@ async function carregarBarbeiro(user){
     const av=$('avatar-initials');
     if(user.photoURL)av.innerHTML=`<img src="${user.photoURL}" alt="foto">`;
     else av.textContent=(barbeiroData.nome||user.email||'?')[0].toUpperCase();
-    // Mostra email no topbar
-    const emailEl=document.getElementById('topbar-email');
-    if(emailEl&&user.email){emailEl.textContent=user.email;emailEl.style.display='block';}
+    // Ícone do avatar já mostra o email no tooltip (title) ao passar o mouse/segurar
     if(av&&user.email) av.title=user.email;
 
     // Load funcionamento
@@ -2409,10 +2438,18 @@ function initDash(){
             const tituloEl=$('menu-titulo-atual');
             if(tituloEl) tituloEl.innerHTML=tab.innerHTML;
             fecharDrawer();
-            // Partículas de fundo: só ficam ligadas na aba Clientes
-            if(window.setParticlesVisible) window.setParticlesVisible(tab.dataset.tab==='clientes');
+            // Partículas de fundo desligadas em todo o dashboard (só ficam no login)
+            if(window.setParticlesVisible) window.setParticlesVisible(false);
             // Carrega dados específicos ao abrir aba
-            if(tab.dataset.tab==='cortes') carregarPromocoes();
+            if(tab.dataset.tab==='promocoes') carregarPromocoes();
+            if(tab.dataset.tab==='painel-chamada'){
+                const ifr=document.getElementById('preview-painel-chamada');
+                if(ifr && !ifr.src){
+                    const isLocalP = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+                    const baseUrlP = isLocalP ? window.location.origin + '/' : 'https://alesh4rk-design.github.io/prob-site/';
+                    ifr.src = baseUrlP+'painel-chamada.html?b='+barbeiroData.uid;
+                }
+            }
             if(tab.dataset.tab==='clientes'){ carregarClientes(); carregarAvisos1h(); }
         });
     });
@@ -2432,6 +2469,12 @@ function initDash(){
         $('btn-menu-hamburger').addEventListener('click', abrirDrawer);
         $('btn-fechar-drawer').addEventListener('click', fecharDrawer);
         $('drawer-overlay').addEventListener('click', fecharDrawer);
+
+        // Aviso ao recarregar/sair sem querer (comum puxar a tela pra baixo no celular)
+        window.addEventListener('beforeunload', (e) => {
+            e.preventDefault();
+            e.returnValue = '';
+        });
     }
 
     // Aplica visibilidade da aba Fila imediatamente
@@ -3627,7 +3670,7 @@ function obterSemana(date){
 
 // Atalho: vem da aba Clientes já com nome/whatsapp preenchidos
 window.criarPromoParaCliente = (nome, wpp) => {
-    document.querySelector('.tab[data-tab="cortes"]').click();
+    document.querySelector('.tab[data-tab="promocoes"]').click();
     const tipoSel = document.getElementById('promo-tipo');
     tipoSel.value = 'individual';
     tipoSel.dispatchEvent(new Event('change'));
