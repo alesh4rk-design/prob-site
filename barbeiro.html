@@ -611,6 +611,54 @@
     </div>
 </section>
 
+<!-- ════════ TELA CONVITE (funcionário aceitando convite) ════════ -->
+<section class="screen" id="screen-convite" style="min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,180,255,0.08) 0%, transparent 55%),linear-gradient(180deg,#060a12,#0a1018);">
+    <div class="login-box">
+        <div class="logo">
+            <div class="pro-b-hero-barber">
+                <span class="pro-hero-b">PRO<span class="apos">'</span><span class="apostrophe-b">B</span>
+            </div>
+            <div class="logo-sub">Convite da equipe</div>
+        </div>
+
+        <div id="convite-carregando" style="text-align:center;color:var(--muted);padding:1rem 0">Carregando convite...</div>
+
+        <div id="convite-invalido" style="display:none;text-align:center;padding:1rem 0">
+            <div style="font-size:2rem;margin-bottom:.5rem">⚠️</div>
+            <p style="color:var(--muted);font-size:.9rem;line-height:1.6">Esse link de convite não é válido, ou a pessoa já foi removida da equipe. Fale com o dono da barbearia.</p>
+        </div>
+
+        <div id="convite-usado" style="display:none;text-align:center;padding:1rem 0">
+            <div style="font-size:2rem;margin-bottom:.5rem">✅</div>
+            <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1rem">Esse convite já foi usado — a conta já existe. É só entrar normalmente.</p>
+            <button class="btn-primary" id="btn-convite-ir-login">Ir para o login</button>
+        </div>
+
+        <div id="convite-form" style="display:none">
+            <p style="text-align:center;font-size:.9rem;color:var(--text);line-height:1.6;margin-bottom:1.2rem">
+                Você foi convidado(a) para trabalhar na <strong id="convite-barbearia-nome" style="color:var(--blue)"></strong> como
+                <strong id="convite-cargo" style="color:var(--green)"></strong>.<br>
+                Crie sua senha de acesso abaixo:
+            </p>
+            <div class="input-group"><label>Seu nome</label><input type="text" id="convite-nome-display" disabled style="opacity:.6"></div>
+            <div class="input-group"><label>E-mail</label><input type="email" id="convite-email" placeholder="seuemail@gmail.com"></div>
+            <div class="input-group"><label>Crie uma senha</label><input type="password" id="convite-senha" placeholder="mínimo 6 caracteres"></div>
+            <button class="btn-primary" id="btn-convite-criar">Criar minha conta e entrar</button>
+            <p class="err-msg" id="err-convite"></p>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ TELA ACESSO REVOGADO ════════ -->
+<section class="screen" id="screen-revogado" style="min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,75,43,0.08) 0%, transparent 55%),linear-gradient(180deg,#060a12,#0a1018);">
+    <div class="login-box" style="text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:.5rem">🔒</div>
+        <div style="font-family:'Courier New',monospace;font-size:1rem;font-weight:700;letter-spacing:2px;color:var(--red);margin-bottom:.75rem">ACESSO REMOVIDO</div>
+        <p style="color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:1.2rem">O dono da barbearia removeu ou desativou seu acesso a esse painel. Fale com ele se achar que isso foi um engano.</p>
+        <button class="btn-primary" id="btn-revogado-sair" style="margin:0">Sair</button>
+    </div>
+</section>
+
 <!-- ════════ TELA PENDENTE ════════ -->
 <section class="screen" id="screen-pendente" style="min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,180,255,0.08) 0%, transparent 55%),linear-gradient(180deg,#060a12,#0a1018);">
     <div style="width:100%;max-width:420px;text-align:center;">
@@ -874,7 +922,7 @@
             <div style="display:flex;gap:.6rem;flex-wrap:wrap">
                 <input type="text" id="fila-nome" placeholder="Nome do cliente" style="flex:2;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
                 <select id="fila-corte" style="flex:1;min-width:120px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
-                    <option value="">Corte (opcional)</option>
+                    <option value="">Corte (obrigatório)</option>
                 </select>
                 <button id="btn-add-fila" style="padding:.75rem 1.2rem;background:rgba(0,255,136,.1);border:1.5px solid var(--green);border-radius:8px;color:var(--green);font-weight:700;cursor:pointer;white-space:nowrap">+ Entrar na fila</button>
             </div>
@@ -907,28 +955,41 @@
 
     <!-- TAB Equipe -->
     <div class="tab-content" id="tab-equipe">
-        <div class="section-title">Adicionar Barbeiro</div>
+        <div id="secao-add-equipe">
+        <div class="section-title">Adicionar à Equipe</div>
         <div class="card">
+            <div class="input-group" style="margin-bottom:.6rem">
+                <label>Tipo</label>
+                <select id="eq-tipo" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
+                    <option value="barbeiro">✂️ Barbeiro — corta cabelo, tem comissão e vê só a própria agenda</option>
+                    <option value="recepcionista">🗒️ Recepcionista — organiza a casa toda, sem ver valores nem links</option>
+                </select>
+            </div>
             <div class="form-row">
-                <div class="input-group"><label>Nome do barbeiro</label><input type="text" id="eq-nome" placeholder="Ex: João da Navalha"></div>
-                <div class="input-group" style="max-width:130px"><label>% por corte</label><input type="number" id="eq-pct" placeholder="50" min="0" max="100" step="5"></div>
+                <div class="input-group"><label>Nome</label><input type="text" id="eq-nome" placeholder="Ex: João da Navalha"></div>
+                <div class="input-group" id="eq-pct-wrap" style="max-width:130px"><label>% por corte</label><input type="number" id="eq-pct" placeholder="50" min="0" max="100" step="5"></div>
             </div>
             <button class="btn-add" id="btn-add-barbeiro">+ Adicionar</button>
+        </div>
         </div>
 
         <div class="section-title">Equipe</div>
         <div id="lista-equipe"><div class="empty-state"><div class="icon">👥</div>Nenhum barbeiro cadastrado ainda.</div></div>
 
         <!-- Links de acesso para funcionários -->
-        <div class="section-title" style="margin-top:1.5rem">🔗 Links de Acesso</div>
-        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Envie o link de acesso para cada barbeiro da sua equipe.</div>
-        <div id="lista-links-func-equipe"><div class="empty-state"><div class="icon">🔗</div>Adicione barbeiros acima para gerar os links.</div></div>
+        <div id="secao-links-equipe">
+            <div class="section-title" style="margin-top:1.5rem">🔗 Links de Acesso</div>
+            <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Envie o link de acesso para cada pessoa da sua equipe.</div>
+            <div id="lista-links-func-equipe"><div class="empty-state"><div class="icon">🔗</div>Adicione pessoas acima para gerar os links.</div></div>
+        </div>
 
-        <div class="section-title" style="margin-top:1.5rem">Ganhos de Hoje</div>
-        <div id="ganhos-hoje"><div class="empty-state"><div class="icon">💰</div>Carregando...</div></div>
+        <div id="secao-ganhos-equipe">
+            <div class="section-title" style="margin-top:1.5rem">Ganhos de Hoje</div>
+            <div id="ganhos-hoje"><div class="empty-state"><div class="icon">💰</div>Carregando...</div></div>
 
-        <div class="section-title" style="margin-top:1.5rem">Ganhos do Mês</div>
-        <div id="ganhos-mes"><div class="empty-state"><div class="icon">📊</div>Carregando...</div></div>
+            <div class="section-title" style="margin-top:1.5rem">Ganhos do Mês</div>
+            <div id="ganhos-mes"><div class="empty-state"><div class="icon">📊</div>Carregando...</div></div>
+        </div>
     </div>
 
     <!-- TAB Cortes -->
@@ -1100,10 +1161,11 @@
                         <div class="input-group" style="margin-bottom:0"><label>Valor</label><input type="number" id="promo-i-desconto-valor" placeholder="15" min="0" step="0.01"></div>
                         <div class="input-group" style="margin-bottom:0"><label>Válido até</label><input type="date" id="promo-i-valido-ate"></div>
                     </div>
-                    <label style="display:flex;align-items:center;gap:.5rem;margin-top:.6rem;font-size:.78rem;color:var(--muted);cursor:pointer">
-                        <input type="checkbox" id="promo-i-uso-unico" checked style="width:16px;height:16px;accent-color:var(--blue)">
-                        Uso único (desativa sozinho depois de usado uma vez)
-                    </label>
+                    <div class="input-group" style="margin-top:.6rem;margin-bottom:0;max-width:220px">
+                        <label>Quantos usos vale</label>
+                        <input type="number" id="promo-i-limite-usos" placeholder="1" min="1" step="1" value="1">
+                        <p style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Ex: 1 = só no próximo corte. 3 = vale nos próximos 3 cortes.</p>
+                    </div>
                 </div>
                 <div id="promo-campos-datas" style="display:none;margin-top:.6rem">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
@@ -1853,7 +1915,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot, addDoc, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs, onSnapshot, addDoc, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = PROB_CONFIG.firebase;
 
@@ -2094,24 +2156,110 @@ function mostrarBloqueio(excluido=false){
 
 let authInitialized = false;
 let authLogoutTimer = null;
-let funcModeIniciado = false;
 
-// Detecta se é um link de funcionário — verificado de forma independente do
-// login, porque funcionário NUNCA faz login próprio (link direto, sem senha).
+// Detecta se é um link de CONVITE (funcionário aceitando pela primeira vez).
+// Isso é a única coisa que ainda usa parâmetro de URL — o acesso do dia a dia
+// depois disso é sempre por login (email+senha) normal.
 const urlParamsIniciais = new URLSearchParams(window.location.search);
-const ehLinkFuncionario = !!(urlParamsIniciais.get('func') && urlParamsIniciais.get('bId'));
+const conviteEquipeId = urlParamsIniciais.get('convite');
+const conviteBId = urlParamsIniciais.get('bId');
+const ehTelaConvite = !!(conviteEquipeId && conviteBId);
 
-if(ehLinkFuncionario){
+if(ehTelaConvite){
+    go('screen-convite');
+    carregarConvite(conviteBId, conviteEquipeId);
+}
+
+// Verifica se o usuário logado é dono ou funcionário (com login próprio) e
+// carrega a tela certa. Retorna true se tratou o login (owner ou staff),
+// false se essa conta não pertence a nenhum dos dois papéis.
+async function tratarLoginStaff(user){
+    // Pequena tolerância: logo após criar a conta pelo convite, o documento em
+    // funcionarios/{uid} pode ainda não ter terminado de salvar quando esse
+    // evento de login dispara. Tenta de novo por até ~1.5s antes de desistir.
+    let fSnap = await getDoc(doc(db,'funcionarios',user.uid));
+    for(let tentativa=0; tentativa<3 && !fSnap.exists(); tentativa++){
+        await new Promise(r=>setTimeout(r,500));
+        fSnap = await getDoc(doc(db,'funcionarios',user.uid));
+    }
+    if(!fSnap.exists()) return false;
+
+    const {bId, equipeId} = fSnap.data();
+    const authSnap = await getDoc(doc(db,'barbeiros',bId,'equipeAuth',equipeId));
+    if(!authSnap.exists() || authSnap.data().ativo !== true){
+        go('screen-revogado');
+        return true;
+    }
+
     go('screen-dash');
-    (async()=>{
-        funcModeIniciado = true;
-        const ok = await initFuncionarioMode();
-        if(!ok){
-            // Link inválido (funcionário removido, barbearia não existe, etc.)
-            funcModeIniciado = false;
-            go('screen-login');
+    const ok = await initFuncionarioMode(bId, equipeId);
+    if(!ok) go('screen-revogado');
+    return true;
+}
+
+async function carregarConvite(bId, equipeId){
+    const elCarregando=document.getElementById('convite-carregando');
+    const elInvalido=document.getElementById('convite-invalido');
+    const elUsado=document.getElementById('convite-usado');
+    const elForm=document.getElementById('convite-form');
+
+    try{
+        const bSnap=await getDoc(doc(db,'barbeiros',bId));
+        const membro=bSnap.exists() ? (bSnap.data().equipe||[]).find(e=>e.id===equipeId) : null;
+        if(!bSnap.exists() || !membro){
+            elCarregando.style.display='none';
+            elInvalido.style.display='block';
+            return;
         }
-    })();
+
+        const authSnap=await getDoc(doc(db,'barbeiros',bId,'equipeAuth',equipeId));
+        if(authSnap.exists()){
+            elCarregando.style.display='none';
+            elUsado.style.display='block';
+            return;
+        }
+
+        document.getElementById('convite-barbearia-nome').textContent=bSnap.data().nome||'a barbearia';
+        document.getElementById('convite-cargo').textContent=membro.tipo==='recepcionista'?'Recepcionista':'Barbeiro';
+        document.getElementById('convite-nome-display').value=membro.nome;
+
+        elCarregando.style.display='none';
+        elForm.style.display='block';
+
+        document.getElementById('btn-convite-criar').addEventListener('click',async()=>{
+            const email=document.getElementById('convite-email').value.trim();
+            const senha=document.getElementById('convite-senha').value;
+            const errEl=document.getElementById('err-convite');
+            errEl.textContent='';
+
+            if(!email||!senha||senha.length<6){
+                errEl.textContent='Preencha um e-mail válido e uma senha com pelo menos 6 caracteres.';
+                return;
+            }
+
+            const btn=document.getElementById('btn-convite-criar');
+            btn.disabled=true;btn.textContent='Criando conta...';
+
+            try{
+                const cred=await createUserWithEmailAndPassword(auth,email,senha);
+                await setDoc(doc(db,'funcionarios',cred.user.uid),{bId,equipeId});
+                await setDoc(doc(db,'barbeiros',bId,'equipeAuth',equipeId),{ativo:true,authUid:cred.user.uid,email,criadoEm:new Date().toISOString()});
+                // onAuthStateChanged cuida do resto (carrega o painel certo)
+            }catch(e){
+                console.error(e);
+                errEl.textContent = e.code==='auth/email-already-in-use'
+                    ? 'Esse e-mail já está em uso. Se já tem conta, entre normalmente pela tela de login.'
+                    : 'Não deu pra criar a conta. Confira os dados e tente de novo.';
+                btn.disabled=false;btn.textContent='Criar minha conta e entrar';
+            }
+        });
+
+        document.getElementById('btn-convite-ir-login')?.addEventListener('click',()=>go('screen-login'));
+    }catch(e){
+        console.error('carregarConvite:',e);
+        elCarregando.style.display='none';
+        elInvalido.style.display='block';
+    }
 }
 
 onAuthStateChanged(auth,async user=>{
@@ -2123,6 +2271,21 @@ onAuthStateChanged(auth,async user=>{
         // Admin não deve usar o painel do barbeiro
         if(user.uid === ADMIN_UID){
             window.location.href = 'admin.html';
+            return;
+        }
+
+        // É dono de alguma barbearia (documento com o mesmo UID)?
+        const souDonoSnap = await getDoc(doc(db,'barbeiros',user.uid));
+        if(!souDonoSnap.exists()){
+            // Não é dono — tenta como funcionário com login próprio
+            const tratado = await tratarLoginStaff(user);
+            if(!tratado){
+                // Conta que não é dono nem funcionário de nenhuma barbearia
+                await signOut(auth);
+                const errEl=document.getElementById('err-login');
+                if(errEl) errEl.textContent='Essa conta não está vinculada a nenhuma barbearia.';
+                go('screen-login');
+            }
             return;
         }
 
@@ -2150,17 +2313,6 @@ onAuthStateChanged(auth,async user=>{
         // 2. Acesso aprovado — carrega dados e abre painel
         await carregarBarbeiro(user);
 
-        const params = new URLSearchParams(window.location.search);
-        if(params.get('func')){
-            go('screen-dash');
-            if(!funcModeIniciado){
-                funcModeIniciado = true;
-                const isFuncMode = await initFuncionarioMode();
-                if(!isFuncMode) initDash();
-            }
-            return;
-        }
-
         const pendWpp = document.getElementById('pend-wpp-btn');
         if(pendWpp){
             const msg = encodeURIComponent(`Olá! Quero renovar meu acesso Pro'B. E-mail: ${user.email}`);
@@ -2170,8 +2322,6 @@ onAuthStateChanged(auth,async user=>{
         go('screen-dash');
         initDash();
     } else {
-        // Link de funcionário nunca tem sessão logada — não mostra tela de login.
-        if(ehLinkFuncionario) return;
         // Debounce de 2s para evitar logout acidental durante renovação de token
         if(authInitialized){
             authLogoutTimer = setTimeout(()=>{
@@ -2182,7 +2332,7 @@ onAuthStateChanged(auth,async user=>{
             }, 2000);
         } else {
             if(window.setParticlesVisible) window.setParticlesVisible(true);
-            go('screen-login');
+            if(!ehTelaConvite) go('screen-login');
         }
     }
 });
@@ -2231,6 +2381,7 @@ document.getElementById('link-login').onclick = () => {
     document.getElementById('err-login').style.display     = 'none';
 };
 document.getElementById('btn-logout').onclick = () => signOut(auth);
+document.getElementById('btn-revogado-sair')?.addEventListener('click', () => signOut(auth));
 
 // ── Login com email/senha ──
 document.getElementById('btn-login').onclick = async () => {
@@ -2503,23 +2654,27 @@ function initDash(){
         barbeiroData={...barbeiroData,...snap.data()};
         renderCortes();
         renderEquipe();
-    renderLinksEquipe();
-        carregarGanhos();
-        if(typeof renderGastos==='function'){renderGastos();carregarResumoGestao();}
+        if(!window.__recepcionista){
+            renderLinksEquipe();
+            carregarGanhos();
+            if(typeof renderGastos==='function'){renderGastos();carregarResumoGestao();}
+        }
         // Atualiza preview visual em tempo real
         if(typeof atualizarPreview==='function') atualizarPreview();
     },e=>console.error('Erro barbeiro listener:',e));
 
     carregarAgendamentos();
     carregarAvisos1h();
-    // Aplica tema salvo
-    carregarFaturamento();
+    if(!window.__recepcionista){
+        // Financeiro/comissões — recepcionista nunca carrega esses dados, nem escondidos
+        carregarFaturamento();
+        initPerfil();
+        initGestao();
+    }
     initHorarios();
-    initPerfil();
     initVisual();
     initPresencial();
     initFila();
-    initGestao();
 
     const btnExp=document.getElementById('btn-exportar-excel');
     if(btnExp && !btnExp.dataset.bound){
@@ -2556,7 +2711,7 @@ function initFila(){
     // Popula cortes
     const corteSel=document.getElementById('fila-corte');
     const cortes=barbeiroData.cortes||[];
-    corteSel.innerHTML='<option value="">Corte (opcional)</option>'+
+    corteSel.innerHTML='<option value="">Corte (obrigatório)</option>'+
         cortes.map((c,i)=>`<option value="${i}">${c.nome} — R$${Number(c.preco).toFixed(0)}</option>`).join('');
 
     const btnAdd=document.getElementById('btn-add-fila');
@@ -2591,10 +2746,12 @@ async function adicionarNaFila(){
     const nome=document.getElementById('fila-nome').value.trim();
     if(!nome){toast('Informe o nome do cliente','var(--red)');return;}
 
+    const corteIdx=document.getElementById('fila-corte').value;
+    if(corteIdx===''){toast('Escolha o corte antes de adicionar na fila','var(--red)');return;}
+
     const equipe=barbeiroData.equipe||[];
     const barbeiroNome=equipe.length>0?document.getElementById('fila-select-barbeiro').value:'';
-    const corteIdx=document.getElementById('fila-corte').value;
-    const corte=corteIdx!==''?barbeiroData.cortes[Number(corteIdx)]:null;
+    const corte=barbeiroData.cortes[Number(corteIdx)];
 
     const btn=document.getElementById('btn-add-fila');
     btn.disabled=true;
@@ -2905,8 +3062,61 @@ async function confirmarPresencial(){
     btn.disabled=false;btn.textContent='Confirmar Agendamento';
 }
 
+// Cache de promoções individuais e fidelidade por WhatsApp do cliente,
+// usado pra mostrar um selo na Agenda quando o cliente tem algo ativo.
+let cachePromoPorWpp = {};
+let cacheFidelidadePorWpp = {};
+async function carregarCachePromoCliente(){
+    try{
+        const hoje=fmtHoje();
+        const promosSnap = await getDocs(collection(db,'barbeiros',barbeiroData.uid,'promocoes'));
+        cachePromoPorWpp = {};
+        promosSnap.forEach(d=>{
+            const p={id:d.id,...d.data()};
+            if(p.tipo!=='individual' || !p.ativo || p.alvo!=='cliente' || !p.clienteWpp) return;
+            if(p.validoAte && hoje>p.validoAte) return;
+            const restam=(p.limiteUsos||1)-(p.usosFeitos||0);
+            if(restam<=0) return;
+            cachePromoPorWpp[p.clienteWpp]=p;
+        });
+
+        const fidPromosSnap = await getDocs(collection(db,'barbeiros',barbeiroData.uid,'promocoes'));
+        const metasFidelidade=[];
+        fidPromosSnap.forEach(d=>{ const p=d.data(); if(p.tipo==='fidelidade'&&p.ativo) metasFidelidade.push(p); });
+
+        cacheFidelidadePorWpp = {};
+        if(metasFidelidade.length){
+            const fidSnap = await getDocs(collection(db,'barbeiros',barbeiroData.uid,'fidelidade'));
+            fidSnap.forEach(d=>{ cacheFidelidadePorWpp[d.id]={id:d.id,...d.data()}; });
+        }
+        window.__metasFidelidade = metasFidelidade;
+    }catch(e){ console.error('carregarCachePromoCliente:',e); }
+}
+
+// Monta o selinho pra mostrar no card do agendamento, se o cliente tiver
+// promoção individual ativa e/ou estiver no programa de fidelidade.
+function gerarBadgePromoCliente(wpp){
+    if(!wpp) return '';
+    let html='';
+    const promo=cachePromoPorWpp[wpp];
+    if(promo){
+        const restam=(promo.limiteUsos||1)-(promo.usosFeitos||0);
+        const valorFmt=promo.descontoTipo==='percentual'?`${promo.descontoValor}%`:`R$${Number(promo.descontoValor).toFixed(0)}`;
+        html+=`<span class="appt-barber-tag" style="background:rgba(0,255,136,.12);color:var(--green);border-color:rgba(0,255,136,.3)" title="Desconto de ${valorFmt}, restam ${restam} uso(s)">🎁 ${valorFmt} off · ${restam}x restante${restam>1?'s':''}</span>`;
+    }
+    const fid=cacheFidelidadePorWpp[wpp];
+    const metas=window.__metasFidelidade||[];
+    if(fid && metas.length){
+        const meta=metas[0]; // programa mais recente ativo
+        const feitos=fid.cortes||0;
+        html+=`<span class="appt-barber-tag" style="background:rgba(245,166,35,.12);color:var(--yellow);border-color:rgba(245,166,35,.3)" title="${meta.brinde} a cada ${meta.meta} cortes">⭐ ${feitos}/${meta.meta} p/ ${escapeHtml(meta.brinde||'brinde')}</span>`;
+    }
+    return html;
+}
+
 function carregarAgendamentos(){
     if(unsubAgendamentos)unsubAgendamentos();
+    carregarCachePromoCliente();
     const hoje=fmtHoje();
     const q=query(collection(db,'agendamentos'),where('barbeiroId','==',barbeiroData.uid));
     unsubAgendamentos=onSnapshot(q,snap=>{
@@ -2954,6 +3164,7 @@ function renderAppts(container,lista,emptyMsg){
         const btnWpp=a.clienteWhatsapp?`<a href="${wppUrl}" target="_blank" class="btn-wpp">WPP</a>`:'';
         const barberTag=a.barbeiro?`<span class="appt-barber-tag">✂️ ${a.barbeiro}</span>`:'';
         const presencialTag=a.origem==='presencial'?`<span class="appt-barber-tag" style="background:rgba(255,255,255,.06);color:var(--muted)">🏠 presencial</span>`:'';
+        const promoTag=gerarBadgePromoCliente(a.clienteWhatsapp);
         const dataFmt=(d=>{
             if(!d) return '';
             const [y,m,dia]=d.split('-');
@@ -2982,6 +3193,7 @@ function renderAppts(container,lista,emptyMsg){
                 <span class="appt-corte">${escapeHtml(a.corte)}</span>
                 ${barberTag}
                 ${presencialTag}
+                ${promoTag}
                 ${dataTag}
                 ${!concluido&&!cancelado?`<span class="badge badge-pend">pend</span>`:''}
             </div>
@@ -3086,52 +3298,96 @@ function renderCortes(){
 }
 
 // EQUIPE
-function renderLinksEquipe(){
+async function renderLinksEquipe(){
     const container = document.getElementById('lista-links-func-equipe');
     if(!container) return;
     const equipe = barbeiroData.equipe || [];
     if(!equipe.length){
-        container.innerHTML = '<div class="empty-state"><div class="icon">🔗</div>Adicione barbeiros acima para gerar os links.</div>';
+        container.innerHTML = '<div class="empty-state"><div class="icon">🔗</div>Adicione pessoas acima para gerar os convites.</div>';
         return;
     }
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
     const baseUrl = isLocal ? window.location.origin + '/' : 'https://alesh4rk-design.github.io/prob-site/';
 
+    let authDocs={};
+    try{
+        const snap=await getDocs(collection(db,'barbeiros',barbeiroData.uid,'equipeAuth'));
+        snap.forEach(d=>authDocs[d.id]=d.data());
+    }catch(e){ console.error('renderLinksEquipe:',e); }
+
     container.innerHTML = equipe.map(b => {
-        const funcLink = `${baseUrl}barbeiro.html?func=${encodeURIComponent(b.id)}&bId=${barbeiroData.uid}`;
-        const msgWpp = encodeURIComponent(`Olá ${b.nome}! Seu link de acesso Pro'B: ${funcLink}`);
+        const authInfo = authDocs[b.id];
+        const cargo = b.tipo==='recepcionista'?'Recepcionista':'Barbeiro';
+
+        if(!authInfo){
+            // Ainda não aceitou o convite — mostra o link de convite
+            const conviteLink = `${baseUrl}barbeiro.html?convite=${encodeURIComponent(b.id)}&bId=${barbeiroData.uid}`;
+            const msgWpp = encodeURIComponent(`Olá ${b.nome}! Você foi convidado(a) pra trabalhar como ${cargo.toLowerCase()} — é só abrir esse link e criar sua senha de acesso: ${conviteLink}`);
+            return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem">
+                <div style="font-weight:700;font-size:.88rem;margin-bottom:.2rem">${escapeHtml(b.nome)} <span style="font-size:.65rem;color:var(--yellow);font-weight:400">· convite pendente</span></div>
+                <div style="font-size:.7rem;color:var(--muted);word-break:break-all;margin:.4rem 0 .6rem;background:var(--card);padding:.4rem .65rem;border-radius:6px;border:1px solid var(--border)">${conviteLink}</div>
+                <div style="display:flex;gap:.5rem">
+                    <button class="btn-add" style="flex:1;font-size:.75rem;padding:.4rem" onclick="navigator.clipboard.writeText('${conviteLink}').then(()=>toast('✓ Convite de ${escAttr(b.nome)} copiado!'))">📋 Copiar</button>
+                    <a href="https://wa.me/?text=${msgWpp}" target="_blank" class="btn-wpp" style="flex:1;text-align:center;font-size:.75rem;padding:.4rem;text-decoration:none">📱 WhatsApp</a>
+                </div>
+            </div>`;
+        }
+
+        const ativo = authInfo.ativo!==false;
         return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem">
-            <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem">✂️ ${b.nome}</div>
-            <div style="font-size:.7rem;color:var(--muted);word-break:break-all;margin-bottom:.6rem;background:var(--card);padding:.4rem .65rem;border-radius:6px;border:1px solid var(--border)">${funcLink}</div>
-            <div style="display:flex;gap:.5rem">
-                <button class="btn-add" style="flex:1;font-size:.75rem;padding:.4rem" onclick="navigator.clipboard.writeText('${funcLink}').then(()=>toast('✓ Link de ${b.nome} copiado!'))">📋 Copiar</button>
-                <a href="https://wa.me/?text=${msgWpp}" target="_blank" class="btn-wpp" style="flex:1;text-align:center;font-size:.75rem;padding:.4rem;text-decoration:none">📱 WhatsApp</a>
-            </div>
+            <div style="font-weight:700;font-size:.88rem;margin-bottom:.2rem">${escapeHtml(b.nome)} <span style="font-size:.65rem;color:${ativo?'var(--green)':'var(--red)'};font-weight:400">· ${ativo?'✅ acesso ativo':'⛔ acesso desativado'}</span></div>
+            <div style="font-size:.72rem;color:var(--muted);margin-bottom:.6rem">${escapeHtml(authInfo.email||'')}</div>
+            <button class="btn-${ativo?'del':'add'}" style="width:100%;font-size:.75rem;padding:.4rem" onclick="toggleAcessoEquipe('${b.id}',${!ativo})">${ativo?'⛔ Desativar acesso':'✅ Reativar acesso'}</button>
         </div>`;
     }).join('');
 }
 
+window.toggleAcessoEquipe = async(equipeId, novoAtivo) => {
+    try{
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'equipeAuth',equipeId),{ativo:novoAtivo});
+        toast(novoAtivo?'Acesso reativado!':'Acesso desativado.');
+        renderLinksEquipe();
+    }catch(e){ toast('Erro ao atualizar acesso','var(--red)'); }
+};
+
 function renderEquipe(){
     const lista=barbeiroData.equipe||[];
     const container=$('lista-equipe');
-    if(!lista.length){container.innerHTML=`<div class="empty-state"><div class="icon">👥</div>Nenhum barbeiro cadastrado ainda.</div>`;return;}
-    container.innerHTML=lista.map((b,i)=>`
-        <div class="service-item" style="flex-wrap:wrap">
-            <div style="flex:1;min-width:140px">
-                <div class="service-name" style="padding-right:0">✂️ ${escapeHtml(b.nome)}</div>
-                <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-                    Comissão: <span style="color:var(--blue);font-weight:700">${b.pct||50}%</span> por corte
-                </div>
-            </div>
+    if(!lista.length){container.innerHTML=`<div class="empty-state"><div class="icon">👥</div>Ninguém cadastrado ainda.</div>`;return;}
+    const modoLeitura = !!window.__recepcionista;
+
+    container.innerHTML=lista.map((b,i)=>{
+        const ehRecep = b.tipo==='recepcionista';
+        const badge = ehRecep
+            ? `<span style="font-size:.65rem;background:rgba(0,212,255,.12);color:var(--blue);border:1px solid rgba(0,212,255,.3);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">🗒️ Recepcionista</span>`
+            : `<span style="font-size:.65rem;background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.25);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">✂️ Barbeiro</span>`;
+        const infoLinha = ehRecep
+            ? `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">Organiza agendamentos, fila e clientes</div>`
+            : (modoLeitura
+                ? ''
+                : `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">Comissão: <span style="color:var(--blue);font-weight:700">${b.pct||50}%</span> por corte</div>`);
+
+        const acoes = modoLeitura ? '' : `
             <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
+                ${ehRecep?'':`
                 <input type="number" class="pct-input" data-idx="${i}" value="${b.pct||50}"
                     min="0" max="100" step="5"
                     style="width:58px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;color:var(--text);font-size:.85rem;text-align:center;">
                 <span style="font-size:.75rem;color:var(--muted)">%</span>
-                <button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-save="${i}">Salvar</button>
+                <button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-save="${i}">Salvar</button>`}
                 <button class="btn-del" data-idx="${i}">Remover</button>
+            </div>`;
+
+        return `<div class="service-item" style="flex-wrap:wrap">
+            <div style="flex:1;min-width:140px">
+                <div class="service-name" style="padding-right:0">${escapeHtml(b.nome)}${badge}</div>
+                ${infoLinha}
             </div>
-        </div>`).join('');
+            ${acoes}
+        </div>`;
+    }).join('');
+
+    if(modoLeitura) return; // recepcionista não edita/remove/vê comissão
 
     container.querySelectorAll('[data-save]').forEach(btn=>{
         btn.addEventListener('click',async()=>{
@@ -3146,22 +3402,33 @@ function renderEquipe(){
     });
     container.querySelectorAll('.btn-del').forEach(btn=>{
         btn.addEventListener('click',async()=>{
-            barbeiroData.equipe.splice(Number(btn.dataset.idx),1);
+            const idx=Number(btn.dataset.idx);
+            const equipeId=barbeiroData.equipe[idx]?.id;
+            barbeiroData.equipe.splice(idx,1);
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:barbeiroData.equipe});
-            renderEquipe();carregarGanhos();toast('Barbeiro removido');
+            // Revoga o acesso de vez, mesmo que a pessoa já tivesse criado a própria conta
+            if(equipeId){
+                try{ await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'equipeAuth',equipeId)); }catch(e){}
+            }
+            renderEquipe();carregarGanhos();toast('Removido e acesso revogado');
         });
     });
 }
 
+$('eq-tipo').addEventListener('change',function(){
+    $('eq-pct-wrap').style.display=this.value==='recepcionista'?'none':'block';
+});
+
 $('btn-add-barbeiro').addEventListener('click',async()=>{
     const nome=$('eq-nome').value.trim();
-    const pct=Number($('eq-pct').value)||50;
-    if(!nome){toast('Informe o nome do barbeiro','var(--red)');return;}
+    const tipo=$('eq-tipo').value;
+    const pct=tipo==='recepcionista'?0:(Number($('eq-pct').value)||50);
+    if(!nome){toast('Informe o nome','var(--red)');return;}
     barbeiroData.equipe=barbeiroData.equipe||[];
-    barbeiroData.equipe.push({id:Date.now().toString(),nome,pct,criadoEm:new Date().toISOString()});
+    barbeiroData.equipe.push({id:Date.now().toString(),nome,pct,tipo,criadoEm:new Date().toISOString()});
     await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:barbeiroData.equipe});
     $('eq-nome').value='';$('eq-pct').value='';
-    renderEquipe();carregarGanhos();toast('Barbeiro adicionado!');
+    renderEquipe();carregarGanhos();toast((tipo==='recepcionista'?'Recepcionista':'Barbeiro')+' adicionado!');
 });
 
 // GANHOS
@@ -3541,8 +3808,8 @@ document.getElementById('btn-add-promo').addEventListener('click', async()=>{
         promo.alvo = alvo;
         promo.descontoTipo  = document.getElementById('promo-i-desconto-tipo').value;
         promo.descontoValor = parseFloat(document.getElementById('promo-i-desconto-valor').value)||0;
-        promo.usoUnico = document.getElementById('promo-i-uso-unico').checked;
-        promo.usado = false;
+        promo.limiteUsos = Math.max(1, parseInt(document.getElementById('promo-i-limite-usos').value) || 1);
+        promo.usosFeitos = 0;
         const validoAte = document.getElementById('promo-i-valido-ate').value;
         if(validoAte) promo.validoAte = validoAte;
 
@@ -3597,6 +3864,7 @@ async function carregarPromocoes(){
         snap.forEach(d=>promos.push({id:d.id,...d.data()}));
         renderPromocoes(promos);
         carregarFidelidade(promos.filter(p=>p.tipo==='fidelidade'&&p.ativo));
+        carregarCachePromoCliente(); // mantém o selo da Agenda atualizado
     }catch(e){ console.error('carregarPromocoes:',e); }
 }
 
@@ -3612,7 +3880,7 @@ function renderPromocoes(promos){
         // Verifica se está dentro do período
         let ativaNoPeriodo = p.ativo;
         if(p.tipo==='individual'){
-            ativaNoPeriodo = p.ativo && !p.usado && (!p.validoAte || hoje<=p.validoAte);
+            ativaNoPeriodo = p.ativo && (p.usosFeitos||0) < (p.limiteUsos||1) && (!p.validoAte || hoje<=p.validoAte);
         } else if(p.periodo==='semanal'){
             const semanaAtual = obterSemana(new Date());
             ativaNoPeriodo = p.ativo && obterSemana(new Date(p.criadoEm))===semanaAtual;
@@ -3631,7 +3899,13 @@ function renderPromocoes(promos){
         if(p.tipo==='individual'){
             const valorFmt = p.descontoTipo==='percentual'?`${p.descontoValor}% off`:`R$${Number(p.descontoValor).toFixed(2)} off`;
             const quemFmt = p.alvo==='cliente'?`👤 ${escapeHtml(p.clienteNome||'Cliente')} (${escapeHtml(p.clienteWpp||'')})`:`🔑 Cupom <strong>${escapeHtml(p.codigo)}</strong>`;
-            detalhe=`${quemFmt} — <strong style="color:var(--green)">${valorFmt}</strong>${p.usado?' <span style="color:var(--muted)">· já usado</span>':''}`;
+            const usosFeitos = p.usosFeitos||0, limiteUsos = p.limiteUsos||1, usosRestam = limiteUsos-usosFeitos;
+            const statusUso = usosRestam<=0
+                ? ' <span style="color:var(--muted)">· esgotado</span>'
+                : limiteUsos>1
+                    ? ` <span style="color:var(--yellow)">· restam ${usosRestam} de ${limiteUsos} usos</span>`
+                    : '';
+            detalhe=`${quemFmt} — <strong style="color:var(--green)">${valorFmt}</strong>${statusUso}`;
         }
 
         const periodoLabel = p.tipo==='individual'
@@ -4261,20 +4535,30 @@ async function renderHours(){
     });
 }
 
+// Link de agendamento do cliente — mora na aba Clientes, mas não depende de
+// nada exclusivo de Configurações, então roda pra dono E recepcionista.
+function initLinkCliente(){
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const baseUrl = isLocal
+        ? window.location.origin + '/'
+        : 'https://alesh4rk-design.github.io/prob-site/';
+    const link = baseUrl + 'cliente.html?b=' + barbeiroData.uid;
+    const linkEl=$('link-cliente');
+    if(linkEl) linkEl.textContent=link;
+    const btnCopy=$('btn-copy-link');
+    if(btnCopy && !btnCopy.dataset.bound){
+        btnCopy.dataset.bound='1';
+        btnCopy.addEventListener('click',()=>{navigator.clipboard.writeText(link).then(()=>toast('Link copiado!'));});
+    }
+}
+
 // PERFIL
 function initPerfil(){
     $('perf-nome').value=barbeiroData.nome||'';
     $('perf-wpp').value=barbeiroData.whatsapp||'';
     $('perf-endereco').value=barbeiroData.endereco||'';
     $('perf-pix').value=barbeiroData.pix||'';
-    // Detecta se está no VS Code (localhost) ou Netlify
-    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const baseUrl = isLocal
-        ? window.location.origin + '/'
-        : 'https://alesh4rk-design.github.io/prob-site/';
-    const link = baseUrl + 'cliente.html?b=' + barbeiroData.uid;
-    $('link-cliente').textContent=link;
-    $('btn-copy-link').addEventListener('click',()=>{navigator.clipboard.writeText(link).then(()=>toast('Link copiado!'));});
+    initLinkCliente();
 
     // Modo de atendimento
     const modoAtual=barbeiroData.modoAtendimento||'agendamento';
@@ -4906,19 +5190,57 @@ async function carregarFaturamento(){
     if(typeof carregarResumoGestao==='function') carregarResumoGestao();
 }
 
-// ══ PAINEL FUNCIONÁRIO (quando abre com ?func=ID) ══
-async function initFuncionarioMode(){
-    const params=new URLSearchParams(window.location.search);
-    const funcId=params.get('func');
-    const bId=params.get('bId');
-    if(!funcId||!bId)return false;
+// ══ PAINEL FUNCIONÁRIO (login próprio, chamado por tratarLoginStaff) ══
+// ══ MODO RECEPCIONISTA — vê quase tudo, exceto valores/comissões/links ══
+async function initRecepcionistaMode(bId,bData,equipeId){
+    barbeiroData={uid:bId,...bData};
+    window.__recepcionista=true;
 
+    // Menu restrito: Operação do dia, Catálogo e Pessoas — sem Configurações nem Gestão
+    document.getElementById('drawer-tab-items').innerHTML=`
+        <div style="padding:.6rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase">Operação do dia</div>
+        <div class="tab active" data-tab="agendamentos">📋 Agendamentos</div>
+        <div class="tab" data-tab="fila">🪑 Fila de Espera</div>
+
+        <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Catálogo</div>
+        <div class="tab" data-tab="cortes">✂️ Cortes</div>
+        <div class="tab" data-tab="promocoes">🎁 Promoções</div>
+        <div class="tab" data-tab="horarios">🕐 Horários</div>
+
+        <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Pessoas</div>
+        <div class="tab" data-tab="equipe">👥 Equipe</div>
+        <div class="tab" data-tab="clientes">🧑 Clientes</div>
+        <div class="tab" data-tab="visual">📱 Tela Cliente</div>
+        <div class="tab" data-tab="painel-chamada">📺 Painel de Chamada</div>`;
+    document.getElementById('menu-titulo-atual').innerHTML='📋 Agendamentos';
+
+    // Esconde o que é exclusivo de dono: comissões, links de acesso, formulário de adicionar equipe
+    const secaoAdd=document.getElementById('secao-add-equipe'); if(secaoAdd)secaoAdd.style.display='none';
+    const secaoLinks=document.getElementById('secao-links-equipe'); if(secaoLinks)secaoLinks.style.display='none';
+    const secaoGanhos=document.getElementById('secao-ganhos-equipe'); if(secaoGanhos)secaoGanhos.style.display='none';
+
+    initDash(); // liga os cliques do menu e carrega os dados (financeiro/links ficam bloqueados pelo próprio initDash)
+    initLinkCliente(); // recepcionista também pode enviar o link de agendamento pro cliente
+
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-dash').classList.add('active');
+    const av=document.getElementById('avatar-initials');
+    const membro=(bData.equipe||[]).find(e=>e.id===equipeId);
+    if(av) av.textContent=(membro?membro.nome:'Recepção')[0].toUpperCase();
+}
+
+async function initFuncionarioMode(bId, funcId){
     // Load barbearia data
     const bSnap=await getDoc(doc(db,'barbeiros',bId));
     if(!bSnap.exists())return false;
     const bData=bSnap.data();
     const funcMembro=(bData.equipe||[]).find(e=>e.id===funcId);
     if(!funcMembro)return false;
+
+    if(funcMembro.tipo==='recepcionista'){
+        await initRecepcionistaMode(bId,bData,funcId);
+        return true;
+    }
 
     // Show only employee view
     document.getElementById('drawer-tab-items').innerHTML=`
@@ -4947,7 +5269,7 @@ async function initFuncionarioMode(){
                 <div style="display:flex;gap:.6rem;flex-wrap:wrap">
                     <input type="text" id="func-fila-nome" placeholder="Nome do cliente" style="flex:2;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
                     <select id="func-fila-corte" style="flex:1;min-width:120px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
-                        <option value="">Corte (opcional)</option>
+                        <option value="">Corte (obrigatório)</option>
                     </select>
                     <button id="btn-func-add-fila" style="padding:.75rem 1.2rem;background:rgba(0,255,136,.1);border:1.5px solid var(--green);border-radius:8px;color:var(--green);font-weight:700;cursor:pointer;white-space:nowrap">+ Entrar na fila</button>
                 </div>
@@ -5152,7 +5474,7 @@ function initFilaFuncionario(bId,funcNome,bData){
     const corteSel=document.getElementById('func-fila-corte');
     const cortes=bData.cortes||[];
     if(corteSel){
-        corteSel.innerHTML='<option value="">Corte (opcional)</option>'+
+        corteSel.innerHTML='<option value="">Corte (obrigatório)</option>'+
             cortes.map((c,i)=>`<option value="${i}">${c.nome} — R$${Number(c.preco).toFixed(0)}</option>`).join('');
     }
 
@@ -5163,7 +5485,8 @@ function initFilaFuncionario(bId,funcNome,bData){
             const nome=document.getElementById('func-fila-nome').value.trim();
             if(!nome){toast('Informe o nome do cliente','var(--red)');return;}
             const corteIdx=document.getElementById('func-fila-corte').value;
-            const corte=corteIdx!==''?cortes[Number(corteIdx)]:null;
+            if(corteIdx===''){toast('Escolha o corte antes de adicionar na fila','var(--red)');return;}
+            const corte=cortes[Number(corteIdx)];
 
             btnAdd.disabled=true;
             try{

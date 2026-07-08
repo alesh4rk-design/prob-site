@@ -775,7 +775,7 @@
 <script src="config.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 
@@ -1011,7 +1011,7 @@ async function carregarPromocoesCliente(){
         });
 
         promosIndividuais = todas.filter(p=>
-            p.tipo==='individual' && p.ativo && !p.usado && (!p.validoAte || hoje<=p.validoAte)
+            p.tipo==='individual' && p.ativo && (p.usosFeitos||0) < (p.limiteUsos||1) && (!p.validoAte || hoje<=p.validoAte)
         );
 
         const banner = $('banner-promocoes');
@@ -1069,9 +1069,9 @@ function conferirPromoCliente(wppLimpo, cupomDigitado){
 }
 
 async function marcarPromoUsadaSeAplicavel(){
-    if(!promoAplicada || !promoAplicada.usoUnico) return;
+    if(!promoAplicada) return;
     try{
-        await updateDoc(doc(db,'barbeiros',barbeiroId,'promocoes',promoAplicada.id),{usado:true});
+        await updateDoc(doc(db,'barbeiros',barbeiroId,'promocoes',promoAplicada.id),{usosFeitos:increment(1)});
     }catch(e){ console.error('marcarPromoUsadaSeAplicavel:', e); }
 }
 
