@@ -89,17 +89,17 @@
         .stat-lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:.25rem;}
 
         /* ── APPT CARD ── */
-        .appt-card{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:.45rem .85rem;margin-bottom:.3rem;display:flex;align-items:center;gap:.6rem;transition:border-color .2s;flex-wrap:wrap;}
+        .appt-card{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:.45rem .85rem;margin-bottom:.3rem;display:flex;align-items:center;gap:.6rem;transition:border-color .2s;}
         .appt-card:hover{border-color:rgba(0,212,255,.3);}
         .appt-card.appt-done{opacity:.55;border-color:transparent;}
         .appt-card.appt-canceled{opacity:.4;border-color:transparent;}
-        .appt-time{font-family:'Courier New',monospace;font-size:.9rem;font-weight:700;color:var(--blue);min-width:40px;}
-        .appt-info{flex:1;display:flex;align-items:center;flex-wrap:wrap;gap:.35rem;min-width:0;}
-        .appt-name{font-weight:700;font-size:.9rem;}
-        .appt-sep{color:var(--border);}
-        .appt-corte{font-size:.82rem;color:var(--muted);}
-        .appt-barber-tag{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);border-radius:20px;padding:.15rem .55rem;font-size:.68rem;color:var(--blue);font-weight:600;}
-        .appt-price{font-family:'Courier New',monospace;font-size:.85rem;color:var(--green);font-weight:700;flex-shrink:0;}
+        .appt-time{font-family:'Courier New',monospace;font-size:.82rem;font-weight:700;color:var(--blue);min-width:40px;flex-shrink:0;}
+        .appt-info{flex:1;display:flex;align-items:center;gap:.4rem;flex-wrap:nowrap;min-width:0;overflow:hidden;}
+        .appt-name{font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:85px;flex-shrink:0;}
+        .appt-sep{color:var(--border);font-size:.7rem;flex-shrink:0;}
+        .appt-corte{font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;flex-shrink:1;}
+        .appt-barber-tag{font-size:.7rem;color:var(--blue);white-space:nowrap;flex-shrink:0;background:rgba(0,212,255,.08);padding:.1rem .35rem;border-radius:4px;}
+        .appt-price{font-family:'Courier New',monospace;font-size:.78rem;font-weight:700;color:var(--green);flex-shrink:0;}
         .badge{padding:.2rem .55rem;border-radius:20px;font-size:.68rem;font-weight:700;flex-shrink:0;}
         .badge-pend{background:rgba(245,166,35,.15);color:var(--yellow);border:1px solid rgba(245,166,35,.3);}
         .badge-ok{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2);}
@@ -176,6 +176,9 @@
         .contato-wpp:hover{background:rgba(37,211,102,.22);}
         .contato-fechar{background:transparent;border:1px solid var(--border);color:var(--muted);margin-top:.25rem;}
         .contato-fechar:hover{border-color:var(--red);color:var(--red);}
+        @media(max-width:500px){
+            .appt-card{flex-wrap:wrap;}
+        }
     </style>
 </head>
 <body>
@@ -671,20 +674,18 @@ function renderCortes(){
         </div>`).join('')}`).join('');
 }
 
+function mostrarBloqueioDemo(o){
+    toast('🔒 '+o+' — disponível só na conta de verdade', 'var(--yellow)');
+    setTimeout(()=>{ document.getElementById('modal-contato').style.display='flex'; }, 1400);
+}
+
 function addCorte(){
     const nome  = document.getElementById('corte-nome').value.trim();
     const preco = parseFloat(document.getElementById('corte-preco').value);
-    const dur   = parseInt(document.getElementById('corte-duracao').value)||30;
-    const obs   = document.getElementById('corte-obs').value.trim();
-    const sessao= document.getElementById('corte-sessao').value || 'Corte de Cabelo';
     if(!nome || isNaN(preco) || preco < 0){ toast('Preencha nome e preço','var(--red)'); return; }
-    cortes.push({id:gerarId(), sessao, nome, preco, duracao:dur, obs, foto:''});
-    document.getElementById('corte-nome').value = '';
-    document.getElementById('corte-preco').value = '';
-    document.getElementById('corte-obs').value = '';
-    renderCortes(); toast('✓ Serviço adicionado!');
+    mostrarBloqueioDemo('Cadastrar novos serviços');
 }
-function delCorte(i){ if(confirm('Remover serviço?')){ cortes.splice(i,1); renderCortes(); toast('Removido','var(--red)'); } }
+function delCorte(i){ mostrarBloqueioDemo('Remover serviços do catálogo'); }
 
 // ═══════════════════════════════════════════
 // EQUIPE
@@ -704,14 +705,10 @@ function renderEquipe(){
 
 function addEquipe(){
     const nome = document.getElementById('eq-nome').value.trim();
-    const porc = parseInt(document.getElementById('eq-porc').value)||50;
     if(!nome){ toast('Digite o nome do barbeiro','var(--red)'); return; }
-    equipe.push({id:gerarId(), nome, porcentagem:porc});
-    document.getElementById('eq-nome').value = '';
-    document.getElementById('eq-porc').value = '';
-    renderEquipe(); toast('✓ Barbeiro adicionado!');
+    mostrarBloqueioDemo('Cadastrar sua equipe de verdade');
 }
-function delEquipe(i){ if(confirm('Remover barbeiro?')){ equipe.splice(i,1); renderEquipe(); toast('Removido','var(--red)'); } }
+function delEquipe(i){ mostrarBloqueioDemo('Gerenciar sua equipe'); }
 
 // ═══════════════════════════════════════════
 // HORÁRIOS
@@ -733,7 +730,7 @@ function renderHorarios(){
                 <input type="time" value="${h.fim}" onchange="horarios[${i}].fim=this.value"
                     style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.3rem .6rem;color:var(--text);font-size:.8rem;">
             `:''}
-        </div>`).join('') + `<button class="btn-save" style="margin-top:1rem;width:100%" onclick="toast('✓ Horários salvos! (demo)')">Salvar Horários</button>`;
+        </div>`).join('') + `<button class="btn-save" style="margin-top:1rem;width:100%" onclick="mostrarBloqueioDemo('Salvar horário de funcionamento')">Salvar Horários</button>`;
 }
 
 // ═══════════════════════════════════════════
