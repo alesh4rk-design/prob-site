@@ -2776,6 +2776,7 @@ async function adicionarNaFila(){
     btn.disabled=false;
 }
 
+let ultimaListaFila = [];
 function carregarFila(){
     if(unsubFila)unsubFila();
     const q=query(collection(db,'fila'),where('barbeiroId','==',barbeiroData.uid),where('status','==','aguardando'));
@@ -2783,6 +2784,7 @@ function carregarFila(){
         let lista=[];
         snap.forEach(d=>lista.push({id:d.id,...d.data()}));
         lista.sort((a,b)=>new Date(a.criadoEm)-new Date(b.criadoEm));
+        ultimaListaFila=lista;
         renderFila(lista);
     },e=>console.error('Erro fila:',e));
 }
@@ -2880,6 +2882,7 @@ function renderFilaCard(item,posicao){
     const tempoStr=tempo<1?'agora':tempo<60?`${tempo}min`:`${Math.floor(tempo/60)}h${tempo%60}min`;
     const corteTag=item.corte?` · ${escapeHtml(item.corte)}`:'';
     const barbeiroTag=item.barbeiro?`<span style="display:inline-flex;align-items:center;gap:.25rem;margin-left:.4rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);border-radius:20px;padding:.1rem .5rem;font-size:.68rem;color:rgba(0,212,255,.85);font-weight:600">✂️ ${escapeHtml(item.barbeiro)}</span>`:'';
+    const promoTagFila=gerarBadgePromoCliente(item.clienteWhatsapp);
     const wppMsg=encodeURIComponent(`Olá ${item.clienteNome}! É sua vez na fila da ${barbeiroData.nome||'barbearia'}. Por favor, dirija-se ao atendimento.`);
     const btnWpp=item.clienteWhatsapp?`<a href="https://wa.me/55${item.clienteWhatsapp.replace(/\D/g,'')
 }?text=${wppMsg}" target="_blank" class="btn-wpp" style="margin-right:.25rem" title="Chamar pelo WhatsApp">WPP</a>`:'';
@@ -2888,7 +2891,7 @@ function renderFilaCard(item,posicao){
         <div class="fila-info">
             <div class="fila-nome">${escapeHtml(item.clienteNome)}</div>
             <div class="fila-meta" style="display:flex;align-items:center;flex-wrap:wrap;gap:.25rem">
-                <span>Aguardando há ${tempoStr}${corteTag}</span>${barbeiroTag}
+                <span>Aguardando há ${tempoStr}${corteTag}</span>${barbeiroTag}${promoTagFila}
             </div>
         </div>
         <div class="fila-actions">
@@ -3091,6 +3094,13 @@ async function carregarCachePromoCliente(){
         }
         window.__metasFidelidade = metasFidelidade;
     }catch(e){ console.error('carregarCachePromoCliente:',e); }
+
+    // Re-renderiza o que já estava na tela, agora com os selos de promoção
+    if(ultimosAgendamentos.deHoje.length || ultimosAgendamentos.proximos.length){
+        renderAppts($('lista-agendamentos'),ultimosAgendamentos.deHoje,'Nenhum agendamento hoje ainda.');
+        renderAppts($('lista-proximos'),ultimosAgendamentos.proximos,'Nenhum agendamento futuro.');
+    }
+    if(ultimaListaFila.length) renderFila(ultimaListaFila);
 }
 
 // Monta o selinho pra mostrar no card do agendamento, se o cliente tiver
@@ -3114,6 +3124,7 @@ function gerarBadgePromoCliente(wpp){
     return html;
 }
 
+let ultimosAgendamentos = {deHoje:[], proximos:[], pendencias:[]};
 function carregarAgendamentos(){
     if(unsubAgendamentos)unsubAgendamentos();
     carregarCachePromoCliente();
@@ -3131,6 +3142,7 @@ function carregarAgendamentos(){
             a.data < hoje &&
             a.status === 'pendente'
         );
+        ultimosAgendamentos = {deHoje, proximos, pendencias};
 
         $('stat-hoje').textContent=deHoje.filter(a=>a.status!=='cancelado').length;
         $('stat-semana').textContent=todos.filter(a=>a.data>=hoje&&a.status!=='cancelado').length;
@@ -5243,6 +5255,8 @@ async function initFuncionarioMode(bId, funcId){
     }
 
     // Show only employee view
+    barbeiroData={uid:bId,...bData};
+    carregarCachePromoCliente();
     document.getElementById('drawer-tab-items').innerHTML=`
         <div class="tab active" data-tab="func-agenda">📋 Meus Agendamentos</div>
         <div class="tab" data-tab="func-fila">🪑 Fila</div>
@@ -5533,11 +5547,12 @@ function renderFilaFuncionario(lista,bId){
         const tempo=Math.floor((new Date()-new Date(item.criadoEm))/60000);
         const tempoStr=tempo<1?'agora':tempo<60?`${tempo}min`:`${Math.floor(tempo/60)}h${tempo%60}min`;
         const corteTag=item.corte?` · ${escapeHtml(item.corte)}`:'';
+        const promoTagFunc=gerarBadgePromoCliente(item.clienteWhatsapp);
         return `<div class="fila-card">
             <div class="fila-pos">${i+1}º</div>
             <div class="fila-info">
                 <div class="fila-nome">${escapeHtml(item.clienteNome)}</div>
-                <div class="fila-meta">Aguardando há ${tempoStr}${corteTag}</div>
+                <div class="fila-meta" style="display:flex;align-items:center;flex-wrap:wrap;gap:.25rem"><span>Aguardando há ${tempoStr}${corteTag}</span>${promoTagFunc}</div>
             </div>
             <div class="fila-actions">
                 <button class="btn-concluir func-fila-atender" data-id="${item.id}" title="Atender">✓</button>
