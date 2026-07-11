@@ -208,7 +208,7 @@ footer a{color:var(--blue);text-decoration:none;}
 <nav>
     <div class="wrap">
         <div class="nav-logo">PRO<span class="apo" style="color:var(--green)">'</span><span style="color:#fff">B</span></div>
-        <a href="barbeiro.html" class="nav-cta">Criar minha conta →</a>
+        <a href="barbeiro.html" class="nav-cta cta-cadastro">Criar minha conta →</a>
     </div>
 </nav>
 
@@ -219,7 +219,7 @@ footer a{color:var(--blue);text-decoration:none;}
         <h1>Sua barbearia organizada <span class="hl">sem planilha, sem caderno, sem esquecimento.</span></h1>
         <p class="hero-sub">Agenda online, fila de espera com painel de TV, financeiro automático e cobrança de cliente sumido — tudo pelo celular, funcionando desde o primeiro dia.</p>
         <div class="hero-ctas">
-            <a href="barbeiro.html" class="btn-primary-cta">Testar grátis por 7 dias</a>
+            <a href="barbeiro.html" class="btn-primary-cta cta-cadastro">Testar grátis por 7 dias</a>
             <a href="demo.html" class="btn-secondary-cta">Ver demonstração</a>
         </div>
         <p class="hero-note">Sem cartão de crédito. Cadastro leva menos de 2 minutos.</p>
@@ -319,6 +319,7 @@ footer a{color:var(--blue);text-decoration:none;}
             <h2>Um valor só, sem letra miúda</h2>
         </div>
         <div class="pricing-card">
+            <div id="oferta-badge" style="display:none;background:rgba(0,255,136,.12);color:var(--green);border:1px solid rgba(0,255,136,.35);border-radius:20px;padding:.3rem .85rem;font-size:.72rem;font-weight:700;margin-bottom:1rem">🏷️ Condição especial combinada com você</div>
             <div class="price-tag">Plano mensal</div>
             <div class="price-val" id="preco-valor">R$45<small>/mês</small></div>
             <div class="price-per">Cancele quando quiser, sem multa</div>
@@ -331,7 +332,7 @@ footer a{color:var(--blue);text-decoration:none;}
                 <li>Funciona no celular como app (PWA)</li>
                 <li>Suporte direto pelo WhatsApp</li>
             </ul>
-            <a href="barbeiro.html" class="btn-primary-cta" style="display:block;width:100%">Começar teste grátis</a>
+            <a href="barbeiro.html" class="btn-primary-cta cta-cadastro" style="display:block;width:100%">Começar teste grátis</a>
             <div class="price-trial">7 dias grátis pra testar. Só paga se continuar usando.</div>
         </div>
     </div>
@@ -368,7 +369,7 @@ footer a{color:var(--blue);text-decoration:none;}
             <h2>Bora organizar sua barbearia?</h2>
             <p>Cria sua conta agora ou chama no WhatsApp pra tirar dúvidas antes.</p>
             <div class="hero-ctas">
-                <a href="barbeiro.html" class="btn-primary-cta">Criar minha conta grátis</a>
+                <a href="barbeiro.html" class="btn-primary-cta cta-cadastro">Criar minha conta grátis</a>
                 <a href="#" id="link-wpp-vender" class="btn-secondary-cta" target="_blank">💬 Falar no WhatsApp</a>
             </div>
         </div>
@@ -392,15 +393,38 @@ const db = getFirestore(app);
 
 let wppAdmin = '5521966190515';
 
+function setPreco(valor){
+    document.getElementById('preco-valor').innerHTML =
+        'R$' + Number(valor).toFixed(0) + '<small>/mês</small>';
+}
+
+function propagarOferta(ofertaId){
+    // Todo botão de "criar conta" leva o mesmo ?oferta=ID junto, pra quem
+    // cadastrar já cair com o preço combinado, sem precisar digitar nada.
+    document.querySelectorAll('.cta-cadastro').forEach(a=>{
+        a.href = 'barbeiro.html?oferta=' + encodeURIComponent(ofertaId);
+    });
+}
+
 (async () => {
+    // Link de venda com preço combinado? (ex: vender.html?oferta=ID)
+    const ofertaId = new URLSearchParams(window.location.search).get('oferta');
+
     try{
+        if(ofertaId){
+            const ofSnap = await getDoc(doc(db,'ofertas',ofertaId));
+            if(ofSnap.exists() && ofSnap.data().ativo!==false){
+                setPreco(ofSnap.data().valor);
+                propagarOferta(ofertaId);
+                document.getElementById('oferta-badge').style.display='inline-block';
+            }
+            // Link de oferta inválido/desativado: cai pro preço padrão abaixo, sem quebrar a página.
+        }
+
         const snap = await getDoc(doc(db, 'config', 'admin'));
         if(snap.exists()){
             const d = snap.data();
-            if(d.preco){
-                document.getElementById('preco-valor').innerHTML =
-                    'R$' + Number(d.preco).toFixed(0) + '<small>/mês</small>';
-            }
+            if(d.preco && !ofertaId){ setPreco(d.preco); } // preço padrão só entra se não veio de oferta
             if(d.wpp){
                 const digitos = String(d.wpp).replace(/\D/g,'');
                 wppAdmin = digitos.startsWith('55') && digitos.length>=12 ? digitos : '55'+digitos;

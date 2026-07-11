@@ -463,15 +463,20 @@ async function carregarOfertas(){
             return;
         }
         cont.innerHTML=ofertas.map(o=>{
-            const link=`https://alesh4rk-design.github.io/prob-site/barbeiro.html?oferta=${o.id}`;
+            const linkVenda=`https://alesh4rk-design.github.io/prob-site/vender.html?oferta=${o.id}`;
+            const linkDireto=`https://alesh4rk-design.github.io/prob-site/barbeiro.html?oferta=${o.id}`;
             const ativo=o.ativo!==false;
             return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;gap:.5rem;flex-wrap:wrap;margin-bottom:.4rem">
                 <div style="min-width:0">
                     <div style="font-size:.85rem;font-weight:700;color:${ativo?'var(--green)':'var(--muted)'}">R$ ${Number(o.valor).toFixed(2)}/mês ${ativo?'':'· desativado'}</div>
-                    <div style="font-size:.66rem;color:var(--muted);margin-top:.1rem;word-break:break-all">${link}</div>
+                    <div style="font-size:.66rem;color:var(--muted);margin-top:.25rem">💰 Página de vendas (recomendado):</div>
+                    <div style="font-size:.66rem;color:var(--muted);word-break:break-all">${linkVenda}</div>
+                    <div style="font-size:.66rem;color:var(--muted);margin-top:.2rem">✂️ Direto pro cadastro:</div>
+                    <div style="font-size:.66rem;color:var(--muted);word-break:break-all">${linkDireto}</div>
                 </div>
-                <div style="display:flex;gap:.4rem;flex-shrink:0">
-                    <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('${link}');toast('✓ Copiado!')">Copiar</button>
+                <div style="display:flex;flex-direction:column;gap:.4rem;flex-shrink:0">
+                    <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('${linkVenda}');toast('✓ Link de vendas copiado!')">Copiar venda</button>
+                    <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('${linkDireto}');toast('✓ Link direto copiado!')">Copiar direto</button>
                     <button class="btn-sm" style="border-color:${ativo?'rgba(255,75,43,.4)':'rgba(0,255,136,.4)'};color:${ativo?'var(--red)':'var(--green)'};font-size:.68rem" onclick="toggleOferta('${o.id}',${!ativo})">${ativo?'Desativar':'Reativar'}</button>
                 </div>
             </div>`;
