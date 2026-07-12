@@ -137,6 +137,39 @@ section{padding:4.5rem 0;}
 .feature-card h3{font-size:1rem;font-weight:700;margin-bottom:.45rem;}
 .feature-card p{font-size:.84rem;color:var(--muted);line-height:1.55;}
 
+/* carrossel de telas */
+.carousel-wrap{
+    display:flex;gap:1.1rem;overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;padding:.5rem 1.5rem 1.2rem;
+    scrollbar-width:none;
+}
+.carousel-wrap::-webkit-scrollbar{display:none;}
+.carousel-slide{
+    scroll-snap-align:center;flex:0 0 auto;width:min(280px,78vw);
+}
+.slide-frame{
+    background:var(--card2);border:1px solid var(--border);border-radius:20px;
+    overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.4);
+    aspect-ratio:9/17.5;display:flex;flex-direction:column;
+}
+.slide-topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:.7rem .9rem;border-bottom:1px solid var(--border);background:rgba(10,14,20,.6);flex-shrink:0;
+}
+.slide-topbar b{font-size:.72rem;font-weight:900;letter-spacing:1px;color:var(--blue);}
+.slide-body{padding:.75rem;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:.55rem;}
+.slide-title{font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.1rem;}
+.slide-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:.55rem .65rem;}
+.slide-row{display:flex;align-items:center;justify-content:space-between;gap:.4rem;}
+.slide-nm{font-size:.72rem;font-weight:700;}
+.slide-sub{font-size:.6rem;color:var(--muted);margin-top:.1rem;}
+.slide-badge{font-size:.56rem;font-weight:700;padding:.12rem .4rem;border-radius:20px;white-space:nowrap;}
+.slide-caption{text-align:center;font-size:.82rem;color:var(--muted);margin-top:.85rem;font-weight:600;}
+.carousel-dots{display:flex;gap:.4rem;justify-content:center;margin-top:.3rem;}
+.carousel-dot{width:6px;height:6px;border-radius:50%;background:var(--border);}
+.carousel-dot.active{background:var(--blue);width:16px;border-radius:4px;transition:all .2s;}
+.carousel-hint{text-align:center;font-size:.72rem;color:var(--muted);margin-bottom:.5rem;}
+
 /* como funciona */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;counter-reset:step;}
 .step{position:relative;padding-top:2.6rem;}
@@ -266,27 +299,144 @@ footer a{color:var(--blue);text-decoration:none;}
                 <p>Chegou sem hora marcada? Entra na fila e o próximo da vez aparece sozinho numa tela ou monitor na barbearia.</p>
             </div>
             <div class="feature-card">
+                <div class="feature-icon">📦</div>
+                <h3>Estoque e venda de produtos</h3>
+                <p>Cadastra pomada, óleo, o que vender no balcão. Passa o leitor de código de barras (ou a câmera do celular) e a venda já desconta do estoque sozinha.</p>
+            </div>
+            <div class="feature-card">
                 <div class="feature-icon">💼</div>
                 <h3>Financeiro automático</h3>
-                <p>Faturamento, comissão por barbeiro e despesas fixas calculados sozinhos. Exporta relatório em Excel ou PDF quando quiser.</p>
+                <p>Faturamento de cortes e de produtos, comissão por barbeiro e despesas fixas, tudo calculado sozinho. Exporta relatório em Excel ou PDF quando quiser.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🎁</div>
                 <h3>Promoções e fidelidade</h3>
-                <p>Desconto pra cliente específico, cupom pra divulgar, e carteirinha de fidelidade — "a cada 10 cortes, 1 grátis".</p>
+                <p>Desconto pra um cliente específico com quantidade de usos que você define, cupom pra divulgar, e carteirinha de fidelidade — "a cada 10 cortes, 1 grátis".</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">⚠️</div>
                 <h3>Cliente sumido? O sistema avisa</h3>
-                <p>Mostra sozinho quem não aparece há 15, 30 dias, com mensagem de WhatsApp pronta pra mandar num clique.</p>
+                <p>Mostra sozinho quem não aparece há 5, 10, 15 ou 30 dias, com mensagem de WhatsApp pronta pra mandar num clique.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">👥</div>
-                <h3>Equipe com acesso próprio</h3>
-                <p>Cada barbeiro e recepcionista tem login e senha próprios, vendo só o que precisa ver — comissão de ninguém aparece pra quem não é dono.</p>
+                <h3>Equipe com login e permissão própria</h3>
+                <p>Cada barbeiro ou recepcionista cria a própria senha por um link de convite. Você decide o que cada um vê — e pode desativar o acesso na hora que quiser.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎓</div>
+                <h3>Tutoriais dentro do próprio sistema</h3>
+                <p>Um tour guiado mostra cada parte da tela na primeira vez que você entra, e fica sempre disponível pra rever quando precisar.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Funciona como app</h3>
+                <p>Sem baixar nada de loja de aplicativo. Abre pelo navegador e pode ser "instalado" na tela inicial do celular em um toque.</p>
             </div>
         </div>
     </div>
+</section>
+
+<section id="telas" style="padding-top:0">
+    <div class="wrap">
+        <div class="section-head">
+            <div class="eyebrow" style="text-align:center">Por dentro do sistema</div>
+            <h2>Arrasta pro lado e dá uma olhada</h2>
+            <p>Essas são telas reais do sistema — do jeito que aparecem no seu celular.</p>
+        </div>
+    </div>
+
+    <p class="carousel-hint">👉 Arraste pra ver mais telas</p>
+    <div class="carousel-wrap" id="carousel-track">
+
+        <div class="carousel-slide">
+            <div class="slide-frame">
+                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
+                <div class="slide-body">
+                    <div class="slide-title">Agendamentos de hoje</div>
+                    <div class="slide-card"><div class="slide-row"><span class="slide-nm">08:30 · Rafael Costa</span></div><div class="slide-sub">Corte + Barba · R$55</div></div>
+                    <div class="slide-card"><div class="slide-row"><span class="slide-nm">10:00 · Pedro Alves</span><span class="slide-badge" style="background:rgba(0,255,136,.12);color:var(--green)">🎁 15% off</span></div><div class="slide-sub">Degradê · com Chico Bento</div></div>
+                    <div class="slide-card"><div class="slide-row"><span class="slide-nm">11:30 · Bruno Souza</span></div><div class="slide-sub">Mid Fade · R$35</div></div>
+                    <div class="slide-card" style="opacity:.5"><div class="slide-row"><span class="slide-nm">14:00 · Carlos Lima</span></div><div class="slide-sub">✓ concluído</div></div>
+                </div>
+            </div>
+            <div class="slide-caption">📋 Agendamentos</div>
+        </div>
+
+        <div class="carousel-slide">
+            <div class="slide-frame">
+                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
+                <div class="slide-body">
+                    <div class="slide-title">Fila de espera</div>
+                    <div class="slide-card"><div class="slide-row"><span class="slide-nm">1º Diego Ferreira</span></div><div class="slide-sub">Coque Samurai · aguardando 8 min</div></div>
+                    <div class="slide-card"><div class="slide-row"><span class="slide-nm">2º Souza</span></div><div class="slide-sub">Social · aguardando 3 min</div></div>
+                    <div class="slide-card" style="border-color:rgba(0,212,255,.35);background:rgba(0,212,255,.05)">
+                        <div class="slide-title" style="margin:0 0 .3rem">📺 no painel de TV</div>
+                        <div class="slide-nm" style="font-size:.85rem">Próximo: Diego Ferreira</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-caption">🪑 Fila de Espera</div>
+        </div>
+
+        <div class="carousel-slide">
+            <div class="slide-frame">
+                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
+                <div class="slide-body">
+                    <div class="slide-title">Venda rápida</div>
+                    <div class="slide-card" style="border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05)">
+                        <div class="slide-sub">📷 Escaneie o código de barras</div>
+                    </div>
+                    <div class="slide-card"><div class="slide-row"><span class="slide-nm">Pomada Modeladora</span><span class="slide-badge" style="background:rgba(0,255,136,.12);color:var(--green)">R$35</span></div><div class="slide-sub">Estoque: 8 un.</div></div>
+                    <div class="slide-card"><div class="slide-row"><span class="slide-nm">Óleo pra Barba</span><span class="slide-badge" style="background:rgba(255,75,43,.12);color:var(--red)">⚠️ baixo</span></div><div class="slide-sub">Estoque: 2 un.</div></div>
+                </div>
+            </div>
+            <div class="slide-caption">📦 Estoque</div>
+        </div>
+
+        <div class="carousel-slide">
+            <div class="slide-frame">
+                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
+                <div class="slide-body">
+                    <div class="slide-title">Promoções ativas</div>
+                    <div class="slide-card"><div class="slide-nm">🎯 Desconto — Alexandre</div><div class="slide-sub">15% off · restam 2 usos</div></div>
+                    <div class="slide-card"><div class="slide-nm">🔑 Cupom VOLTA10</div><div class="slide-sub">R$10 off no próximo corte</div></div>
+                    <div class="slide-card"><div class="slide-nm">⭐ Fidelidade</div><div class="slide-sub">A cada 10 cortes = 1 grátis</div></div>
+                </div>
+            </div>
+            <div class="slide-caption">🎁 Promoções</div>
+        </div>
+
+        <div class="carousel-slide">
+            <div class="slide-frame">
+                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
+                <div class="slide-body">
+                    <div class="slide-title">Sua base de clientes</div>
+                    <div class="slide-card" style="border-color:rgba(0,255,136,.35)"><div class="slide-nm">Marcos Vinícius</div><div class="slide-sub">✅ Recorrente · 12 cortes</div></div>
+                    <div class="slide-card" style="border-color:rgba(0,212,255,.35)"><div class="slide-nm">Felipe Rocha</div><div class="slide-sub">🆕 Novo · 1 corte</div></div>
+                    <div class="slide-card" style="border-color:rgba(255,75,43,.4)"><div class="slide-nm">André Oliveira</div><div class="slide-sub">⚠️ Sumiu há 32 dias</div></div>
+                </div>
+            </div>
+            <div class="slide-caption">🧑 Clientes</div>
+        </div>
+
+        <div class="carousel-slide">
+            <div class="slide-frame">
+                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
+                <div class="slide-body">
+                    <div class="slide-title">Visão geral financeira</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                        <div class="slide-card"><div class="slide-nm" style="color:var(--green);font-family:monospace;font-size:.85rem">R$4.250</div><div class="slide-sub">Receita do mês</div></div>
+                        <div class="slide-card"><div class="slide-nm" style="color:var(--blue);font-family:monospace;font-size:.85rem">R$680</div><div class="slide-sub">Produtos vendidos</div></div>
+                    </div>
+                    <div class="slide-card"><div class="slide-sub">📄 Exportar relatório completo</div></div>
+                </div>
+            </div>
+            <div class="slide-caption">💼 Gestão da Barbearia</div>
+        </div>
+
+    </div>
+    <div class="carousel-dots" id="carousel-dots"></div>
 </section>
 
 <section id="como-funciona" style="background:rgba(255,255,255,.015);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
@@ -326,9 +476,11 @@ footer a{color:var(--blue);text-decoration:none;}
             <ul class="price-list">
                 <li>Agenda online ilimitada</li>
                 <li>Fila de espera + painel de TV</li>
-                <li>Relatórios financeiros (Excel/PDF)</li>
+                <li>Estoque e venda de produtos com leitor de código de barras</li>
+                <li>Relatórios financeiros completos (Excel/PDF)</li>
                 <li>Promoções e programa de fidelidade</li>
-                <li>Equipe com login próprio</li>
+                <li>Equipe com login próprio e permissões por cargo</li>
+                <li>Tutoriais guiados dentro do sistema</li>
                 <li>Funciona no celular como app (PWA)</li>
                 <li>Suporte direto pelo WhatsApp</li>
             </ul>
@@ -354,7 +506,11 @@ footer a{color:var(--blue);text-decoration:none;}
         </div>
         <div class="faq-item">
             <h3>Funciona pra mais de um barbeiro na mesma barbearia?</h3>
-            <p>Sim. Você cadastra sua equipe, cada um recebe um convite próprio pra criar login e senha, e vê só a própria agenda e ganhos.</p>
+            <p>Sim. Você cadastra sua equipe (barbeiro ou recepcionista), cada um recebe um convite próprio pra criar login e senha, e vê só o que faz sentido pro cargo dele.</p>
+        </div>
+        <div class="faq-item">
+            <h3>Preciso comprar um leitor de código de barras?</h3>
+            <p>Não é obrigatório. Se você já tem um leitor USB ou Bluetooth comum, ele funciona direto, sem configurar nada. Se não tiver, dá pra escanear pela câmera do próprio celular.</p>
         </div>
         <div class="faq-item">
             <h3>E se eu quiser parar de usar?</h3>
@@ -434,6 +590,44 @@ function propagarOferta(ofertaId){
 
     const msg = encodeURIComponent("Olá! Vi a página do Pro'B e quero saber mais sobre o sistema pra minha barbearia.");
     document.getElementById('link-wpp-vender').href = `https://wa.me/${wppAdmin}?text=${msg}`;
+})();
+</script>
+
+<!-- Script à parte, de propósito: o carrossel de telas é só visual e não
+     pode depender do Firebase carregar — se a internet estiver ruim ou algo
+     bloquear o módulo acima, o carrossel continua funcionando normalmente. -->
+<script>
+(() => {
+    const track = document.getElementById('carousel-track');
+    const dotsWrap = document.getElementById('carousel-dots');
+    if(!track || !dotsWrap) return;
+    const slides = track.querySelectorAll('.carousel-slide');
+
+    slides.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'carousel-dot' + (i===0?' active':'');
+        dot.addEventListener('click', () => {
+            slides[i].scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+        });
+        dotsWrap.appendChild(dot);
+    });
+    const dots = dotsWrap.querySelectorAll('.carousel-dot');
+
+    let ticking = false;
+    track.addEventListener('scroll', () => {
+        if(ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            const centro = track.scrollLeft + track.clientWidth/2;
+            let maisPerto = 0, menorDist = Infinity;
+            slides.forEach((s,i) => {
+                const dist = Math.abs((s.offsetLeft + s.offsetWidth/2) - centro);
+                if(dist < menorDist){ menorDist = dist; maisPerto = i; }
+            });
+            dots.forEach((d,i) => d.classList.toggle('active', i===maisPerto));
+            ticking = false;
+        });
+    });
 })();
 </script>
 </body>
