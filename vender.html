@@ -152,51 +152,11 @@ section{padding:4.5rem 0;}
     overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.4);
     aspect-ratio:9/17.5;display:flex;flex-direction:column;
 }
-.slide-topbar{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:.7rem .9rem;border-bottom:1px solid var(--border);background:rgba(10,14,20,.6);flex-shrink:0;
-}
-.slide-topbar b{font-size:.72rem;font-weight:900;letter-spacing:1px;color:var(--blue);}
-.slide-body{padding:.75rem;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:.55rem;}
-.slide-title{font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.1rem;}
-.slide-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:.55rem .65rem;}
-.slide-row{display:flex;align-items:center;justify-content:space-between;gap:.4rem;}
-.slide-nm{font-size:.72rem;font-weight:700;}
-.slide-sub{font-size:.6rem;color:var(--muted);margin-top:.1rem;}
-.slide-badge{font-size:.56rem;font-weight:700;padding:.12rem .4rem;border-radius:20px;white-space:nowrap;}
 .slide-caption{text-align:center;font-size:.82rem;color:var(--muted);margin-top:.85rem;font-weight:600;}
 .carousel-dots{display:flex;gap:.4rem;justify-content:center;margin-top:.3rem;}
 .carousel-dot{width:6px;height:6px;border-radius:50%;background:var(--border);}
 .carousel-dot.active{background:var(--blue);width:16px;border-radius:4px;transition:all .2s;}
 .carousel-hint{text-align:center;font-size:.72rem;color:var(--muted);margin-bottom:.5rem;}
-
-/* ── Classes abaixo copiadas exatamente do sistema real (barbeiro.html),
-     pra essas telas de exemplo ficarem idênticas ao produto de verdade. ── */
-.appt-card{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:.45rem .6rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;}
-.appt-card.appt-done{opacity:.55;}
-.appt-time{font-family:'Courier New',monospace;font-size:.72rem;font-weight:700;color:var(--blue);flex-shrink:0;}
-.appt-info{flex:1;display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;min-width:0;}
-.appt-name{font-size:.7rem;font-weight:700;white-space:nowrap;}
-.appt-sep{color:var(--border);font-size:.65rem;}
-.appt-corte{font-size:.66rem;color:var(--muted);white-space:nowrap;}
-.appt-barber-tag{font-size:.6rem;color:var(--blue);white-space:nowrap;background:rgba(0,212,255,.08);padding:.08rem .3rem;border-radius:4px;}
-.appt-price{font-family:'Courier New',monospace;font-size:.68rem;font-weight:700;color:var(--green);margin-left:auto;}
-.badge{padding:.1rem .38rem;border-radius:20px;font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
-.badge-pend{background:rgba(245,166,35,.15);color:var(--yellow);border:1px solid rgba(245,166,35,.3);}
-.badge-ok{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2);}
-.fila-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:.6rem .7rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.55rem;}
-.fila-pos{width:24px;height:24px;border-radius:50%;background:rgba(0,212,255,.1);border:1.5px solid var(--blue);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--blue);font-size:.68rem;flex-shrink:0;}
-.fila-info{flex:1;min-width:0;}
-.fila-nome{font-size:.72rem;font-weight:700;}
-.fila-meta{font-size:.6rem;color:var(--muted);margin-top:.1rem;}
-.service-item{background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:.55rem;margin-bottom:.4rem;display:flex;gap:.55rem;align-items:center;position:relative;}
-.service-foto-placeholder{width:34px;height:34px;border-radius:7px;flex-shrink:0;background:var(--card);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;}
-.service-name{font-size:.72rem;font-weight:600;}
-.service-price-badge{position:absolute;top:.5rem;right:.5rem;font-family:'Courier New',monospace;color:var(--green);font-size:.62rem;font-weight:700;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);border-radius:20px;padding:.15rem .4rem;}
-.fat-kpi{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:.6rem;text-align:center;}
-.fat-kpi-val{font-family:'Courier New',monospace;font-size:.95rem;font-weight:900;color:var(--blue);}
-.fat-kpi-lbl{font-size:.56rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:.2rem;}
-.wpp-mini{padding:.12rem .4rem;border:1px solid #25d366;border-radius:5px;color:#25d366;font-size:.58rem;font-weight:700;flex-shrink:0;}
 
 /* como funciona */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;counter-reset:step;}
@@ -379,154 +339,42 @@ footer a{color:var(--blue);text-decoration:none;}
 
         <div class="carousel-slide">
             <div class="slide-frame">
-                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
-                <div class="slide-body">
-                    <div class="slide-title">Agendamentos de hoje</div>
-                    <div class="appt-card">
-                        <div class="appt-time">08:30</div>
-                        <div class="appt-info">
-                            <span class="appt-name">Rafael Costa</span><span class="appt-sep">·</span><span class="appt-corte">Corte + Barba</span>
-                        </div>
-                        <span class="appt-price">R$55</span>
-                    </div>
-                    <div class="appt-card">
-                        <div class="appt-time">10:00</div>
-                        <div class="appt-info">
-                            <span class="appt-name">Pedro Alves</span><span class="appt-sep">·</span><span class="appt-corte">Degradê</span>
-                            <span class="appt-barber-tag">✂️ Chico Bento</span>
-                            <span class="appt-barber-tag" style="background:rgba(0,255,136,.12);color:var(--green)">🎁 15% off</span>
-                            <span class="badge badge-pend">pend</span>
-                        </div>
-                        <span class="appt-price">R$47</span>
-                    </div>
-                    <div class="appt-card">
-                        <div class="appt-time">11:30</div>
-                        <div class="appt-info"><span class="appt-name">Bruno Souza</span><span class="appt-sep">·</span><span class="appt-corte">Mid Fade</span></div>
-                        <span class="appt-price">R$35</span>
-                    </div>
-                    <div class="appt-card appt-done">
-                        <div class="appt-time">14:00</div>
-                        <div class="appt-info"><span class="appt-name">Carlos Lima</span><span class="appt-sep">·</span><span class="appt-corte">Social</span><span class="badge badge-ok">✓ feito</span></div>
-                        <span class="appt-price">R$30</span>
-                    </div>
-                </div>
+                <img src="prints/1_agendamentos.png" alt="Tela de 📋 Agendamentos do sistema Pro'B" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block">
             </div>
             <div class="slide-caption">📋 Agendamentos</div>
         </div>
 
         <div class="carousel-slide">
             <div class="slide-frame">
-                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
-                <div class="slide-body">
-                    <div class="slide-title">Fila de espera</div>
-                    <div class="fila-card">
-                        <div class="fila-pos">1º</div>
-                        <div class="fila-info">
-                            <div class="fila-nome">Diego Ferreira</div>
-                            <div class="fila-meta">Aguardando há 8min · Coque Samurai</div>
-                        </div>
-                        <span class="wpp-mini">WPP</span>
-                    </div>
-                    <div class="fila-card">
-                        <div class="fila-pos">2º</div>
-                        <div class="fila-info">
-                            <div class="fila-nome">Souza</div>
-                            <div class="fila-meta">Aguardando há 3min · Social</div>
-                        </div>
-                        <span class="wpp-mini">WPP</span>
-                    </div>
-                    <div class="service-item" style="border-color:rgba(0,212,255,.35);background:rgba(0,212,255,.05);margin-top:.3rem">
-                        <div style="font-size:.62rem;color:var(--blue);font-weight:700">📺 No painel de TV da barbearia<br><span style="color:var(--text);font-size:.72rem">Próximo: Diego Ferreira</span></div>
-                    </div>
-                </div>
+                <img src="prints/2_fila.png" alt="Tela de 🪑 Fila de Espera do sistema Pro'B" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block">
             </div>
             <div class="slide-caption">🪑 Fila de Espera</div>
         </div>
 
         <div class="carousel-slide">
             <div class="slide-frame">
-                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
-                <div class="slide-body">
-                    <div class="slide-title">💰 Venda rápida</div>
-                    <div class="service-item" style="border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05)">
-                        <div style="font-size:.62rem;color:var(--muted)">📷 Escaneie o código de barras</div>
-                    </div>
-                    <div class="slide-title" style="margin-top:.2rem">Produtos cadastrados</div>
-                    <div class="service-item">
-                        <div class="service-foto-placeholder">🧴</div>
-                        <div style="flex:1;min-width:0"><div class="service-name">Pomada Modeladora</div><div style="font-size:.6rem;color:var(--muted);margin-top:.1rem">Estoque: 8 un.</div></div>
-                        <div class="service-price-badge">R$35</div>
-                    </div>
-                    <div class="service-item" style="border-color:rgba(255,75,43,.4)">
-                        <div class="service-foto-placeholder">🧴</div>
-                        <div style="flex:1;min-width:0"><div class="service-name">Óleo pra Barba<span style="font-size:.55rem;background:rgba(255,75,43,.12);color:var(--red);border-radius:20px;padding:.06rem .35rem;margin-left:.3rem">⚠️ baixo</span></div><div style="font-size:.6rem;color:var(--muted);margin-top:.1rem">Estoque: 2 un.</div></div>
-                        <div class="service-price-badge">R$45</div>
-                    </div>
-                </div>
+                <img src="prints/3_estoque.png" alt="Tela de 📦 Estoque do sistema Pro'B" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block">
             </div>
             <div class="slide-caption">📦 Estoque</div>
         </div>
 
         <div class="carousel-slide">
             <div class="slide-frame">
-                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
-                <div class="slide-body">
-                    <div class="slide-title">🎁 Promoções</div>
-                    <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:.6rem">
-                        <div style="font-weight:700;font-size:.7rem">🎯 Desconto — Alexandre</div>
-                        <div style="font-size:.6rem;margin-top:.15rem">👤 Alexandre Ferreira — <strong style="color:var(--green)">15% off</strong></div>
-                        <div style="font-size:.56rem;color:var(--yellow);margin-top:.15rem">· restam 2 de 3 usos</div>
-                    </div>
-                    <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:.6rem;margin-top:.4rem">
-                        <div style="font-weight:700;font-size:.7rem">🔑 Cupom VOLTA10</div>
-                        <div style="font-size:.6rem;margin-top:.15rem">R$10,00 off no próximo corte</div>
-                    </div>
-                    <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:.6rem;margin-top:.4rem">
-                        <div style="font-weight:700;font-size:.7rem;color:var(--yellow)">⭐ Fidelidade</div>
-                        <div style="font-size:.6rem;margin-top:.15rem">A cada 10 cortes = 1 corte grátis</div>
-                    </div>
-                </div>
+                <img src="prints/4_promocoes.png" alt="Tela de 🎁 Promoções do sistema Pro'B" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block">
             </div>
             <div class="slide-caption">🎁 Promoções</div>
         </div>
 
         <div class="carousel-slide">
             <div class="slide-frame">
-                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
-                <div class="slide-body">
-                    <div class="slide-title">Sua base de clientes</div>
-                    <div style="background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.35);border-radius:9px;padding:.55rem .65rem;display:flex;align-items:center;gap:.5rem">
-                        <div style="width:24px;height:24px;border-radius:50%;background:rgba(0,212,255,.12);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:900;color:var(--blue);flex-shrink:0">M</div>
-                        <div style="min-width:0"><div style="font-weight:700;font-size:.68rem">Marcos Vinícius <span style="font-weight:400;color:var(--muted);font-size:.56rem">✅ Recorrente</span></div><div style="font-size:.58rem;color:var(--muted)">12 cortes · Favorito: Degradê</div></div>
-                    </div>
-                    <div style="background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.3);border-radius:9px;padding:.55rem .65rem;margin-top:.4rem;display:flex;align-items:center;gap:.5rem">
-                        <div style="width:24px;height:24px;border-radius:50%;background:rgba(0,212,255,.12);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:900;color:var(--blue);flex-shrink:0">F</div>
-                        <div style="min-width:0"><div style="font-weight:700;font-size:.68rem">Felipe Rocha <span style="font-weight:400;color:var(--muted);font-size:.56rem">🆕 Novo</span></div><div style="font-size:.58rem;color:var(--muted)">1 corte · Favorito: Social</div></div>
-                    </div>
-                    <div style="background:rgba(255,75,43,.05);border:1px solid rgba(255,75,43,.45);border-radius:9px;padding:.55rem .65rem;margin-top:.4rem;display:flex;align-items:center;gap:.5rem">
-                        <div style="width:24px;height:24px;border-radius:50%;background:rgba(0,212,255,.12);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:900;color:var(--blue);flex-shrink:0">A</div>
-                        <div style="min-width:0"><div style="font-weight:700;font-size:.68rem">André Oliveira</div><div style="font-size:.58rem;color:var(--red)">⚠️ Sumiu há 32 dias</div></div>
-                    </div>
-                </div>
+                <img src="prints/5_clientes.png" alt="Tela de 🧑 Clientes do sistema Pro'B" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block">
             </div>
             <div class="slide-caption">🧑 Clientes</div>
         </div>
 
         <div class="carousel-slide">
             <div class="slide-frame">
-                <div class="slide-topbar"><b>PRO'B</b><span style="font-size:.6rem;color:var(--muted)">☰</span></div>
-                <div class="slide-body">
-                    <div class="slide-title">Visão geral financeira</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem">
-                        <div class="fat-kpi"><div class="fat-kpi-val">R$3.900</div><div class="fat-kpi-lbl">Receita serviços</div></div>
-                        <div class="fat-kpi" style="border-color:rgba(0,212,255,.3)"><div class="fat-kpi-val" style="color:var(--blue)">R$350</div><div class="fat-kpi-lbl">Receita produtos</div></div>
-                        <div class="fat-kpi" style="border-color:rgba(245,166,35,.3)"><div class="fat-kpi-val" style="color:var(--yellow)">R$860</div><div class="fat-kpi-lbl">Comissões</div></div>
-                        <div class="fat-kpi" style="border-color:rgba(0,255,136,.3)"><div class="fat-kpi-val" style="color:var(--green)">R$2.690</div><div class="fat-kpi-lbl">Líquido dono</div></div>
-                    </div>
-                    <div class="service-item" style="margin-top:.4rem">
-                        <div style="font-size:.62rem;color:var(--muted)">📄 Exportar relatório completo (Excel/PDF)</div>
-                    </div>
-                </div>
+                <img src="prints/6_gestao.png" alt="Tela de 💼 Gestão da Barbearia do sistema Pro'B" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block">
             </div>
             <div class="slide-caption">💼 Gestão da Barbearia</div>
         </div>
