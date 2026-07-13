@@ -977,6 +977,7 @@
 
             <div style="display:flex;gap:.6rem;flex-wrap:wrap">
                 <input type="text" id="fila-nome" placeholder="Nome do cliente" style="flex:2;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
+                <input type="tel" id="fila-wpp" placeholder="WhatsApp (opcional)" style="flex:1;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
                 <select id="fila-corte" style="flex:1;min-width:120px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
                     <option value="">Corte (obrigatório)</option>
                 </select>
@@ -3135,6 +3136,9 @@ async function adicionarNaFila(){
     const corteIdx=document.getElementById('fila-corte').value;
     if(corteIdx===''){toast('Escolha o corte antes de adicionar na fila','var(--red)');return;}
 
+    const wppInput=document.getElementById('fila-wpp');
+    const wpp=wppInput?wppInput.value.replace(/\D/g,''):'';
+
     const equipe=barbeiroData.equipe||[];
     const barbeiroNome=equipe.length>0?document.getElementById('fila-select-barbeiro').value:'';
     const corte=barbeiroData.cortes[Number(corteIdx)];
@@ -3146,6 +3150,7 @@ async function adicionarNaFila(){
         await addDoc(collection(db,'fila'),{
             barbeiroId:barbeiroData.uid,
             clienteNome:nome,
+            clienteWhatsapp:wpp,
             barbeiro:barbeiroNome,
             corte:corte?corte.nome:'',
             preco:corte?corte.preco:0,
@@ -3154,6 +3159,7 @@ async function adicionarNaFila(){
             origem:'painel'
         });
         document.getElementById('fila-nome').value='';
+        if(wppInput)wppInput.value='';
         document.getElementById('fila-corte').value='';
         toast('✓ Adicionado à fila!');
     }catch(e){
@@ -6109,6 +6115,7 @@ async function initFuncionarioMode(bId, funcId){
                 <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Adicione clientes que chegaram sem agendamento. Você só vê e gerencia a sua própria fila.</p>
                 <div style="display:flex;gap:.6rem;flex-wrap:wrap">
                     <input type="text" id="func-fila-nome" placeholder="Nome do cliente" style="flex:2;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
+                    <input type="tel" id="func-fila-wpp" placeholder="WhatsApp (opcional)" style="flex:1;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
                     <select id="func-fila-corte" style="flex:1;min-width:120px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
                         <option value="">Corte (obrigatório)</option>
                     </select>
@@ -6328,12 +6335,15 @@ function initFilaFuncionario(bId,funcNome,bData){
             const corteIdx=document.getElementById('func-fila-corte').value;
             if(corteIdx===''){toast('Escolha o corte antes de adicionar na fila','var(--red)');return;}
             const corte=cortes[Number(corteIdx)];
+            const wppEl=document.getElementById('func-fila-wpp');
+            const wpp=wppEl?wppEl.value.replace(/\D/g,''):'';
 
             btnAdd.disabled=true;
             try{
                 await addDoc(collection(db,'fila'),{
                     barbeiroId:bId,
                     clienteNome:nome,
+                    clienteWhatsapp:wpp,
                     barbeiro:funcNome,
                     corte:corte?corte.nome:'',
                     preco:corte?corte.preco:0,
@@ -6342,6 +6352,7 @@ function initFilaFuncionario(bId,funcNome,bData){
                     origem:'painel-funcionario'
                 });
                 document.getElementById('func-fila-nome').value='';
+                if(wppEl)wppEl.value='';
                 document.getElementById('func-fila-corte').value='';
                 toast('✓ Adicionado à fila!');
             }catch(e){
