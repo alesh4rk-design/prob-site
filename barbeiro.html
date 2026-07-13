@@ -495,6 +495,7 @@
             .service-foto-thumb,.service-foto-placeholder{width:60px;height:60px;}
             .service-name{padding-right:5rem;font-size:.88rem;}
             .service-price-badge{font-size:.72rem;padding:.18rem .5rem;}
+            .cli-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
         }
         @media(max-width:360px){
             .service-name{padding-right:5.5rem;font-size:.85rem;}
@@ -789,6 +790,7 @@
             </div>
         </div>
         <div class="topbar-user">
+            <button id="btn-ajuda" title="Ajuda e tutoriais" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--blue);font-weight:900;font-size:.9rem;cursor:pointer;flex-shrink:0">?</button>
             <div class="user-avatar" id="avatar-initials" title="">?</div>
             <button class="btn-logout" id="btn-logout">Sair</button>
         </div>
@@ -812,6 +814,7 @@
         <div class="tab" data-tab="cortes">✂️ Cortes</div>
         <div class="tab" data-tab="promocoes">🎁 Promoções</div>
         <div class="tab" data-tab="horarios">🕐 Horários</div>
+        <div class="tab" data-tab="estoque">📦 Estoque</div>
 
         <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Pessoas</div>
         <div class="tab" data-tab="equipe">👥 Equipe</div>
@@ -822,6 +825,41 @@
         <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Negócio</div>
         <div class="tab" data-tab="perfil">⚙️ Configurações</div>
         <div class="tab" data-tab="gestao">💼 Gestão da Barbearia</div>
+
+        <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Ajuda</div>
+        <div class="tab" data-tab="tutoriais">🎓 Tutoriais</div>
+        </div>
+    </div>
+
+    <!-- ══ TOUR GUIADO — destaque + balão ══ -->
+    <div id="tour-spotlight" style="display:none;position:fixed;z-index:9998;border-radius:10px;box-shadow:0 0 0 9999px rgba(4,6,10,.82);border:2px solid var(--blue);pointer-events:none;transition:all .35s ease;"></div>
+    <div id="tour-tooltip" style="display:none;position:fixed;z-index:9999;max-width:300px;background:var(--card);border:1.5px solid var(--blue);border-radius:12px;padding:1.1rem 1.2rem;box-shadow:0 10px 40px rgba(0,0,0,.5);transition:top .35s ease,left .35s ease;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+            <span id="tour-passo-atual" style="font-size:.68rem;color:var(--muted);font-weight:700;letter-spacing:.5px"></span>
+            <button id="tour-fechar" style="background:transparent;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;line-height:1;padding:0 .2rem">✕</button>
+        </div>
+        <div id="tour-titulo" style="font-size:.92rem;font-weight:700;color:var(--blue);margin-bottom:.4rem"></div>
+        <div id="tour-texto" style="font-size:.82rem;color:var(--text);line-height:1.5;margin-bottom:1rem"></div>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end">
+            <button id="tour-anterior" style="display:none;padding:.4rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer">← Voltar</button>
+            <button id="tour-proximo" style="padding:.4rem 1rem;background:var(--blue);border:none;border-radius:8px;color:#04140c;font-weight:700;font-size:.78rem;cursor:pointer">Próximo →</button>
+        </div>
+    </div>
+
+    <!-- ══ Menu do botão de ajuda ══ -->
+    <div id="ajuda-menu" style="display:none;position:fixed;top:56px;right:16px;z-index:400;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:.5rem;box-shadow:0 10px 30px rgba(0,0,0,.4);min-width:220px">
+        <button id="btn-refazer-tour" style="width:100%;text-align:left;padding:.65rem .8rem;background:transparent;border:none;color:var(--text);font-size:.85rem;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:.5rem">🎬 Fazer tour guiado</button>
+        <button id="btn-central-ajuda" style="width:100%;text-align:left;padding:.65rem .8rem;background:transparent;border:none;color:var(--text);font-size:.85rem;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:.5rem">📖 Central de Ajuda</button>
+    </div>
+
+    <!-- ══ Central de Ajuda (modal) ══ -->
+    <div id="modal-ajuda" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:1.2rem">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:14px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:1.3rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <div style="font-size:1.05rem;font-weight:800;color:var(--blue)">📖 Central de Ajuda</div>
+                <button id="btn-fechar-ajuda" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer">✕</button>
+            </div>
+            <div id="lista-topicos-ajuda"></div>
         </div>
     </div>
 
@@ -1227,6 +1265,64 @@
         </div>
     </div>
 
+    <!-- TAB Estoque -->
+    <div class="tab-content" id="tab-estoque">
+        <div class="section-title">💰 Venda Rápida</div>
+        <div class="card" style="margin-bottom:1.2rem;border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.04)">
+            <p style="font-size:.75rem;color:var(--muted);margin-bottom:.7rem">Passe o leitor de código de barras (USB/Bluetooth) com esse campo selecionado — ele "digita" sozinho. Sem leitor? Usa a câmera do celular.</p>
+            <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
+                <input type="text" id="venda-codigo" placeholder="Escaneie ou digite o código de barras" autocomplete="off"
+                    style="flex:1;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-size:.9rem;outline:none">
+                <button id="btn-scan-camera" title="Escanear com a câmera" style="flex-shrink:0;width:44px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--blue);font-size:1.1rem;cursor:pointer">📷</button>
+            </div>
+            <div id="venda-produto-encontrado" style="display:none;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem;margin-bottom:.75rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap">
+                    <div>
+                        <div id="venda-produto-nome" style="font-weight:700;font-size:.92rem"></div>
+                        <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">Em estoque: <span id="venda-produto-estoque"></span> · <span id="venda-produto-preco" style="color:var(--green);font-family:'Courier New',monospace"></span></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                        <button id="venda-qtd-menos" style="width:30px;height:30px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer">−</button>
+                        <span id="venda-qtd" style="min-width:24px;text-align:center;font-weight:700">1</span>
+                        <button id="venda-qtd-mais" style="width:30px;height:30px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer">+</button>
+                    </div>
+                </div>
+                <button class="btn-add" id="btn-confirmar-venda" style="width:100%;margin-top:.75rem">✓ Confirmar Venda — <span id="venda-total">R$0,00</span></button>
+            </div>
+            <div id="venda-nao-encontrado" style="display:none;font-size:.8rem;color:var(--yellow);padding:.6rem 0">⚠️ Nenhum produto com esse código. Cadastre ele aqui embaixo primeiro.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin-bottom:1.2rem">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem;text-align:center">
+                <div style="font-family:'Courier New',monospace;font-size:1.3rem;font-weight:900;color:var(--green)" id="estoque-kpi-vendas-hoje">R$0</div>
+                <div style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem">Vendas hoje</div>
+            </div>
+            <div style="background:var(--card);border:1px solid rgba(255,75,43,.35);border-radius:10px;padding:.85rem;text-align:center">
+                <div style="font-family:'Courier New',monospace;font-size:1.3rem;font-weight:900;color:var(--red)" id="estoque-kpi-baixo">0</div>
+                <div style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem">Estoque baixo</div>
+            </div>
+        </div>
+
+        <div class="section-title">Cadastrar Produto</div>
+        <div class="card" style="margin-bottom:1.2rem">
+            <div style="display:flex;gap:.5rem;margin-bottom:.6rem">
+                <input type="text" id="prod-codigo" placeholder="Código de barras (opcional)" autocomplete="off"
+                    style="flex:1;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none">
+                <button id="btn-scan-camera-cadastro" title="Escanear com a câmera" style="flex-shrink:0;width:40px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--blue);font-size:1rem;cursor:pointer">📷</button>
+            </div>
+            <div class="input-group"><label>Nome do produto</label><input type="text" id="prod-nome" placeholder="Ex: Pomada Modeladora"></div>
+            <div class="form-row">
+                <div class="input-group"><label>Preço de venda (R$)</label><input type="number" id="prod-preco" placeholder="35.00" step="0.01" min="0"></div>
+                <div class="input-group"><label>Estoque inicial</label><input type="number" id="prod-estoque" placeholder="10" min="0" step="1"></div>
+            </div>
+            <div class="input-group"><label>Avisar quando estoque chegar em (opcional)</label><input type="number" id="prod-estoque-min" placeholder="3" min="0" step="1"></div>
+            <button class="btn-add" id="btn-add-produto">+ Adicionar Produto</button>
+        </div>
+
+        <div class="section-title">Produtos Cadastrados</div>
+        <div id="lista-produtos"><div class="empty-state"><div class="icon">📦</div>Nenhum produto cadastrado ainda.</div></div>
+    </div>
+
     <!-- TAB Visual -->
     <div class="tab-content" id="tab-visual">
         <div class="section-title">Personalizar Tela do Cliente</div>
@@ -1562,7 +1658,7 @@
             <input type="text" id="cli-busca" placeholder="🔍 Nome ou WhatsApp..."
                 style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem 1rem;color:var(--text);font-size:.85rem;outline:none;width:200px">
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.85rem">
+        <div class="cli-kpi-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem;margin-bottom:.85rem">
             <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem;text-align:center">
                 <div style="font-family:'Courier New',monospace;font-size:1.4rem;font-weight:900;color:var(--blue)" id="cli-kpi-total">0</div>
                 <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:.2rem">Clientes</div>
@@ -1609,11 +1705,15 @@
 
         <div class="section-title" style="margin-top:1.2rem">Detalhamento do Mês</div>
         <div class="fat-kpis">
-            <div class="fat-kpi"><div class="fat-kpi-val" id="gest-receita">R$0</div><div class="fat-kpi-lbl">Receita bruta</div></div>
+            <div class="fat-kpi"><div class="fat-kpi-val" id="gest-receita">R$0</div><div class="fat-kpi-lbl">Receita de serviços</div></div>
+            <div class="fat-kpi" style="border-color:rgba(0,212,255,.3)"><div class="fat-kpi-val" id="gest-receita-produtos" style="color:var(--blue)">R$0</div><div class="fat-kpi-lbl">Receita de produtos</div></div>
             <div class="fat-kpi" style="border-color:rgba(245,166,35,.3)"><div class="fat-kpi-val" id="gest-comissoes" style="color:var(--yellow)">R$0</div><div class="fat-kpi-lbl">Comissões pagas</div></div>
             <div class="fat-kpi red"><div class="fat-kpi-val" id="gest-despesas">R$0</div><div class="fat-kpi-lbl">Despesas fixas</div></div>
             <div class="fat-kpi green"><div class="fat-kpi-val" id="fat-liquido">R$0</div><div class="fat-kpi-lbl">Líquido dono (s/ despesas)</div></div>
         </div>
+
+        <div class="section-title" style="margin-top:1.2rem">📦 Produtos mais vendidos (mês)</div>
+        <div id="ranking-produtos" class="card"><div class="empty-state" style="padding:1rem 0"><div class="icon">📦</div>Nenhuma venda de produto este mês ainda.</div></div>
 
         <div class="card" style="margin-top:1.2rem;margin-bottom:1.2rem">
             <div class="section-title" style="font-size:.78rem">Exportar Relatório</div>
@@ -1762,6 +1862,16 @@
 
         <div class="section-title" style="margin-top:1.2rem">Lista de Gastos</div>
         <div id="lista-gastos"><div class="empty-state"><div class="icon">💼</div>Nenhum gasto fixo cadastrado ainda.</div></div>
+    </div>
+
+    <!-- TAB Tutoriais -->
+    <div class="tab-content" id="tab-tutoriais">
+        <div class="card" style="margin-bottom:1.2rem;border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04);text-align:center">
+            <p style="font-size:.85rem;margin-bottom:.85rem">Quer rever tudo do começo, com aquele passo a passo apontando na tela?</p>
+            <button class="btn-add" id="btn-tutoriais-refazer-tour">🎬 Fazer o tour guiado</button>
+        </div>
+        <div class="section-title">Tópicos</div>
+        <div id="lista-topicos-tutoriais"></div>
     </div>
 
     <!-- TAB Perfil -->
@@ -2635,6 +2745,7 @@ function initDash(){
                 }
             }
             if(tab.dataset.tab==='clientes'){ carregarClientes(); carregarAvisos1h(); }
+            if(tab.dataset.tab==='tutoriais') renderTopicosAjuda('lista-topicos-tutoriais');
         });
     });
     // Aba inicial (Agendamentos) não é a Clientes — desliga as partículas
@@ -2708,6 +2819,7 @@ function initDash(){
     initVisual();
     initPresencial();
     initFila();
+    initEstoque();
 
     const btnExp=document.getElementById('btn-exportar-excel');
     if(btnExp && !btnExp.dataset.bound){
@@ -2721,6 +2833,199 @@ function initDash(){
         btnExpPdf.dataset.bound='1';
         btnExpPdf.addEventListener('click',exportarPDF);
     }
+
+    initAjudaETour();
+}
+
+// ══════════════════════════════════════════════════════════
+// TOUR GUIADO + CENTRAL DE AJUDA
+// ══════════════════════════════════════════════════════════
+const TOUR_STEPS = [
+    {selector:'#btn-menu-hamburger', drawer:false,
+        titulo:"Bem-vindo ao Pro'B! 👋",
+        texto:"Esse é o botão de menu — é por ele que você acessa todas as áreas do sistema. Vamos dar uma volta rápida?"},
+    {selector:'[data-tab="agendamentos"]', drawer:true,
+        titulo:'📋 Agendamentos',
+        texto:'Aqui ficam os horários marcados de hoje e dos próximos dias, atualizando sozinho conforme os clientes agendam.'},
+    {selector:'[data-tab="fila"]', drawer:true,
+        titulo:'🪑 Fila de Espera',
+        texto:'Cliente chegou sem hora marcada? Entra na fila por aqui. Dá até pra deixar numa TV/monitor da barbearia mostrando quem é o próximo.'},
+    {selector:'[data-tab="cortes"]', drawer:true,
+        titulo:'✂️ Cortes',
+        texto:'Cadastre seus serviços: nome, preço, duração e até foto. É o catálogo que o cliente vê na hora de agendar.'},
+    {selector:'[data-tab="promocoes"]', drawer:true,
+        titulo:'🎁 Promoções',
+        texto:'Crie descontos gerais, um desconto só pra um cliente específico, ou até um cupom pra divulgar.'},
+    {selector:'[data-tab="equipe"]', drawer:true,
+        titulo:'👥 Equipe',
+        texto:'Cadastre barbeiros e recepcionistas. Cada um recebe um convite pra criar login e senha próprios — vendo só o que precisa ver.'},
+    {selector:'[data-tab="clientes"]', drawer:true,
+        titulo:'🧑 Clientes',
+        texto:'Veja sua base de clientes, quem tá recorrente, quem sumiu — e mande mensagem de WhatsApp pronta direto daqui.'},
+    {selector:'[data-tab="painel-chamada"]', drawer:true,
+        titulo:'📺 Painel de Chamada',
+        texto:'Deixe essa tela aberta numa TV ou monitor da barbearia — mostra sozinho, em tempo real, quem é o próximo da fila.'},
+    {selector:'[data-tab="gestao"]', drawer:true,
+        titulo:'💼 Gestão da Barbearia',
+        texto:'Faturamento, comissões e despesas calculados automaticamente. Exporta relatório em Excel ou PDF quando quiser.'},
+    {selector:'#btn-ajuda', drawer:false,
+        titulo:'Precisa rever isso depois? 😉',
+        texto:'É só clicar aqui a qualquer momento — o tour guiado e a central de ajuda ficam sempre disponíveis.'},
+];
+
+const TOPICOS_AJUDA = [
+    {titulo:'📋 Como funciona a Agenda', texto:'Os agendamentos de hoje e dos próximos dias aparecem automaticamente, feitos pelos seus clientes ou por você (agendamento presencial). Marque como concluído ou cancelado direto no card.', tab:'agendamentos', selector:'[data-tab="agendamentos"]'},
+    {titulo:'🪑 Como funciona a Fila de Espera', texto:'Pra clientes que chegam sem hora marcada. Adicione o nome e o corte escolhido — o corte é obrigatório, pra manter o controle de faturamento certinho.', tab:'fila', selector:'[data-tab="fila"]'},
+    {titulo:'✂️ Cadastrando serviços', texto:'Em Cortes, adicione cada serviço com nome, preço, duração e, se quiser, uma foto. Isso é o que aparece pro cliente escolher ao agendar.', tab:'cortes', selector:'[data-tab="cortes"]'},
+    {titulo:'🎁 Criando uma promoção', texto:'Em Promoções, escolha entre desconto geral, pacote, ou promoção individual pra um cliente específico (com desconto e quantidade de usos definida por você).', tab:'promocoes', selector:'[data-tab="promocoes"]'},
+    {titulo:'👥 Convidando sua equipe', texto:'Em Equipe, cadastre um barbeiro ou recepcionista e copie o link de convite gerado — manda por WhatsApp. A pessoa cria a própria senha ao abrir o link.', tab:'equipe', selector:'[data-tab="equipe"]'},
+    {titulo:'⚠️ Clientes sumidos', texto:'Na aba Clientes, use os filtros de "dias sem aparecer" pra achar rapidinho quem tá sumido e mandar um WhatsApp de reativação com um clique.', tab:'clientes', selector:'[data-tab="clientes"]'},
+    {titulo:'📺 Painel de TV da barbearia', texto:'Em Painel de Chamada, copie o link e abra numa TV ou monitor — atualiza sozinho mostrando a fila e quem é o próximo.', tab:'painel-chamada', selector:'[data-tab="painel-chamada"]'},
+    {titulo:'💼 Relatórios financeiros', texto:'Em Gestão da Barbearia, veja faturamento e despesas, e exporte um relatório completo em Excel ou PDF quando precisar.', tab:'gestao', selector:'[data-tab="gestao"]'},
+    {titulo:'🔗 Link de agendamento', texto:'Na aba Clientes tem o link público de agendamento — copie e mande pros seus clientes pelo WhatsApp, Instagram, onde quiser.', tab:'clientes', selector:'[data-tab="clientes"]'},
+];
+
+let tourPassoAtual = 0;
+let tourAtivo = false;
+let modoDestaqueUnico = false;
+
+function initAjudaETour(){
+    if(window.__ajudaBound) { verificarPrimeiroAcesso(); return; }
+    window.__ajudaBound = true;
+
+    $('btn-ajuda').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const menu = $('ajuda-menu');
+        menu.style.display = menu.style.display==='block' ? 'none' : 'block';
+    });
+    document.addEventListener('click', (e)=>{
+        const menu = $('ajuda-menu');
+        if(menu.style.display==='block' && !menu.contains(e.target) && e.target.id!=='btn-ajuda'){
+            menu.style.display = 'none';
+        }
+    });
+    $('btn-refazer-tour').addEventListener('click', ()=>{
+        $('ajuda-menu').style.display = 'none';
+        iniciarTour();
+    });
+    const btnTutRefazer = $('btn-tutoriais-refazer-tour');
+    if(btnTutRefazer) btnTutRefazer.addEventListener('click', iniciarTour);
+    $('btn-central-ajuda').addEventListener('click', ()=>{
+        $('ajuda-menu').style.display = 'none';
+        abrirCentralAjuda();
+    });
+    $('btn-fechar-ajuda').addEventListener('click', ()=> $('modal-ajuda').style.display='none');
+    $('modal-ajuda').addEventListener('click', (e)=>{ if(e.target.id==='modal-ajuda') $('modal-ajuda').style.display='none'; });
+
+    $('tour-fechar').addEventListener('click', pararTour);
+    $('tour-proximo').addEventListener('click', ()=>{
+        if(modoDestaqueUnico || tourPassoAtual >= TOUR_STEPS.length-1){ pararTour(); return; }
+        tourPassoAtual++;
+        mostrarPassoTour();
+    });
+    $('tour-anterior').addEventListener('click', ()=>{
+        if(tourPassoAtual<=0) return;
+        tourPassoAtual--;
+        mostrarPassoTour();
+    });
+    window.addEventListener('resize', ()=>{ if(tourAtivo) posicionarTour(TOUR_STEPS[tourPassoAtual].selector); });
+
+    verificarPrimeiroAcesso();
+}
+
+function verificarPrimeiroAcesso(){
+    try{
+        if(window.__recepcionista) return; // tour é só pro dono, por enquanto
+        if(!localStorage.getItem('probTourFeito')){
+            setTimeout(iniciarTour, 900);
+        }
+    }catch(e){}
+}
+
+function iniciarTour(){
+    tourPassoAtual = 0;
+    tourAtivo = true;
+    modoDestaqueUnico = false;
+    mostrarPassoTour();
+}
+
+function pararTour(){
+    tourAtivo = false;
+    $('tour-spotlight').style.display = 'none';
+    $('tour-tooltip').style.display = 'none';
+    fecharDrawer();
+    if(!modoDestaqueUnico){
+        try{ localStorage.setItem('probTourFeito','1'); }catch(e){}
+    }
+    modoDestaqueUnico = false;
+}
+
+function mostrarPassoTour(){
+    const passo = TOUR_STEPS[tourPassoAtual];
+    if(passo.drawer){ if(window.abrirDrawer) window.abrirDrawer(); }
+    else { fecharDrawer(); }
+
+    $('tour-passo-atual').textContent = `Passo ${tourPassoAtual+1} de ${TOUR_STEPS.length}`;
+    $('tour-titulo').textContent = passo.titulo;
+    $('tour-texto').textContent = passo.texto;
+    $('tour-anterior').style.display = tourPassoAtual>0 ? 'inline-block' : 'none';
+    $('tour-proximo').textContent = tourPassoAtual>=TOUR_STEPS.length-1 ? 'Concluir ✓' : 'Próximo →';
+
+    setTimeout(()=>posicionarTour(passo.selector), passo.drawer!==undefined ? 300 : 50);
+}
+
+function posicionarTour(selector){
+    const alvo = document.querySelector(selector);
+    const spot = $('tour-spotlight');
+    const tip = $('tour-tooltip');
+    if(!alvo){ spot.style.display='none'; tip.style.display='none'; return; }
+
+    const r = alvo.getBoundingClientRect();
+    const pad = 6;
+    spot.style.display = 'block';
+    spot.style.top    = (r.top-pad)+'px';
+    spot.style.left   = (r.left-pad)+'px';
+    spot.style.width  = (r.width+pad*2)+'px';
+    spot.style.height = (r.height+pad*2)+'px';
+
+    tip.style.display = 'block';
+    const tipW = 300, margem = 14;
+    let top = r.bottom + margem;
+    if(top + 180 > window.innerHeight){ top = Math.max(margem, r.top - 190); }
+    let left = Math.min(Math.max(margem, r.left), window.innerWidth - tipW - margem);
+    tip.style.top = top+'px';
+    tip.style.left = left+'px';
+
+    alvo.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function renderTopicosAjuda(containerId, aoFechar){
+    const container = $(containerId);
+    container.innerHTML = TOPICOS_AJUDA.map((t,i)=>`
+        <div style="border-bottom:1px solid var(--border);padding:.9rem 0">
+            <div style="font-weight:700;font-size:.88rem;margin-bottom:.35rem">${t.titulo}</div>
+            <div style="font-size:.8rem;color:var(--muted);line-height:1.5;margin-bottom:.5rem">${t.texto}</div>
+            <button class="btn-edit" style="font-size:.72rem" data-idx="${i}">👁️ Mostrar na tela</button>
+        </div>`).join('');
+    container.querySelectorAll('button[data-idx]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+            const t = TOPICOS_AJUDA[Number(btn.dataset.idx)];
+            if(aoFechar) aoFechar();
+            tourPassoAtual = -1; tourAtivo = true; modoDestaqueUnico = true;
+            if(window.abrirDrawer) window.abrirDrawer();
+            $('tour-passo-atual').textContent = '';
+            $('tour-titulo').textContent = t.titulo;
+            $('tour-texto').textContent = t.texto;
+            $('tour-anterior').style.display = 'none';
+            $('tour-proximo').textContent = 'Entendi ✓';
+            setTimeout(()=>posicionarTour(t.selector), 300);
+        });
+    });
+}
+
+function abrirCentralAjuda(){
+    renderTopicosAjuda('lista-topicos-ajuda', ()=>{ $('modal-ajuda').style.display = 'none'; });
+    $('modal-ajuda').style.display = 'flex';
 }
 
 // AGENDAMENTOS — tempo real
@@ -3420,6 +3725,7 @@ function renderEquipe(){
                     style="width:58px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;color:var(--text);font-size:.85rem;text-align:center;">
                 <span style="font-size:.75rem;color:var(--muted)">%</span>
                 <button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-save="${i}">Salvar</button>`}
+                <button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-trocar-tipo="${i}" title="Trocar entre Barbeiro e Recepcionista">🔄 ${ehRecep?'Virar Barbeiro':'Virar Recepcionista'}</button>
                 <button class="btn-del" data-idx="${i}">Remover</button>
             </div>`;
 
@@ -3441,6 +3747,20 @@ function renderEquipe(){
             barbeiroData.equipe[i].pct=pct;
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:barbeiroData.equipe});
             toast(`${barbeiroData.equipe[i].nome}: ${pct}% salvo!`);
+            renderEquipe();
+            carregarGanhos();
+        });
+    });
+    container.querySelectorAll('[data-trocar-tipo]').forEach(btn=>{
+        btn.addEventListener('click',async()=>{
+            const i=Number(btn.dataset.trocarTipo);
+            const membro=barbeiroData.equipe[i];
+            const novoTipo = membro.tipo==='recepcionista' ? 'barbeiro' : 'recepcionista';
+            if(!confirm(`Trocar ${membro.nome} para ${novoTipo==='recepcionista'?'Recepcionista':'Barbeiro'}?\n\nNa próxima vez que ela(e) entrar, o menu já vem atualizado sozinho.`)) return;
+            barbeiroData.equipe[i].tipo = novoTipo;
+            if(novoTipo==='recepcionista') barbeiroData.equipe[i].pct = 0;
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:barbeiroData.equipe});
+            toast(`${membro.nome} agora é ${novoTipo==='recepcionista'?'Recepcionista':'Barbeiro'}!`);
             renderEquipe();
             carregarGanhos();
         });
@@ -4513,6 +4833,211 @@ function initHorarios(){
     renderHours();
 }
 
+// ══════════════════════════════════════════════════════════
+// ESTOQUE — cadastro de produtos, venda rápida e leitor de
+// código de barras (USB/Bluetooth digitam sozinhos; câmera é bônus)
+// ══════════════════════════════════════════════════════════
+let produtosCache = [];
+let unsubProdutos = null;
+let vendaProdutoSelecionado = null;
+let vendaQtdAtual = 1;
+
+function initEstoque(){
+    if(window.__estoqueBound) return;
+    window.__estoqueBound = true;
+
+    if(unsubProdutos) unsubProdutos();
+    unsubProdutos = onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'produtos'), snap=>{
+        produtosCache = [];
+        snap.forEach(d=>produtosCache.push({id:d.id,...d.data()}));
+        renderProdutos();
+        atualizarKpiEstoqueBaixo();
+    }, e=>console.error('produtos:',e));
+
+    carregarVendasHoje();
+
+    // Campo de código de barras — Enter (leitor manda Enter sozinho) ou digitação manual
+    const inputVenda = $('venda-codigo');
+    inputVenda.addEventListener('keydown', e=>{
+        if(e.key==='Enter'){ e.preventDefault(); buscarProdutoPorCodigo(inputVenda.value.trim()); }
+    });
+    $('venda-qtd-menos').addEventListener('click', ()=>{ if(vendaQtdAtual>1){ vendaQtdAtual--; atualizarResumoVenda(); } });
+    $('venda-qtd-mais').addEventListener('click', ()=>{
+        if(vendaProdutoSelecionado && vendaQtdAtual>=vendaProdutoSelecionado.estoque){ toast('Não tem tanto em estoque assim','var(--red)'); return; }
+        vendaQtdAtual++; atualizarResumoVenda();
+    });
+    $('btn-confirmar-venda').addEventListener('click', confirmarVenda);
+
+    $('btn-add-produto').addEventListener('click', adicionarProduto);
+
+    $('btn-scan-camera').addEventListener('click', ()=>abrirScannerCamera(codigo=>{ $('venda-codigo').value=codigo; buscarProdutoPorCodigo(codigo); }));
+    $('btn-scan-camera-cadastro').addEventListener('click', ()=>abrirScannerCamera(codigo=>{ $('prod-codigo').value=codigo; }));
+}
+
+function buscarProdutoPorCodigo(codigo){
+    $('venda-produto-encontrado').style.display='none';
+    $('venda-nao-encontrado').style.display='none';
+    if(!codigo) return;
+    const produto = produtosCache.find(p=>p.codigoBarras && p.codigoBarras===codigo);
+    if(!produto){ $('venda-nao-encontrado').style.display='block'; return; }
+    if(produto.estoque<=0){ toast('Esse produto está sem estoque','var(--red)'); return; }
+    vendaProdutoSelecionado = produto;
+    vendaQtdAtual = 1;
+    $('venda-produto-nome').textContent = produto.nome;
+    $('venda-produto-encontrado').style.display='block';
+    atualizarResumoVenda();
+}
+
+function atualizarResumoVenda(){
+    if(!vendaProdutoSelecionado) return;
+    $('venda-qtd').textContent = vendaQtdAtual;
+    $('venda-produto-estoque').textContent = vendaProdutoSelecionado.estoque;
+    $('venda-produto-preco').textContent = 'R$'+Number(vendaProdutoSelecionado.preco).toFixed(2);
+    $('venda-total').textContent = 'R$'+(vendaProdutoSelecionado.preco*vendaQtdAtual).toFixed(2).replace('.',',');
+}
+
+async function confirmarVenda(){
+    if(!vendaProdutoSelecionado) return;
+    if(vendaQtdAtual>vendaProdutoSelecionado.estoque){ toast('Quantidade maior que o estoque','var(--red)'); return; }
+    const btn = $('btn-confirmar-venda');
+    btn.disabled=true;
+    try{
+        const total = vendaProdutoSelecionado.preco*vendaQtdAtual;
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vendaProdutoSelecionado.id),{estoque:increment(-vendaQtdAtual)});
+        await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
+            produtoId: vendaProdutoSelecionado.id,
+            produtoNome: vendaProdutoSelecionado.nome,
+            quantidade: vendaQtdAtual,
+            precoUnit: vendaProdutoSelecionado.preco,
+            total,
+            data: fmtHoje(),
+            criadoEm: new Date().toISOString()
+        });
+        toast(`✓ Venda registrada: ${vendaQtdAtual}x ${vendaProdutoSelecionado.nome}`);
+        $('venda-codigo').value='';
+        $('venda-produto-encontrado').style.display='none';
+        vendaProdutoSelecionado=null; vendaQtdAtual=1;
+        $('venda-codigo').focus();
+        carregarVendasHoje();
+    }catch(e){ toast('Erro ao registrar venda: '+e.message,'var(--red)'); }
+    btn.disabled=false;
+}
+
+async function carregarVendasHoje(){
+    try{
+        const hoje = fmtHoje();
+        const q = query(collection(db,'barbeiros',barbeiroData.uid,'vendas'), where('data','==',hoje));
+        const snap = await getDocs(q);
+        let total=0;
+        snap.forEach(d=>total+=Number(d.data().total||0));
+        const el = $('estoque-kpi-vendas-hoje');
+        if(el) el.textContent = 'R$'+total.toFixed(0);
+    }catch(e){ console.error('carregarVendasHoje:',e); }
+}
+
+function atualizarKpiEstoqueBaixo(){
+    const n = produtosCache.filter(p=>p.estoqueMinimo && p.estoque<=p.estoqueMinimo).length;
+    const el = $('estoque-kpi-baixo');
+    if(el) el.textContent = n;
+}
+
+async function adicionarProduto(){
+    const nome = $('prod-nome').value.trim();
+    const codigoBarras = $('prod-codigo').value.trim();
+    const preco = parseFloat($('prod-preco').value);
+    const estoque = parseInt($('prod-estoque').value);
+    const estoqueMinimo = $('prod-estoque-min').value ? parseInt($('prod-estoque-min').value) : null;
+    if(!nome){ toast('Digite o nome do produto','var(--red)'); return; }
+    if(isNaN(preco) || preco<0){ toast('Informe um preço válido','var(--red)'); return; }
+    if(isNaN(estoque) || estoque<0){ toast('Informe a quantidade em estoque','var(--red)'); return; }
+    if(codigoBarras && produtosCache.some(p=>p.codigoBarras===codigoBarras)){
+        toast('Já existe um produto com esse código de barras','var(--red)'); return;
+    }
+    const btn = $('btn-add-produto');
+    btn.disabled=true;
+    try{
+        await addDoc(collection(db,'barbeiros',barbeiroData.uid,'produtos'), {
+            nome, codigoBarras: codigoBarras||null, preco, estoque, estoqueMinimo,
+            criadoEm: new Date().toISOString()
+        });
+        $('prod-nome').value=''; $('prod-codigo').value=''; $('prod-preco').value=''; $('prod-estoque').value=''; $('prod-estoque-min').value='';
+        toast('✓ Produto cadastrado!');
+    }catch(e){ toast('Erro ao cadastrar: '+e.message,'var(--red)'); }
+    btn.disabled=false;
+}
+
+function renderProdutos(){
+    const cont = $('lista-produtos');
+    if(!cont) return;
+    if(!produtosCache.length){ cont.innerHTML = '<div class="empty-state"><div class="icon">📦</div>Nenhum produto cadastrado ainda.</div>'; return; }
+    cont.innerHTML = produtosCache.map(p=>{
+        const baixo = p.estoqueMinimo && p.estoque<=p.estoqueMinimo;
+        return `<div class="service-item" style="flex-wrap:wrap;${baixo?'border-color:rgba(255,75,43,.4)':''}">
+            <div style="flex:1;min-width:140px">
+                <div class="service-name" style="padding-right:0">${escapeHtml(p.nome)}${baixo?'<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">⚠️ Estoque baixo</span>':''}</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">
+                    ${p.codigoBarras?`Código: ${escapeHtml(p.codigoBarras)} · `:''}Estoque: <span style="color:${baixo?'var(--red)':'var(--text)'};font-weight:700">${p.estoque}</span> · R$${Number(p.preco).toFixed(2)}
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
+                <button class="btn-edit" data-add-estoque="${p.id}">+ Estoque</button>
+                <button class="btn-del" data-del-produto="${p.id}">Remover</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    cont.querySelectorAll('[data-add-estoque]').forEach(btn=>{
+        btn.addEventListener('click', async()=>{
+            const qtd = prompt('Quantas unidades chegaram?','10');
+            const n = parseInt(qtd);
+            if(!qtd || isNaN(n) || n<=0) return;
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',btn.dataset.addEstoque),{estoque:increment(n)});
+            toast(`✓ +${n} unidades adicionadas`);
+        });
+    });
+    cont.querySelectorAll('[data-del-produto]').forEach(btn=>{
+        btn.addEventListener('click', async()=>{
+            if(!confirm('Remover esse produto do catálogo?')) return;
+            await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',btn.dataset.delProduto));
+            toast('Produto removido');
+        });
+    });
+}
+
+// Leitor de código de barras pela câmera do celular (bônus pra quem não
+// tem leitor físico). Carrega a biblioteca só quando realmente usada.
+let scannerCameraCarregado = false;
+function abrirScannerCamera(aoLer){
+    const iniciar = () => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:9997;background:#000;display:flex;flex-direction:column;';
+        overlay.innerHTML = `
+            <div style="padding:1rem;display:flex;justify-content:space-between;align-items:center;background:var(--card2)">
+                <span style="color:#fff;font-weight:700;font-size:.9rem">📷 Aponte pro código de barras</span>
+                <button id="btn-fechar-scanner" style="background:transparent;border:1.5px solid var(--border);color:#fff;border-radius:8px;padding:.4rem .8rem;cursor:pointer">Fechar</button>
+            </div>
+            <div id="scanner-camera-view" style="flex:1"></div>`;
+        document.body.appendChild(overlay);
+
+        const scanner = new Html5Qrcode('scanner-camera-view');
+        const parar = () => { scanner.stop().catch(()=>{}); overlay.remove(); };
+        overlay.querySelector('#btn-fechar-scanner').addEventListener('click', parar);
+        scanner.start(
+            {facingMode:'environment'},
+            {fps:10, qrbox:{width:250,height:120}},
+            (codigo)=>{ parar(); aoLer(codigo); },
+            ()=>{}
+        ).catch(e=>{ toast('Não deu pra acessar a câmera: '+e.message,'var(--red)'); overlay.remove(); });
+    };
+
+    if(scannerCameraCarregado){ iniciar(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
+    script.onload = ()=>{ scannerCameraCarregado = true; iniciar(); };
+    script.onerror = ()=> toast('Não deu pra carregar o leitor de câmera. Confira sua internet.','var(--red)');
+    document.head.appendChild(script);
+}
+
 async function renderHours(){
     const grid=$('hours-grid');
     grid.innerHTML='<div style="color:var(--muted);font-size:.8rem">Carregando...</div>';
@@ -4748,8 +5273,18 @@ async function exportarExcel(){
         const concluidos=todos.filter(a=>a.status==='concluido');
         const cancelados=todos.filter(a=>a.status==='cancelado');
         const pendentes=todos.filter(a=>a.status!=='concluido'&&a.status!=='cancelado');
-        const totalFaturado=concluidos.reduce((s,a)=>s+Number(a.preco||0),0);
-        const ticketMedio=concluidos.length?totalFaturado/concluidos.length:0;
+        const totalServicosExcel=concluidos.reduce((s,a)=>s+Number(a.preco||0),0);
+        const ticketMedio=concluidos.length?totalServicosExcel/concluidos.length:0;
+
+        // Vendas de produtos do período
+        let vendasExcel=[];
+        try{
+            const snapVendasExcel=await getDocs(collection(db,'barbeiros',barbeiroData.uid,'vendas'));
+            snapVendasExcel.forEach(d=>vendasExcel.push(d.data()));
+        }catch(e){ console.error('vendas excel:',e); }
+        vendasExcel=vendasExcel.filter(v=>v.data>=periodo.inicioStr&&v.data<=periodo.fimStr);
+        const totalProdutosExcel=vendasExcel.reduce((s,v)=>s+Number(v.total||0),0);
+        const totalFaturado=totalServicosExcel+totalProdutosExcel;
 
         const wb=XLSX.utils.book_new();
 
@@ -4773,7 +5308,9 @@ async function exportarExcel(){
             [],
             ['FINANCEIRO'],
             ['Faturamento total (R$)',totalFaturado.toFixed(2)],
-            ['Ticket médio (R$)',ticketMedio.toFixed(2)],
+            ['  · Faturamento de serviços (R$)',totalServicosExcel.toFixed(2)],
+            ['  · Faturamento de produtos (R$)',totalProdutosExcel.toFixed(2)],
+            ['Ticket médio de serviço (R$)',ticketMedio.toFixed(2)],
             ['Gastos fixos mensais (R$)',totalGastosFixos().toFixed(2)],
         ];
         const wsCapa=XLSX.utils.aoa_to_sheet(capa);
@@ -4825,6 +5362,36 @@ async function exportarExcel(){
         aplicarEstiloPlanilha(wsCortes,3);
         XLSX.utils.book_append_sheet(wb,wsCortes,'Cortes Mais Vendidos');
 
+        // ══ ABA 3.5: PRODUTOS MAIS VENDIDOS ══
+        const porProduto={};
+        vendasExcel.forEach(v=>{
+            if(!v.produtoNome)return;
+            if(!porProduto[v.produtoNome])porProduto[v.produtoNome]={qtd:0,total:0};
+            porProduto[v.produtoNome].qtd+=Number(v.quantidade||0);
+            porProduto[v.produtoNome].total+=Number(v.total||0);
+        });
+        const dadosProdutos=Object.entries(porProduto)
+            .sort((a,b)=>b[1].qtd-a[1].qtd)
+            .map(([nome,d])=>({'Produto':nome,'Quantidade Vendida':d.qtd,'Faturado (R$)':d.total.toFixed(2)}));
+        const wsProdutos=XLSX.utils.json_to_sheet(dadosProdutos.length?dadosProdutos:[{'Produto':'Sem vendas no período','Quantidade Vendida':'','Faturado (R$)':''}]);
+        aplicarEstiloPlanilha(wsProdutos,3);
+        XLSX.utils.book_append_sheet(wb,wsProdutos,'Produtos Mais Vendidos');
+
+        // ══ ABA 3.6: VENDAS DE PRODUTOS DETALHADAS ══
+        const dadosVendas=vendasExcel
+            .slice()
+            .sort((a,b)=>(a.data||'').localeCompare(b.data||''))
+            .map(v=>({
+                'Data':v.data?v.data.split('-').reverse().join('/'):'',
+                'Produto':v.produtoNome||'',
+                'Quantidade':v.quantidade||0,
+                'Preço Unitário (R$)':Number(v.precoUnit||0).toFixed(2),
+                'Total (R$)':Number(v.total||0).toFixed(2)
+            }));
+        const wsVendas=XLSX.utils.json_to_sheet(dadosVendas.length?dadosVendas:[{'Data':'Sem vendas de produtos no período'}]);
+        aplicarEstiloPlanilha(wsVendas,5);
+        XLSX.utils.book_append_sheet(wb,wsVendas,'Vendas de Produtos');
+
         // ══ ABA 4: AGENDAMENTOS DETALHADOS ══
         const dadosAgend=todos.map(a=>({
             'Data':a.data?a.data.split('-').reverse().join('/'):'',
@@ -4874,8 +5441,19 @@ async function exportarPDF(){
         const concP=todosPeriodo.filter(a=>a.status==='concluido');
         const cancP=todosPeriodo.filter(a=>a.status==='cancelado');
         const pendP=todosPeriodo.filter(a=>a.status!=='concluido'&&a.status!=='cancelado');
-        const totalFaturado=concP.reduce((s,a)=>s+Number(a.preco||0),0);
-        const ticketMedio=concP.length?totalFaturado/concP.length:0;
+        const totalServicos=concP.reduce((s,a)=>s+Number(a.preco||0),0);
+
+        // Vendas de produtos do período
+        let vendasPdf=[];
+        try{
+            const snapVendasPdf=await getDocs(collection(db,'barbeiros',barbeiroData.uid,'vendas'));
+            snapVendasPdf.forEach(d=>vendasPdf.push(d.data()));
+        }catch(e){ console.error('vendas pdf:',e); }
+        const vendasPeriodo=vendasPdf.filter(v=>v.data>=periodo.inicioStr&&v.data<=periodo.fimStr);
+        const totalProdutos=vendasPeriodo.reduce((s,v)=>s+Number(v.total||0),0);
+
+        const totalFaturado=totalServicos+totalProdutos;
+        const ticketMedio=concP.length?totalServicos/concP.length:0;
         const pctCancel=todosPeriodo.length?Math.round((cancP.length/todosPeriodo.length)*100):0;
 
         const equipe=barbeiroData.equipe||[];
@@ -4893,14 +5471,20 @@ async function exportarPDF(){
         for(let i=6;i>=0;i--){const d=new Date(hoje);d.setDate(hoje.getDate()-i);dias7.push(d.toISOString().split('T')[0]);}
         const nomes7=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
         const concTodos=todos.filter(a=>a.status==='concluido');
-        const vals7=dias7.map(d=>concTodos.filter(a=>a.data===d).reduce((s,a)=>s+Number(a.preco||0),0));
+        const vals7=dias7.map(d=>
+            concTodos.filter(a=>a.data===d).reduce((s,a)=>s+Number(a.preco||0),0)
+            + vendasPdf.filter(v=>v.data===d).reduce((s,v)=>s+Number(v.total||0),0)
+        );
 
         // Últimos 6 meses — receita x despesas
         const nomesM=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
         const meses6=[];
         for(let i=5;i>=0;i--){const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);meses6.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
         const mesAtual=hojeStr.slice(0,7);
-        const receitasM=meses6.map(m=>concTodos.filter(a=>a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0));
+        const receitasM=meses6.map(m=>
+            concTodos.filter(a=>a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0)
+            + vendasPdf.filter(v=>v.data&&v.data.startsWith(m)).reduce((s,v)=>s+Number(v.total||0),0)
+        );
         const despesasM=meses6.map(m=>totalGastosNoMes(m));
 
         // Ranking de cortes
@@ -4999,6 +5583,12 @@ async function exportarPDF(){
         kpiCard(M+3*(kpiW+4),y,kpiW,18,'Pendentes',String(pendP.length),NAVY);
         y+=26;
 
+        kpiCard(M,y,kpiW,18,'Receita serviços','R$'+totalServicos.toFixed(0),NAVY);
+        kpiCard(M+kpiW+4,y,kpiW,18,'Receita produtos','R$'+totalProdutos.toFixed(0),BLUE_DARK);
+        kpiCard(M+2*(kpiW+4),y,kpiW,18,'Produtos vendidos',String(vendasPeriodo.reduce((s,v)=>s+Number(v.quantidade||0),0)),NAVY);
+        kpiCard(M+3*(kpiW+4),y,kpiW,18,'Nº de vendas',String(vendasPeriodo.length),NAVY);
+        y+=26;
+
         y=sectionTitle('Faturamento — últimos 7 dias',y);
         const chH=42;
         chartCard(M,y,W-2*M,chH,'');
@@ -5093,6 +5683,35 @@ async function exportarPDF(){
             doc.setFont('helvetica','normal');doc.setFontSize(8.5);setCor(GRAY_MUTED);
             doc.text('Nenhum corte concluído no período.',M,y);
         }
+        y+=10;
+
+        y=sectionTitle('Produtos mais vendidos',y);
+        const rankingProdutosPdf = (()=>{
+            const cont={};
+            vendasPeriodo.forEach(v=>{
+                if(!v.produtoNome)return;
+                if(!cont[v.produtoNome])cont[v.produtoNome]={qtd:0,total:0};
+                cont[v.produtoNome].qtd+=Number(v.quantidade||0);
+                cont[v.produtoNome].total+=Number(v.total||0);
+            });
+            return Object.entries(cont).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,6);
+        })();
+        if(rankingProdutosPdf.length){
+            doc.setFont('helvetica','bold');doc.setFontSize(7.5);setCor(GRAY_MUTED);
+            doc.text('PRODUTO',M,y);doc.text('QTD',W-M-38,y,{align:'right'});doc.text('FATURADO',W-M,y,{align:'right'});
+            y+=3;setDraw(GRAY_LIGHT);doc.line(M,y,W-M,y);y+=5;
+            rankingProdutosPdf.forEach(([nome,d])=>{
+                doc.setFont('helvetica','normal');doc.setFontSize(8.5);setCor(NAVY);
+                doc.text(nome,M,y);
+                doc.text(String(d.qtd)+'x',W-M-38,y,{align:'right'});
+                setCor(BLUE_DARK);doc.setFont('helvetica','bold');
+                doc.text('R$'+d.total.toFixed(0),W-M,y,{align:'right'});
+                y+=6.5;
+            });
+        }else{
+            doc.setFont('helvetica','normal');doc.setFontSize(8.5);setCor(GRAY_MUTED);
+            doc.text('Nenhuma venda de produto no período.',M,y);
+        }
 
         addFooter();
 
@@ -5129,11 +5748,24 @@ async function carregarFaturamento(){
     const doMes=conc.filter(a=>a.data&&a.data.startsWith(mesAtual));
     const semAnt=conc.filter(a=>a.data>=inicioSemAntStr&&a.data<fimSemAntStr);
 
-    const totalSemana=daSemana.reduce((s,a)=>s+Number(a.preco||0),0);
-    const totalMes=doMes.reduce((s,a)=>s+Number(a.preco||0),0);
-    const totalSemAnt=semAnt.reduce((s,a)=>s+Number(a.preco||0),0);
+    // Vendas de produtos — soma no faturamento junto com os serviços
+    let todasVendasFat=[];
+    try{
+        const snapVendasFat=await getDocs(collection(db,'barbeiros',barbeiroData.uid,'vendas'));
+        snapVendasFat.forEach(d=>todasVendasFat.push(d.data()));
+    }catch(e){ console.error('vendas:',e); }
+    const vendasSemana=todasVendasFat.filter(v=>v.data>=inicioSemStr&&v.data<=hojeStr);
+    const vendasMesFat=todasVendasFat.filter(v=>v.data&&v.data.startsWith(mesAtual));
+    const vendasSemAnt=todasVendasFat.filter(v=>v.data>=inicioSemAntStr&&v.data<fimSemAntStr);
+    const totalVendasSemana=vendasSemana.reduce((s,v)=>s+Number(v.total||0),0);
+    const totalVendasMes=vendasMesFat.reduce((s,v)=>s+Number(v.total||0),0);
+    const totalVendasSemAnt=vendasSemAnt.reduce((s,v)=>s+Number(v.total||0),0);
 
-    // Líquido dono (total - comissões)
+    const totalSemana=daSemana.reduce((s,a)=>s+Number(a.preco||0),0)+totalVendasSemana;
+    const totalMes=doMes.reduce((s,a)=>s+Number(a.preco||0),0)+totalVendasMes;
+    const totalSemAnt=semAnt.reduce((s,a)=>s+Number(a.preco||0),0)+totalVendasSemAnt;
+
+    // Líquido dono (total - comissões) — produtos não têm comissão, entram inteiros
     const equipe=barbeiroData.equipe||[];
     const comissoesMes=doMes.reduce((s,a)=>{
         const b=equipe.find(e=>e.nome===a.barbeiro);
@@ -5173,7 +5805,10 @@ async function carregarFaturamento(){
     // Gráfico últimos 7 dias
     const dias7=[];
     for(let i=6;i>=0;i--){const d=new Date(hoje);d.setDate(hoje.getDate()-i);dias7.push(d.toISOString().split('T')[0]);}
-    const vals7=dias7.map(d=>conc.filter(a=>a.data===d).reduce((s,a)=>s+Number(a.preco||0),0));
+    const vals7=dias7.map(d=>
+        conc.filter(a=>a.data===d).reduce((s,a)=>s+Number(a.preco||0),0)
+        + todasVendasFat.filter(v=>v.data===d).reduce((s,v)=>s+Number(v.total||0),0)
+    );
     const max7=Math.max(...vals7,1);
     const nomes7=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     $('chart-semana').innerHTML=dias7.map((d,i)=>{
@@ -5251,6 +5886,7 @@ async function initRecepcionistaMode(bId,bData,equipeId){
         <div class="tab" data-tab="cortes">✂️ Cortes</div>
         <div class="tab" data-tab="promocoes">🎁 Promoções</div>
         <div class="tab" data-tab="horarios">🕐 Horários</div>
+        <div class="tab" data-tab="estoque">📦 Estoque</div>
 
         <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Pessoas</div>
         <div class="tab" data-tab="equipe">👥 Equipe</div>
@@ -5266,6 +5902,7 @@ async function initRecepcionistaMode(bId,bData,equipeId){
 
     initDash(); // liga os cliques do menu e carrega os dados (financeiro/links ficam bloqueados pelo próprio initDash)
     initLinkCliente(); // recepcionista também pode enviar o link de agendamento pro cliente
+    const btnAjudaR=document.getElementById('btn-ajuda'); if(btnAjudaR) btnAjudaR.style.display='none';
 
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById('screen-dash').classList.add('active');
@@ -5288,6 +5925,7 @@ async function initFuncionarioMode(bId, funcId){
     }
 
     // Show only employee view
+    const btnAjudaF=document.getElementById('btn-ajuda'); if(btnAjudaF) btnAjudaF.style.display='none';
     barbeiroData={uid:bId,...bData};
     carregarCachePromoCliente();
     document.getElementById('drawer-tab-items').innerHTML=`
@@ -5885,7 +6523,18 @@ async function carregarResumoGestao(){
     const todos=[];snap.forEach(d=>todos.push(d.data()));
     const concMes=todos.filter(a=>a.status==='concluido'&&a.data&&a.data.startsWith(mesAtual));
 
-    const receitaMes=concMes.reduce((s,a)=>s+Number(a.preco||0),0);
+    const receitaServicosMes=concMes.reduce((s,a)=>s+Number(a.preco||0),0);
+
+    // Vendas de produtos — busca tudo de uma vez, reaproveita pro mês atual e pro gráfico
+    let todasVendas=[];
+    try{
+        const snapVendas=await getDocs(collection(db,'barbeiros',barbeiroData.uid,'vendas'));
+        snapVendas.forEach(d=>todasVendas.push(d.data()));
+    }catch(e){ console.error('vendas:',e); }
+    const vendasMes=todasVendas.filter(v=>v.data && v.data.startsWith(mesAtual));
+    const receitaProdutosMes=vendasMes.reduce((s,v)=>s+Number(v.total||0),0);
+
+    const receitaMes=receitaServicosMes+receitaProdutosMes;
 
     const equipe=barbeiroData.equipe||[];
     const comissoesMes=concMes.reduce((s,a)=>{
@@ -5897,15 +6546,37 @@ async function carregarResumoGestao(){
     const lucroLiquido=receitaMes-comissoesMes-totalGastos;
 
     const elReceita=document.getElementById('gest-receita');
+    const elReceitaProdutos=document.getElementById('gest-receita-produtos');
     const elDespesas=document.getElementById('gest-despesas');
     const elComissoes=document.getElementById('gest-comissoes');
     const elLucro=document.getElementById('gest-lucro');
-    if(elReceita)elReceita.textContent='R$'+receitaMes.toFixed(0);
+    if(elReceita)elReceita.textContent='R$'+receitaServicosMes.toFixed(0);
+    if(elReceitaProdutos)elReceitaProdutos.textContent='R$'+receitaProdutosMes.toFixed(0);
     if(elDespesas)elDespesas.textContent='R$'+totalGastos.toFixed(0);
     if(elComissoes)elComissoes.textContent='R$'+comissoesMes.toFixed(0);
     if(elLucro){
         elLucro.textContent='R$'+lucroLiquido.toFixed(0);
         elLucro.style.color=lucroLiquido>=0?'var(--green)':'var(--red)';
+    }
+
+    // Ranking de produtos mais vendidos no mês
+    const contagemProdutos={};
+    vendasMes.forEach(v=>{
+        if(!v.produtoNome)return;
+        if(!contagemProdutos[v.produtoNome])contagemProdutos[v.produtoNome]={qtd:0,total:0};
+        contagemProdutos[v.produtoNome].qtd+=Number(v.quantidade||0);
+        contagemProdutos[v.produtoNome].total+=Number(v.total||0);
+    });
+    const rankingProdutos=Object.entries(contagemProdutos).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,6);
+    const elRankProdutos=document.getElementById('ranking-produtos');
+    if(elRankProdutos){
+        elRankProdutos.innerHTML = rankingProdutos.length
+            ? rankingProdutos.map(([nome,d],i)=>`
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;${i>0?'border-top:1px solid var(--border)':''}">
+                    <div style="font-size:.82rem">${escapeHtml(nome)} <span style="color:var(--muted);font-size:.72rem">· ${d.qtd}x</span></div>
+                    <div style="font-family:'Courier New',monospace;color:var(--blue);font-weight:700;font-size:.85rem">R$${d.total.toFixed(0)}</div>
+                </div>`).join('')
+            : '<div class="empty-state" style="padding:1rem 0"><div class="icon">📦</div>Nenhuma venda de produto este mês ainda.</div>';
     }
 
     // Gráfico últimos 6 meses — receita x despesas
@@ -5915,7 +6586,11 @@ async function carregarResumoGestao(){
         meses6.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
     }
     const nomesM=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    const receitasPorMes=meses6.map(m=>todos.filter(a=>a.status==='concluido'&&a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0));
+    const receitasPorMes=meses6.map(m=>{
+        const servicos=todos.filter(a=>a.status==='concluido'&&a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0);
+        const produtos=todasVendas.filter(v=>v.data&&v.data.startsWith(m)).reduce((s,v)=>s+Number(v.total||0),0);
+        return servicos+produtos;
+    });
 
     // Despesas por mês: calcula com precisão considerando gastos fixos + parcelas ativas em cada mês
     const despesasPorMes=meses6.map(m=>totalGastosNoMes(m));
