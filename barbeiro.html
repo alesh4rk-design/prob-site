@@ -863,6 +863,22 @@
         </div>
     </div>
 
+    <!-- ══ Zona de Perigo — confirmação ══ -->
+    <div id="modal-zona-perigo" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:1.2rem">
+        <div style="background:var(--card2);border:1.5px solid var(--red);border-radius:14px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto;padding:1.3rem">
+            <div style="font-size:1.05rem;font-weight:800;color:var(--red);margin-bottom:.75rem">⚠️ Confirmar exclusão</div>
+            <p style="font-size:.82rem;color:var(--text);margin-bottom:.6rem">Isso vai apagar <strong>de verdade</strong>, sem volta:</p>
+            <ul id="zp-resumo" style="font-size:.82rem;color:var(--text);margin:0 0 1rem 1.1rem;line-height:1.7"></ul>
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Pra confirmar, digite <strong style="color:var(--red)">APAGAR</strong> abaixo:</p>
+            <input type="text" id="zp-confirma-texto" placeholder="Digite APAGAR" autocomplete="off"
+                style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:.65rem .85rem;color:var(--text);font-size:.9rem;outline:none;margin-bottom:1rem;box-sizing:border-box">
+            <div style="display:flex;gap:.6rem">
+                <button id="btn-cancelar-zona-perigo" style="flex:1;padding:.65rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;cursor:pointer">Cancelar</button>
+                <button id="btn-confirmar-zona-perigo" disabled style="flex:1;padding:.65rem;background:var(--red);border:none;border-radius:8px;color:#fff;font-weight:700;font-size:.85rem;cursor:pointer;opacity:.5">Apagar de vez</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TAB Agendamentos -->
     <div class="tab-content active" id="tab-agendamentos">
         <!-- Avisos 1h antes -->
@@ -1955,6 +1971,38 @@
                 <button class="btn-save" id="btn-salvar-perfil">Salvar Informações</button>
             </div>
         </div>
+
+        <div class="section-title" style="color:var(--red);margin-top:1.5rem">⚠️ Zona de Perigo</div>
+        <div class="card" style="border-color:rgba(255,75,43,.4);background:rgba(255,75,43,.03)">
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Apaga dados de teste da sua barbearia. <strong style="color:var(--red)">Isso não tem como desfazer.</strong> Marque só o que você quer limpar — o que ficar desmarcado continua intacto.</p>
+            <div style="display:flex;flex-direction:column;gap:.55rem;margin-bottom:1rem">
+                <label style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;cursor:pointer">
+                    <input type="checkbox" class="zona-perigo-check" value="agendamentos" style="width:16px;height:16px;accent-color:var(--red)">
+                    Agendamentos <span style="color:var(--muted);font-size:.72rem" id="zp-count-agendamentos"></span>
+                </label>
+                <label style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;cursor:pointer">
+                    <input type="checkbox" class="zona-perigo-check" value="fila" style="width:16px;height:16px;accent-color:var(--red)">
+                    Fila de espera <span style="color:var(--muted);font-size:.72rem" id="zp-count-fila"></span>
+                </label>
+                <label style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;cursor:pointer">
+                    <input type="checkbox" class="zona-perigo-check" value="clientes" style="width:16px;height:16px;accent-color:var(--red)">
+                    Base de clientes <span style="color:var(--muted);font-size:.72rem" id="zp-count-clientes"></span>
+                </label>
+                <label style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;cursor:pointer">
+                    <input type="checkbox" class="zona-perigo-check" value="vendas" style="width:16px;height:16px;accent-color:var(--red)">
+                    Vendas de produtos (não mexe no estoque cadastrado) <span style="color:var(--muted);font-size:.72rem" id="zp-count-vendas"></span>
+                </label>
+                <label style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;cursor:pointer">
+                    <input type="checkbox" class="zona-perigo-check" value="fidelidade" style="width:16px;height:16px;accent-color:var(--red)">
+                    Carteirinhas de fidelidade <span style="color:var(--muted);font-size:.72rem" id="zp-count-fidelidade"></span>
+                </label>
+                <label style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;cursor:pointer">
+                    <input type="checkbox" class="zona-perigo-check" value="promocoes" style="width:16px;height:16px;accent-color:var(--red)">
+                    Promoções cadastradas <span style="color:var(--muted);font-size:.72rem" id="zp-count-promocoes"></span>
+                </label>
+            </div>
+            <button class="btn-sm" style="background:rgba(255,75,43,.12);border:1.5px solid var(--red);color:var(--red);padding:.6rem 1.1rem;font-size:.82rem;border-radius:8px;cursor:pointer" id="btn-abrir-zona-perigo">🗑️ Apagar o que eu marquei</button>
+        </div>
     </div>
     </div><!-- /dash-content -->
 </section>
@@ -2027,7 +2075,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs, onSnapshot, addDoc, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs, onSnapshot, addDoc, increment, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = PROB_CONFIG.firebase;
 
@@ -4842,6 +4890,112 @@ let unsubProdutos = null;
 let vendaProdutoSelecionado = null;
 let vendaQtdAtual = 1;
 
+// ══════════════════════════════════════════════════════════
+// ZONA DE PERIGO — apagar dados de teste, escolhendo exatamente
+// o quê. Sempre com contagem real antes e confirmação por texto.
+// ══════════════════════════════════════════════════════════
+function refCategoria(categoria){
+    switch(categoria){
+        case 'agendamentos': return query(collection(db,'agendamentos'),where('barbeiroId','==',barbeiroData.uid));
+        case 'fila':          return query(collection(db,'fila'),where('barbeiroId','==',barbeiroData.uid));
+        case 'clientes':      return collection(db,'barbeiros',barbeiroData.uid,'clientes');
+        case 'vendas':        return collection(db,'barbeiros',barbeiroData.uid,'vendas');
+        case 'fidelidade':    return collection(db,'barbeiros',barbeiroData.uid,'fidelidade');
+        case 'promocoes':     return collection(db,'barbeiros',barbeiroData.uid,'promocoes');
+    }
+}
+const ZP_LABELS = {
+    agendamentos:'agendamento(s)', fila:'pessoa(s) na fila', clientes:'cliente(s) da base',
+    vendas:'venda(s) de produto registrada(s)', fidelidade:'carteirinha(s) de fidelidade', promocoes:'promoção(ões) cadastrada(s)'
+};
+
+async function atualizarContagemZonaPerigo(){
+    for(const cat of Object.keys(ZP_LABELS)){
+        const el = document.getElementById('zp-count-'+cat);
+        if(!el) continue;
+        try{
+            const snap = await getDocs(refCategoria(cat));
+            el.textContent = `(${snap.size})`;
+        }catch(e){ el.textContent=''; }
+    }
+}
+
+async function apagarPorLotes(refColOuQuery){
+    const snap = await getDocs(refColOuQuery);
+    const docs = snap.docs;
+    for(let i=0; i<docs.length; i+=450){
+        const lote = docs.slice(i, i+450);
+        const batch = writeBatch(db);
+        lote.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+    }
+    return docs.length;
+}
+
+function initZonaPerigo(){
+    if(window.__zonaPerigoBound) return;
+    window.__zonaPerigoBound = true;
+
+    document.querySelectorAll('.zona-perigo-check').forEach(chk=>{
+        chk.addEventListener('change', atualizarContagemZonaPerigo);
+    });
+    atualizarContagemZonaPerigo();
+
+    document.getElementById('btn-abrir-zona-perigo').addEventListener('click', async ()=>{
+        const marcados = Array.from(document.querySelectorAll('.zona-perigo-check:checked')).map(c=>c.value);
+        if(!marcados.length){ toast('Marque pelo menos uma categoria pra apagar','var(--red)'); return; }
+
+        const btn = document.getElementById('btn-abrir-zona-perigo');
+        btn.disabled = true; btn.textContent = 'Contando...';
+        const resumo = document.getElementById('zp-resumo');
+        resumo.innerHTML = '';
+        let algumComDados = false;
+        for(const cat of marcados){
+            const snap = await getDocs(refCategoria(cat));
+            if(snap.size > 0) algumComDados = true;
+            resumo.innerHTML += `<li><strong style="color:var(--red)">${snap.size}</strong> ${ZP_LABELS[cat]}</li>`;
+        }
+        btn.disabled = false; btn.textContent = '🗑️ Apagar o que eu marquei';
+
+        if(!algumComDados){ toast('Não tem nada pra apagar nas categorias marcadas'); return; }
+
+        document.getElementById('zp-confirma-texto').value = '';
+        document.getElementById('btn-confirmar-zona-perigo').disabled = true;
+        document.getElementById('btn-confirmar-zona-perigo').style.opacity = '.5';
+        document.getElementById('modal-zona-perigo').style.display = 'flex';
+        document.getElementById('modal-zona-perigo').dataset.categorias = JSON.stringify(marcados);
+    });
+
+    document.getElementById('zp-confirma-texto').addEventListener('input', function(){
+        const ok = this.value.trim().toUpperCase() === 'APAGAR';
+        const btnConf = document.getElementById('btn-confirmar-zona-perigo');
+        btnConf.disabled = !ok;
+        btnConf.style.opacity = ok ? '1' : '.5';
+    });
+
+    document.getElementById('btn-cancelar-zona-perigo').addEventListener('click', ()=>{
+        document.getElementById('modal-zona-perigo').style.display = 'none';
+    });
+
+    document.getElementById('btn-confirmar-zona-perigo').addEventListener('click', async ()=>{
+        const categorias = JSON.parse(document.getElementById('modal-zona-perigo').dataset.categorias || '[]');
+        const btnConf = document.getElementById('btn-confirmar-zona-perigo');
+        btnConf.disabled = true;
+        let totalApagado = 0;
+        for(const cat of categorias){
+            btnConf.textContent = 'Apagando ' + ZP_LABELS[cat] + '...';
+            try{
+                totalApagado += await apagarPorLotes(refCategoria(cat));
+            }catch(e){ console.error('Erro ao apagar', cat, e); toast('Erro ao apagar '+cat+': '+e.message, 'var(--red)'); }
+        }
+        btnConf.textContent = 'Apagar de vez';
+        document.getElementById('modal-zona-perigo').style.display = 'none';
+        document.querySelectorAll('.zona-perigo-check').forEach(c=>c.checked=false);
+        atualizarContagemZonaPerigo();
+        toast(`✓ ${totalApagado} registro(s) apagado(s)`);
+    });
+}
+
 function initEstoque(){
     if(window.__estoqueBound) return;
     window.__estoqueBound = true;
@@ -5179,6 +5333,8 @@ function initPerfil(){
             toast('✓ Configuração do painel salva!');
         });
     }
+
+    initZonaPerigo();
 }
 
 function aplicarVisibilidadeAbaFila(modo){
