@@ -885,7 +885,7 @@
             <div style="font-size:1.05rem;font-weight:800;color:var(--green);margin-bottom:1rem">🛒 Vender Produto</div>
             <div class="input-group">
                 <label>Cliente</label>
-                <input type="text" id="vc-cliente-nome" placeholder="Nome do cliente (opcional)">
+                <input type="text" id="vc-cliente-nome" placeholder="Nome do cliente (opcional)" list="lista-clientes-datalist">
             </div>
             <div class="input-group">
                 <label>Produto</label>
@@ -3640,7 +3640,7 @@ function renderAppts(container,lista,emptyMsg){
                 ${!concluido&&!cancelado?`<span class="badge badge-pend">pend</span>`:''}
             </div>
             <span class="appt-price">R$${Number(a.preco).toFixed(0)}</span>
-            <button style="padding:.2rem .5rem;background:transparent;border:1px solid var(--blue);border-radius:5px;color:var(--blue);font-size:.68rem;font-weight:600;cursor:pointer;flex-shrink:0" title="Vender produto pra esse cliente" onclick="abrirModalVendaCliente('${escAttr(a.clienteNome||'')}')">🛒</button>
+            <button style="padding:.2rem .5rem;background:transparent;border:1px solid var(--blue);border-radius:5px;color:var(--blue);font-size:.68rem;font-weight:600;cursor:pointer;flex-shrink:0" title="Vender produto pra esse cliente" onclick="abrirModalVendaCliente('${escAttr(a.clienteNome||'')}','${escAttr(a.clienteWhatsapp||'')}')">🛒</button>
             ${btnWpp}
             ${btnAcoes}
         </div>`;
@@ -5086,7 +5086,7 @@ function initEstoque(){
 let vcProdutoSelecionado = null;
 let vcQtdAtual = 1;
 
-window.abrirModalVendaCliente = function(clienteNome){
+window.abrirModalVendaCliente = function(clienteNome, clienteWpp){
     const sel = $('vc-produto-select');
     sel.innerHTML = '<option value="">Selecione um produto...</option>' +
         produtosCache.filter(p=>p.estoque>0).map((p,i)=>
@@ -5094,6 +5094,7 @@ window.abrirModalVendaCliente = function(clienteNome){
         ).join('');
     $('vc-aviso-vazio').style.display = produtosCache.filter(p=>p.estoque>0).length ? 'none' : 'block';
     $('vc-cliente-nome').value = clienteNome || '';
+    $('vc-cliente-nome').dataset.wpp = clienteWpp || '';
     $('vc-detalhe').style.display = 'none';
     vcProdutoSelecionado = null;
     vcQtdAtual = 1;
@@ -5106,6 +5107,7 @@ function initModalVendaCliente(){
     if(window.__vcBound) return;
     window.__vcBound = true;
 
+    $('vc-cliente-nome').addEventListener('input', function(){ this.dataset.wpp = ''; });
     $('vc-produto-select').addEventListener('change', function(){
         const p = produtosCache.find(x=>x.id===this.value);
         vcProdutoSelecionado = p || null;
@@ -5144,6 +5146,9 @@ async function confirmarVendaCliente(){
     try{
         const total = vcProdutoSelecionado.preco*vcQtdAtual;
         const clienteNome = $('vc-cliente-nome').value.trim();
+        const wppJaVinculado = $('vc-cliente-nome').dataset.wpp;
+        const clienteMatch = !wppJaVinculado && clienteNome ? todosClientes.find(c=>(c.nome||'').toLowerCase()===clienteNome.toLowerCase()) : null;
+        const clienteWhatsapp = wppJaVinculado || (clienteMatch ? clienteMatch.wpp : null);
         await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vcProdutoSelecionado.id),{estoque:increment(-vcQtdAtual)});
         await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
             produtoId: vcProdutoSelecionado.id,
@@ -5152,6 +5157,7 @@ async function confirmarVendaCliente(){
             precoUnit: vcProdutoSelecionado.preco,
             total,
             clienteNome: clienteNome || null,
+            clienteWhatsapp: clienteWhatsapp || null,
             data: fmtHoje(),
             criadoEm: new Date().toISOString()
         });
@@ -5335,18 +5341,54 @@ function abrirScannerCamera(aoLer){
                 <span style="color:#fff;font-weight:700;font-size:.9rem">📷 Aponte pro código de barras</span>
                 <button id="btn-fechar-scanner" style="background:transparent;border:1.5px solid var(--border);color:#fff;border-radius:8px;padding:.4rem .8rem;cursor:pointer">Fechar</button>
             </div>
-            <div id="scanner-camera-view" style="flex:1"></div>`;
+            <div id="scanner-camera-view" style="flex:1"></div>
+            <div style="padding:.85rem 1rem;background:var(--card2);text-align:center">
+                <p style="color:var(--muted);font-size:.75rem;margin-bottom:.6rem">Não focou? Afasta e aproxima o celular devagar até travar a imagem, ou toca no botão abaixo.</p>
+                <button id="btn-refocar-scanner" style="background:transparent;border:1.5px solid var(--blue);color:var(--blue);border-radius:8px;padding:.5rem 1rem;font-size:.8rem;cursor:pointer">🔄 Tentar focar de novo</button>
+            </div>`;
         document.body.appendChild(overlay);
 
-        const scanner = new Html5Qrcode('scanner-camera-view');
+        const scanner = new Html5Qrcode('scanner-camera-view', {
+            // Foco no formato certo (código de barras de produto), não tenta
+            // decodificar QR code também — menos trabalho, mais acerto.
+            formatsToSupport: (typeof Html5QrcodeSupportedFormats !== 'undefined') ? [
+                Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.CODABAR, Html5QrcodeSupportedFormats.ITF,
+            ] : undefined,
+            verbose: false
+        });
         const parar = () => { scanner.stop().catch(()=>{}); overlay.remove(); };
         overlay.querySelector('#btn-fechar-scanner').addEventListener('click', parar);
-        scanner.start(
-            {facingMode:'environment'},
-            {fps:10, qrbox:{width:250,height:120}},
+
+        const config = {
+            fps: 15,
+            qrbox: {width:280,height:130},
+            aspectRatio: 1.6,
+            // Pede foco contínuo pra câmera (muitos celulares travam o foco
+            // uma vez só por padrão, o que atrapalha muito num código de
+            // barras de perto). Se o aparelho não suportar, ignora sozinho.
+            videoConstraints: {
+                facingMode: 'environment',
+                advanced: [{ focusMode: 'continuous' }]
+            },
+            // Usa o leitor nativo do navegador quando existir (Chrome/Android
+            // tem um bem melhor que o de JavaScript, inclusive com foco).
+            experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+        };
+
+        const tentarIniciar = () => scanner.start(
+            {facingMode:'environment'}, config,
             (codigo)=>{ parar(); aoLer(codigo); },
             ()=>{}
         ).catch(e=>{ toast('Não deu pra acessar a câmera: '+e.message,'var(--red)'); overlay.remove(); });
+
+        overlay.querySelector('#btn-refocar-scanner').addEventListener('click', ()=>{
+            scanner.stop().catch(()=>{}).then(()=>tentarIniciar());
+        });
+
+        tentarIniciar();
     };
 
     if(scannerCameraCarregado){ iniciar(); return; }
