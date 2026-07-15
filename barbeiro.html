@@ -879,6 +879,38 @@
         </div>
     </div>
 
+    <!-- ══ Vender produto pra um cliente (Agenda ou Estoque) ══ -->
+    <div id="modal-venda-cliente" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:1.2rem">
+        <div style="background:var(--card2);border:1.5px solid rgba(0,255,136,.4);border-radius:14px;max-width:400px;width:100%;padding:1.3rem">
+            <div style="font-size:1.05rem;font-weight:800;color:var(--green);margin-bottom:1rem">🛒 Vender Produto</div>
+            <div class="input-group">
+                <label>Cliente</label>
+                <input type="text" id="vc-cliente-nome" placeholder="Nome do cliente (opcional)">
+            </div>
+            <div class="input-group">
+                <label>Produto</label>
+                <select id="vc-produto-select" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
+                    <option value="">Selecione um produto...</option>
+                </select>
+            </div>
+            <div id="vc-aviso-vazio" style="display:none;font-size:.78rem;color:var(--yellow);margin-bottom:.6rem">Nenhum produto cadastrado no estoque ainda.</div>
+            <div id="vc-detalhe" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.7rem .85rem;margin-bottom:1rem">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                    <div style="font-size:.75rem;color:var(--muted)">Estoque: <span id="vc-estoque-disp">0</span></div>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                        <button id="vc-qtd-menos" style="width:28px;height:28px;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer">−</button>
+                        <span id="vc-qtd" style="min-width:22px;text-align:center;font-weight:700">1</span>
+                        <button id="vc-qtd-mais" style="width:28px;height:28px;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer">+</button>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:.6rem">
+                <button id="btn-cancelar-venda-cliente" style="flex:1;padding:.65rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;cursor:pointer">Cancelar</button>
+                <button id="btn-confirmar-venda-cliente" disabled style="flex:1;padding:.65rem;background:var(--green);border:none;border-radius:8px;color:#04140c;font-weight:700;font-size:.85rem;cursor:pointer;opacity:.5">Confirmar — <span id="vc-total">R$0,00</span></button>
+            </div>
+        </div>
+    </div>
+
     <!-- TAB Agendamentos -->
     <div class="tab-content active" id="tab-agendamentos">
         <!-- Avisos 1h antes -->
@@ -1304,8 +1336,13 @@
                         <button id="venda-qtd-mais" style="width:30px;height:30px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer">+</button>
                     </div>
                 </div>
-                <button class="btn-add" id="btn-confirmar-venda" style="width:100%;margin-top:.75rem">✓ Confirmar Venda — <span id="venda-total">R$0,00</span></button>
+                <div class="input-group" style="margin:.75rem 0 0">
+                    <label style="font-size:.7rem">Cliente (opcional)</label>
+                    <input type="text" id="venda-cliente-nome" placeholder="Nome do cliente" list="lista-clientes-datalist" style="font-size:.85rem;padding:.55rem .75rem">
+                </div>
+                <button class="btn-add" id="btn-confirmar-venda" style="width:100%;margin-top:.6rem">✓ Confirmar Venda — <span id="venda-total">R$0,00</span></button>
             </div>
+            <datalist id="lista-clientes-datalist"></datalist>
             <div id="venda-nao-encontrado" style="display:none;font-size:.8rem;color:var(--yellow);padding:.6rem 0">⚠️ Nenhum produto com esse código. Cadastre ele aqui embaixo primeiro.</div>
         </div>
 
@@ -3603,6 +3640,7 @@ function renderAppts(container,lista,emptyMsg){
                 ${!concluido&&!cancelado?`<span class="badge badge-pend">pend</span>`:''}
             </div>
             <span class="appt-price">R$${Number(a.preco).toFixed(0)}</span>
+            <button style="padding:.2rem .5rem;background:transparent;border:1px solid var(--blue);border-radius:5px;color:var(--blue);font-size:.68rem;font-weight:600;cursor:pointer;flex-shrink:0" title="Vender produto pra esse cliente" onclick="abrirModalVendaCliente('${escAttr(a.clienteNome||'')}')">🛒</button>
             ${btnWpp}
             ${btnAcoes}
         </div>`;
@@ -4517,6 +4555,10 @@ function nivelAusencia(dias){
 }
 
 function renderClientes(lista){
+    // Datalist de autocomplete (usado na Venda Rápida do Estoque)
+    const dl = document.getElementById('lista-clientes-datalist');
+    if(dl) dl.innerHTML = todosClientes.map(c=>`<option value="${escAttr(c.nome||'')}">`).join('');
+
     // KPIs
     document.getElementById('cli-kpi-total').textContent = lista.length;
     document.getElementById('cli-kpi-recorrentes').textContent = lista.filter(c=>c.totalCortes>1).length;
@@ -5035,6 +5077,89 @@ function initEstoque(){
     $('btn-scan-camera-cadastro').addEventListener('click', ()=>abrirScannerCamera(codigo=>{ $('prod-codigo').value=codigo; verificarCodigoCadastro(); }));
     $('prod-codigo').addEventListener('input', verificarCodigoCadastro);
     $('prod-codigo').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); verificarCodigoCadastro(); $('prod-estoque').focus(); } });
+
+    initModalVendaCliente();
+}
+
+// ── Modal "Vender Produto" — aberto direto de um agendamento na Agenda,
+// ou usado como venda avulsa. Compartilha o mesmo produtosCache do Estoque.
+let vcProdutoSelecionado = null;
+let vcQtdAtual = 1;
+
+window.abrirModalVendaCliente = function(clienteNome){
+    const sel = $('vc-produto-select');
+    sel.innerHTML = '<option value="">Selecione um produto...</option>' +
+        produtosCache.filter(p=>p.estoque>0).map((p,i)=>
+            `<option value="${p.id}">${escapeHtml(p.nome)} — R$${Number(p.preco).toFixed(2)} (${p.estoque} em estoque)</option>`
+        ).join('');
+    $('vc-aviso-vazio').style.display = produtosCache.filter(p=>p.estoque>0).length ? 'none' : 'block';
+    $('vc-cliente-nome').value = clienteNome || '';
+    $('vc-detalhe').style.display = 'none';
+    vcProdutoSelecionado = null;
+    vcQtdAtual = 1;
+    $('btn-confirmar-venda-cliente').disabled = true;
+    $('btn-confirmar-venda-cliente').style.opacity = '.5';
+    $('modal-venda-cliente').style.display = 'flex';
+};
+
+function initModalVendaCliente(){
+    if(window.__vcBound) return;
+    window.__vcBound = true;
+
+    $('vc-produto-select').addEventListener('change', function(){
+        const p = produtosCache.find(x=>x.id===this.value);
+        vcProdutoSelecionado = p || null;
+        vcQtdAtual = 1;
+        atualizarResumoVendaCliente();
+    });
+    $('vc-qtd-menos').addEventListener('click', ()=>{ if(vcQtdAtual>1){ vcQtdAtual--; atualizarResumoVendaCliente(); } });
+    $('vc-qtd-mais').addEventListener('click', ()=>{
+        if(vcProdutoSelecionado && vcQtdAtual>=vcProdutoSelecionado.estoque){ toast('Não tem tanto em estoque assim','var(--red)'); return; }
+        vcQtdAtual++; atualizarResumoVendaCliente();
+    });
+    $('btn-cancelar-venda-cliente').addEventListener('click', ()=>{ $('modal-venda-cliente').style.display='none'; });
+    $('btn-confirmar-venda-cliente').addEventListener('click', confirmarVendaCliente);
+}
+
+function atualizarResumoVendaCliente(){
+    const detalhe = $('vc-detalhe');
+    const btn = $('btn-confirmar-venda-cliente');
+    if(!vcProdutoSelecionado){
+        detalhe.style.display = 'none';
+        btn.disabled = true; btn.style.opacity = '.5';
+        return;
+    }
+    detalhe.style.display = 'block';
+    $('vc-estoque-disp').textContent = vcProdutoSelecionado.estoque;
+    $('vc-qtd').textContent = vcQtdAtual;
+    $('vc-total').textContent = 'R$'+(vcProdutoSelecionado.preco*vcQtdAtual).toFixed(2).replace('.',',');
+    btn.disabled = false; btn.style.opacity = '1';
+}
+
+async function confirmarVendaCliente(){
+    if(!vcProdutoSelecionado) return;
+    if(vcQtdAtual>vcProdutoSelecionado.estoque){ toast('Quantidade maior que o estoque','var(--red)'); return; }
+    const btn = $('btn-confirmar-venda-cliente');
+    btn.disabled = true;
+    try{
+        const total = vcProdutoSelecionado.preco*vcQtdAtual;
+        const clienteNome = $('vc-cliente-nome').value.trim();
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vcProdutoSelecionado.id),{estoque:increment(-vcQtdAtual)});
+        await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
+            produtoId: vcProdutoSelecionado.id,
+            produtoNome: vcProdutoSelecionado.nome,
+            quantidade: vcQtdAtual,
+            precoUnit: vcProdutoSelecionado.preco,
+            total,
+            clienteNome: clienteNome || null,
+            data: fmtHoje(),
+            criadoEm: new Date().toISOString()
+        });
+        toast(`✓ Venda registrada: ${vcQtdAtual}x ${vcProdutoSelecionado.nome}${clienteNome?' — '+clienteNome:''}`);
+        $('modal-venda-cliente').style.display = 'none';
+        carregarVendasHoje();
+    }catch(e){ toast('Erro ao registrar venda: '+e.message,'var(--red)'); }
+    btn.disabled = false;
 }
 
 function verificarCodigoCadastro(){
@@ -5084,6 +5209,7 @@ async function confirmarVenda(){
     btn.disabled=true;
     try{
         const total = vendaProdutoSelecionado.preco*vendaQtdAtual;
+        const clienteNome = $('venda-cliente-nome') ? $('venda-cliente-nome').value.trim() : '';
         await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vendaProdutoSelecionado.id),{estoque:increment(-vendaQtdAtual)});
         await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
             produtoId: vendaProdutoSelecionado.id,
@@ -5091,11 +5217,13 @@ async function confirmarVenda(){
             quantidade: vendaQtdAtual,
             precoUnit: vendaProdutoSelecionado.preco,
             total,
+            clienteNome: clienteNome || null,
             data: fmtHoje(),
             criadoEm: new Date().toISOString()
         });
-        toast(`✓ Venda registrada: ${vendaQtdAtual}x ${vendaProdutoSelecionado.nome}`);
+        toast(`✓ Venda registrada: ${vendaQtdAtual}x ${vendaProdutoSelecionado.nome}${clienteNome?' — '+clienteNome:''}`);
         $('venda-codigo').value='';
+        if($('venda-cliente-nome')) $('venda-cliente-nome').value='';
         $('venda-produto-encontrado').style.display='none';
         vendaProdutoSelecionado=null; vendaQtdAtual=1;
         $('venda-codigo').focus();
