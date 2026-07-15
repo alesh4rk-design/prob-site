@@ -5228,10 +5228,14 @@ async function confirmarVendaCliente(){
     btn.disabled = true;
     try{
         const total = vcProdutoSelecionado.preco*vcQtdAtual;
-        const clienteNome = $('vc-cliente-nome').value.trim();
+        const nomeDigitado = $('vc-cliente-nome').value.trim();
         const wppJaVinculado = $('vc-cliente-nome').dataset.wpp;
-        const clienteMatch = !wppJaVinculado && clienteNome ? todosClientes.find(c=>(c.nome||'').toLowerCase()===clienteNome.toLowerCase()) : null;
-        const clienteWhatsapp = wppJaVinculado || (clienteMatch ? clienteMatch.wpp : null);
+        // Se o WhatsApp já veio direto do agendamento (mais confiável que
+        // procurar por nome), usa ele. Senão, busca na base — e cadastra
+        // esse cliente na hora se ele ainda não existir.
+        const cliente = wppJaVinculado
+            ? {nome:nomeDigitado, wpp:wppJaVinculado}
+            : await resolverClienteDaVenda(nomeDigitado);
         await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vcProdutoSelecionado.id),{estoque:increment(-vcQtdAtual)});
         await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
             produtoId: vcProdutoSelecionado.id,
@@ -5239,12 +5243,12 @@ async function confirmarVendaCliente(){
             quantidade: vcQtdAtual,
             precoUnit: vcProdutoSelecionado.preco,
             total,
-            clienteNome: clienteNome || null,
-            clienteWhatsapp: clienteWhatsapp || null,
+            clienteNome: cliente.nome,
+            clienteWhatsapp: cliente.wpp || null,
             data: fmtHoje(),
             criadoEm: new Date().toISOString()
         });
-        toast(`✓ Venda registrada: ${vcQtdAtual}x ${vcProdutoSelecionado.nome}${clienteNome?' — '+clienteNome:''}`);
+        toast(`✓ Venda registrada: ${vcQtdAtual}x ${vcProdutoSelecionado.nome}${cliente.nome?' — '+cliente.nome:''}`);
         $('modal-venda-cliente').style.display = 'none';
         carregarVendasHoje();
     }catch(e){ toast('Erro ao registrar venda: '+e.message,'var(--red)'); }
@@ -5291,6 +5295,20 @@ function atualizarResumoVenda(){
     $('venda-total').textContent = 'R$'+(vendaProdutoSelecionado.preco*vendaQtdAtual).toFixed(2).replace('.',',');
 }
 
+// Resolve o nome digitado contra a base de clientes de verdade. Se achar,
+// usa os dados reais dela (inclusive WhatsApp). Se não achar e tiver nome,
+// cadastra na hora — assim toda venda fica sempre ligada a um cliente real
+// da aba Clientes, nunca só um texto solto.
+async function resolverClienteDaVenda(nomeDigitado){
+    const nome = (nomeDigitado||'').trim();
+    if(!nome) return {nome:null, wpp:null};
+    const existente = todosClientes.find(c=>(c.nome||'').toLowerCase()===nome.toLowerCase());
+    if(existente) return {nome:existente.nome, wpp:existente.wpp||''};
+    await salvarClienteManual(nome, '');
+    carregarClientes(); // atualiza a base em segundo plano pra próxima venda já achar
+    return {nome, wpp:''};
+}
+
 async function confirmarVenda(){
     if(!vendaProdutoSelecionado) return;
     if(vendaQtdAtual>vendaProdutoSelecionado.estoque){ toast('Quantidade maior que o estoque','var(--red)'); return; }
@@ -5298,7 +5316,8 @@ async function confirmarVenda(){
     btn.disabled=true;
     try{
         const total = vendaProdutoSelecionado.preco*vendaQtdAtual;
-        const clienteNome = $('venda-cliente-nome') ? $('venda-cliente-nome').value.trim() : '';
+        const nomeDigitado = $('venda-cliente-nome') ? $('venda-cliente-nome').value.trim() : '';
+        const cliente = await resolverClienteDaVenda(nomeDigitado);
         await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vendaProdutoSelecionado.id),{estoque:increment(-vendaQtdAtual)});
         await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
             produtoId: vendaProdutoSelecionado.id,
@@ -5306,11 +5325,12 @@ async function confirmarVenda(){
             quantidade: vendaQtdAtual,
             precoUnit: vendaProdutoSelecionado.preco,
             total,
-            clienteNome: clienteNome || null,
+            clienteNome: cliente.nome,
+            clienteWhatsapp: cliente.wpp || null,
             data: fmtHoje(),
             criadoEm: new Date().toISOString()
         });
-        toast(`✓ Venda registrada: ${vendaQtdAtual}x ${vendaProdutoSelecionado.nome}${clienteNome?' — '+clienteNome:''}`);
+        toast(`✓ Venda registrada: ${vendaQtdAtual}x ${vendaProdutoSelecionado.nome}${cliente.nome?' — '+cliente.nome:''}`);
         $('venda-codigo').value='';
         if($('venda-cliente-nome')) $('venda-cliente-nome').value='';
         $('venda-produto-encontrado').style.display='none';
