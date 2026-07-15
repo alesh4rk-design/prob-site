@@ -1327,10 +1327,11 @@
                     style="flex:1;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none">
                 <button id="btn-scan-camera-cadastro" title="Escanear com a câmera" style="flex-shrink:0;width:40px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--blue);font-size:1rem;cursor:pointer">📷</button>
             </div>
+            <div id="prod-codigo-aviso" style="display:none;font-size:.75rem;color:var(--blue);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:8px;padding:.5rem .7rem;margin-bottom:.6rem"></div>
             <div class="input-group"><label>Nome do produto</label><input type="text" id="prod-nome" placeholder="Ex: Pomada Modeladora"></div>
             <div class="form-row">
                 <div class="input-group"><label>Preço de venda (R$)</label><input type="number" id="prod-preco" placeholder="35.00" step="0.01" min="0"></div>
-                <div class="input-group"><label>Estoque inicial</label><input type="number" id="prod-estoque" placeholder="10" min="0" step="1"></div>
+                <div class="input-group"><label id="prod-estoque-label">Quantidade</label><input type="number" id="prod-estoque" placeholder="10" min="1" step="1"></div>
             </div>
             <div class="input-group"><label>Avisar quando estoque chegar em (opcional)</label><input type="number" id="prod-estoque-min" placeholder="3" min="0" step="1"></div>
             <button class="btn-add" id="btn-add-produto">+ Adicionar Produto</button>
@@ -5031,7 +5032,27 @@ function initEstoque(){
     $('btn-add-produto').addEventListener('click', adicionarProduto);
 
     $('btn-scan-camera').addEventListener('click', ()=>abrirScannerCamera(codigo=>{ $('venda-codigo').value=codigo; buscarProdutoPorCodigo(codigo); }));
-    $('btn-scan-camera-cadastro').addEventListener('click', ()=>abrirScannerCamera(codigo=>{ $('prod-codigo').value=codigo; }));
+    $('btn-scan-camera-cadastro').addEventListener('click', ()=>abrirScannerCamera(codigo=>{ $('prod-codigo').value=codigo; verificarCodigoCadastro(); }));
+    $('prod-codigo').addEventListener('input', verificarCodigoCadastro);
+    $('prod-codigo').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); verificarCodigoCadastro(); $('prod-estoque').focus(); } });
+}
+
+function verificarCodigoCadastro(){
+    const codigo = $('prod-codigo').value.trim();
+    const aviso = $('prod-codigo-aviso');
+    const existente = codigo ? produtosCache.find(p=>p.codigoBarras===codigo) : null;
+    if(existente){
+        aviso.style.display = 'block';
+        aviso.innerHTML = `📦 Esse código já é de <strong>"${existente.nome}"</strong> (${existente.estoque} em estoque). Vai só somar a quantidade abaixo, não cria outro cadastro.`;
+        $('prod-nome').value = existente.nome;
+        $('prod-preco').value = existente.preco;
+        $('prod-estoque-label').textContent = 'Quantas chegaram agora';
+        $('btn-add-produto').textContent = '+ Somar ao estoque';
+    } else {
+        aviso.style.display = 'none';
+        $('prod-estoque-label').textContent = 'Quantidade';
+        $('btn-add-produto').textContent = '+ Adicionar Produto';
+    }
 }
 
 function buscarProdutoPorCodigo(codigo){
@@ -5105,23 +5126,33 @@ async function adicionarProduto(){
     const nome = $('prod-nome').value.trim();
     const codigoBarras = $('prod-codigo').value.trim();
     const preco = parseFloat($('prod-preco').value);
-    const estoque = parseInt($('prod-estoque').value);
+    const qtd = parseInt($('prod-estoque').value);
     const estoqueMinimo = $('prod-estoque-min').value ? parseInt($('prod-estoque-min').value) : null;
     if(!nome){ toast('Digite o nome do produto','var(--red)'); return; }
     if(isNaN(preco) || preco<0){ toast('Informe um preço válido','var(--red)'); return; }
-    if(isNaN(estoque) || estoque<0){ toast('Informe a quantidade em estoque','var(--red)'); return; }
-    if(codigoBarras && produtosCache.some(p=>p.codigoBarras===codigoBarras)){
-        toast('Já existe um produto com esse código de barras','var(--red)'); return;
-    }
+    if(isNaN(qtd) || qtd<=0){ toast('Informe a quantidade','var(--red)'); return; }
+
     const btn = $('btn-add-produto');
     btn.disabled=true;
+
+    // Já existe um produto com esse código de barras? Em vez de bloquear (o
+    // que forçava a cadastrar tudo de novo com nome diferente), soma no
+    // estoque que já existe — é assim que os leitores de código de barras
+    // funcionam em qualquer mercado/loja de verdade.
+    const existente = codigoBarras ? produtosCache.find(p=>p.codigoBarras===codigoBarras) : null;
+
     try{
-        await addDoc(collection(db,'barbeiros',barbeiroData.uid,'produtos'), {
-            nome, codigoBarras: codigoBarras||null, preco, estoque, estoqueMinimo,
-            criadoEm: new Date().toISOString()
-        });
+        if(existente){
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',existente.id), {estoque:increment(qtd)});
+            toast(`✓ +${qtd} unidade(s) adicionada(s) a "${existente.nome}" (já cadastrado)`);
+        } else {
+            await addDoc(collection(db,'barbeiros',barbeiroData.uid,'produtos'), {
+                nome, codigoBarras: codigoBarras||null, preco, estoque: qtd, estoqueMinimo,
+                criadoEm: new Date().toISOString()
+            });
+            toast('✓ Produto cadastrado!');
+        }
         $('prod-nome').value=''; $('prod-codigo').value=''; $('prod-preco').value=''; $('prod-estoque').value=''; $('prod-estoque-min').value='';
-        toast('✓ Produto cadastrado!');
     }catch(e){ toast('Erro ao cadastrar: '+e.message,'var(--red)'); }
     btn.disabled=false;
 }
