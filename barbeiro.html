@@ -1708,6 +1708,20 @@
                 <button class="btn-add" style="font-size:.8rem;padding:.5rem 1rem" id="btn-copy-link">Copiar</button>
             </div>
         </div>
+
+        <div class="section-title" style="margin-bottom:.6rem">➕ Adicionar Cliente</div>
+        <div class="card" style="margin-bottom:1.2rem">
+            <div class="form-row">
+                <div class="input-group" style="margin-bottom:0"><label>Nome</label><input type="text" id="cli-add-nome" placeholder="Nome do cliente"></div>
+                <div class="input-group" style="margin-bottom:0"><label>WhatsApp</label><input type="tel" id="cli-add-wpp" placeholder="21999998888"></div>
+            </div>
+            <div style="display:flex;gap:.6rem;margin-top:.75rem;flex-wrap:wrap">
+                <button class="btn-add" style="flex:1;min-width:160px" id="btn-add-cliente">+ Adicionar Cliente</button>
+                <button id="btn-importar-contatos" style="display:none;flex:1;min-width:160px;background:rgba(0,212,255,.08);border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-weight:700;font-size:.85rem;cursor:pointer;padding:.65rem 1rem">📱 Importar dos Contatos</button>
+            </div>
+            <p id="cli-importar-aviso" style="display:none;font-size:.72rem;color:var(--muted);margin-top:.6rem"></p>
+        </div>
+
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
             <div class="section-title" style="margin-bottom:0">👥 Base de Clientes</div>
             <input type="text" id="cli-busca" placeholder="🔍 Nome ou WhatsApp..."
@@ -4543,6 +4557,75 @@ async function carregarClientes(){
         todosClientes.sort((a,b) => (b.totalCortes||0)-(a.totalCortes||0));
         renderClientes(todosClientes);
     }catch(e){ console.error('carregarClientes:',e); }
+    initAddCliente();
+}
+
+// Adiciona um cliente à base manualmente, sem precisar esperar um corte.
+// Usa a mesma "chave" (whatsapp limpo) que o resto do sistema já usa, então
+// se esse cliente já existir, só atualiza — não duplica.
+async function salvarClienteManual(nome, wppBruto){
+    const wpp = (wppBruto||'').replace(/\D/g,'');
+    if(!nome){ toast('Digite o nome do cliente','var(--red)'); return false; }
+    const chave = wpp || ('semtel_' + nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'_'));
+    try{
+        const ref = doc(db,'barbeiros',barbeiroData.uid,'clientes',chave);
+        const existe = await getDoc(ref);
+        await setDoc(ref, {
+            nome,
+            wpp,
+            totalCortes: existe.exists() ? (existe.data().totalCortes||0) : 0,
+        }, {merge:true});
+        return true;
+    }catch(e){ console.error('salvarClienteManual:',e); toast('Erro ao adicionar: '+e.message,'var(--red)'); return false; }
+}
+
+function initAddCliente(){
+    if(window.__addClienteBound) return;
+    window.__addClienteBound = true;
+
+    $('btn-add-cliente').addEventListener('click', async()=>{
+        const nome = $('cli-add-nome').value.trim();
+        const wpp = $('cli-add-wpp').value.trim();
+        const btn = $('btn-add-cliente');
+        btn.disabled = true;
+        const ok = await salvarClienteManual(nome, wpp);
+        if(ok){
+            toast('✓ Cliente adicionado!');
+            $('cli-add-nome').value=''; $('cli-add-wpp').value='';
+            carregarClientes();
+        }
+        btn.disabled = false;
+    });
+
+    // Importar da lista telefônica — só existe em alguns navegadores
+    // (principalmente Chrome no Android). Nos outros, o botão nem aparece.
+    if('contacts' in navigator && 'ContactsManager' in window){
+        const btnImportar = $('btn-importar-contatos');
+        btnImportar.style.display = 'block';
+        btnImportar.addEventListener('click', async()=>{
+            try{
+                const contatos = await navigator.contacts.select(['name','tel'], {multiple:true});
+                if(!contatos.length) return;
+                btnImportar.disabled = true;
+                btnImportar.textContent = 'Importando...';
+                let importados = 0;
+                for(const c of contatos){
+                    const nome = (c.name && c.name[0]) || 'Sem nome';
+                    const tel = (c.tel && c.tel[0]) || '';
+                    if(await salvarClienteManual(nome, tel)) importados++;
+                }
+                toast(`✓ ${importados} contato(s) importado(s)!`);
+                carregarClientes();
+            }catch(e){
+                if(e.name!=='AbortError') toast('Não deu pra acessar os contatos: '+e.message,'var(--red)');
+            }
+            btnImportar.disabled = false;
+            btnImportar.textContent = '📱 Importar dos Contatos';
+        });
+    } else {
+        $('cli-importar-aviso').style.display = 'block';
+        $('cli-importar-aviso').textContent = 'ℹ️ Importar da lista telefônica funciona só em alguns celulares Android (Chrome). Nesse aparelho, cadastre manualmente aí em cima.';
+    }
 }
 
 // Classifica o cliente pelo tempo sem aparecer — usado pra cor do card e pro aviso
