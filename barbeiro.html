@@ -1367,10 +1367,14 @@
             <div id="prod-codigo-aviso" style="display:none;font-size:.75rem;color:var(--blue);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:8px;padding:.5rem .7rem;margin-bottom:.6rem"></div>
             <div class="input-group"><label>Nome do produto</label><input type="text" id="prod-nome" placeholder="Ex: Pomada Modeladora"></div>
             <div class="form-row">
-                <div class="input-group"><label>Preço de venda (R$)</label><input type="number" id="prod-preco" placeholder="35.00" step="0.01" min="0"></div>
-                <div class="input-group"><label id="prod-estoque-label">Quantidade</label><input type="number" id="prod-estoque" placeholder="10" min="1" step="1"></div>
+                <div class="input-group" style="margin-bottom:0"><label>Preço de custo (R$)</label><input type="number" id="prod-custo" placeholder="20.00" step="0.01" min="0"></div>
+                <div class="input-group" style="margin-bottom:0"><label>Preço de venda (R$)</label><input type="number" id="prod-preco" placeholder="35.00" step="0.01" min="0"></div>
             </div>
-            <div class="input-group"><label>Avisar quando estoque chegar em (opcional)</label><input type="number" id="prod-estoque-min" placeholder="3" min="0" step="1"></div>
+            <div id="prod-margem-aviso" style="display:none;font-size:.78rem;font-weight:700;margin:.5rem 0 .85rem;padding:.5rem .7rem;border-radius:8px"></div>
+            <div class="form-row">
+                <div class="input-group"><label id="prod-estoque-label">Quantidade</label><input type="number" id="prod-estoque" placeholder="10" min="1" step="1"></div>
+                <div class="input-group"><label>Avisar quando estoque chegar em (opcional)</label><input type="number" id="prod-estoque-min" placeholder="3" min="0" step="1"></div>
+            </div>
             <button class="btn-add" id="btn-add-produto">+ Adicionar Produto</button>
         </div>
 
@@ -5160,6 +5164,8 @@ function initEstoque(){
     $('btn-scan-camera-cadastro').addEventListener('click', ()=>abrirScannerCamera(codigo=>{ $('prod-codigo').value=codigo; verificarCodigoCadastro(); }));
     $('prod-codigo').addEventListener('input', verificarCodigoCadastro);
     $('prod-codigo').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); verificarCodigoCadastro(); $('prod-estoque').focus(); } });
+    $('prod-custo').addEventListener('input', atualizarMargemCadastro);
+    $('prod-preco').addEventListener('input', atualizarMargemCadastro);
 
     initModalVendaCliente();
 }
@@ -5263,13 +5269,38 @@ function verificarCodigoCadastro(){
         aviso.style.display = 'block';
         aviso.innerHTML = `📦 Esse código já é de <strong>"${existente.nome}"</strong> (${existente.estoque} em estoque). Vai só somar a quantidade abaixo, não cria outro cadastro.`;
         $('prod-nome').value = existente.nome;
+        $('prod-custo').value = existente.custo!=null ? existente.custo : '';
         $('prod-preco').value = existente.preco;
         $('prod-estoque-label').textContent = 'Quantas chegaram agora';
         $('btn-add-produto').textContent = '+ Somar ao estoque';
+        atualizarMargemCadastro();
     } else {
         aviso.style.display = 'none';
         $('prod-estoque-label').textContent = 'Quantidade';
         $('btn-add-produto').textContent = '+ Adicionar Produto';
+    }
+}
+
+// Calcula e mostra a margem em tempo real conforme o dono digita custo/preço
+function atualizarMargemCadastro(){
+    const el = $('prod-margem-aviso');
+    const custo = parseFloat($('prod-custo').value);
+    const preco = parseFloat($('prod-preco').value);
+    if(isNaN(custo) || isNaN(preco) || preco<=0){ el.style.display='none'; return; }
+
+    const margemReais = preco - custo;
+    const margemPct = (margemReais/preco)*100;
+
+    el.style.display = 'block';
+    if(margemReais < 0){
+        el.style.background = 'rgba(255,75,43,.1)'; el.style.color='var(--red)';
+        el.textContent = `⚠️ Prejuízo de R$${Math.abs(margemReais).toFixed(2)} por unidade — o custo tá maior que o preço de venda.`;
+    } else if(margemPct < 15){
+        el.style.background = 'rgba(245,166,35,.1)'; el.style.color='var(--yellow)';
+        el.textContent = `😐 Margem apertada: R$${margemReais.toFixed(2)} por unidade (${margemPct.toFixed(0)}%)`;
+    } else {
+        el.style.background = 'rgba(0,255,136,.1)'; el.style.color='var(--green)';
+        el.textContent = `✓ Lucro de R$${margemReais.toFixed(2)} por unidade (margem de ${margemPct.toFixed(0)}%)`;
     }
 }
 
@@ -5362,11 +5393,13 @@ function atualizarKpiEstoqueBaixo(){
 async function adicionarProduto(){
     const nome = $('prod-nome').value.trim();
     const codigoBarras = $('prod-codigo').value.trim();
+    const custo = $('prod-custo').value ? parseFloat($('prod-custo').value) : null;
     const preco = parseFloat($('prod-preco').value);
     const qtd = parseInt($('prod-estoque').value);
     const estoqueMinimo = $('prod-estoque-min').value ? parseInt($('prod-estoque-min').value) : null;
     if(!nome){ toast('Digite o nome do produto','var(--red)'); return; }
     if(isNaN(preco) || preco<0){ toast('Informe um preço válido','var(--red)'); return; }
+    if(custo!==null && (isNaN(custo) || custo<0)){ toast('Informe um custo válido','var(--red)'); return; }
     if(isNaN(qtd) || qtd<=0){ toast('Informe a quantidade','var(--red)'); return; }
 
     const btn = $('btn-add-produto');
@@ -5384,12 +5417,13 @@ async function adicionarProduto(){
             toast(`✓ +${qtd} unidade(s) adicionada(s) a "${existente.nome}" (já cadastrado)`);
         } else {
             await addDoc(collection(db,'barbeiros',barbeiroData.uid,'produtos'), {
-                nome, codigoBarras: codigoBarras||null, preco, estoque: qtd, estoqueMinimo,
+                nome, codigoBarras: codigoBarras||null, custo, preco, estoque: qtd, estoqueMinimo,
                 criadoEm: new Date().toISOString()
             });
             toast('✓ Produto cadastrado!');
         }
-        $('prod-nome').value=''; $('prod-codigo').value=''; $('prod-preco').value=''; $('prod-estoque').value=''; $('prod-estoque-min').value='';
+        $('prod-nome').value=''; $('prod-codigo').value=''; $('prod-custo').value=''; $('prod-preco').value=''; $('prod-estoque').value=''; $('prod-estoque-min').value='';
+        $('prod-margem-aviso').style.display='none';
     }catch(e){ toast('Erro ao cadastrar: '+e.message,'var(--red)'); }
     btn.disabled=false;
 }
@@ -5400,11 +5434,18 @@ function renderProdutos(){
     if(!produtosCache.length){ cont.innerHTML = '<div class="empty-state"><div class="icon">📦</div>Nenhum produto cadastrado ainda.</div>'; return; }
     cont.innerHTML = produtosCache.map(p=>{
         const baixo = p.estoqueMinimo && p.estoque<=p.estoqueMinimo;
+        let margemHtml = '';
+        if(p.custo!=null && p.preco>0){
+            const margemReais = p.preco - p.custo;
+            const margemPct = (margemReais/p.preco)*100;
+            const cor = margemReais<0 ? 'var(--red)' : margemPct<15 ? 'var(--yellow)' : 'var(--green)';
+            margemHtml = ` · <span style="color:${cor}">margem R$${margemReais.toFixed(2)} (${margemPct.toFixed(0)}%)</span>`;
+        }
         return `<div class="service-item" style="flex-wrap:wrap;${baixo?'border-color:rgba(255,75,43,.4)':''}">
             <div style="flex:1;min-width:140px">
                 <div class="service-name" style="padding-right:0">${escapeHtml(p.nome)}${baixo?'<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">⚠️ Estoque baixo</span>':''}</div>
                 <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">
-                    ${p.codigoBarras?`Código: ${escapeHtml(p.codigoBarras)} · `:''}Estoque: <span style="color:${baixo?'var(--red)':'var(--text)'};font-weight:700">${p.estoque}</span> · R$${Number(p.preco).toFixed(2)}
+                    ${p.codigoBarras?`Código: ${escapeHtml(p.codigoBarras)} · `:''}Estoque: <span style="color:${baixo?'var(--red)':'var(--text)'};font-weight:700">${p.estoque}</span> · R$${Number(p.preco).toFixed(2)}${margemHtml}
                 </div>
             </div>
             <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
