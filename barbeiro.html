@@ -51,8 +51,8 @@
         .login-box::after{display:none;}
 
         /* Hero PRO B logo */
-        .pro-b-hero-barber{display:flex;align-items:baseline;justify-content:center;gap:.2rem;margin-bottom:.3rem;position:relative;}
-        .pro-hero-b{
+        .para o-b-hero-barber{display:flex;align-items:baseline;justify-content:center;gap:.2rem;margin-bottom:.3rem;position:relative;}
+        .para o-hero-b{
             font-size:3.2rem;font-weight:900;letter-spacing:6px;color:#00d4ff;
             text-shadow:0 0 20px rgba(0,212,255,0.9),0 0 40px rgba(0,212,255,0.5),0 0 80px rgba(0,212,255,0.25);
             animation:flickerB 4s infinite;
@@ -76,7 +76,7 @@
             font-size:1.8rem;
         }
         @keyframes flickerB{0%,92%,96%,100%{opacity:1;}93%{opacity:0.85;}94%{opacity:1;}95%{opacity:0.7;}}
-        .pro-b-hero-barber::after{
+        .para o-b-hero-barber::after{
             content:'';position:absolute;left:-5%;width:110%;height:2px;
             background:linear-gradient(90deg,transparent,rgba(0,212,255,0.7),transparent);
             animation:scanB 3s ease-in-out infinite;pointer-events:none;
@@ -518,8 +518,8 @@
 <section class="screen" id="screen-bloqueio" style="min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;padding:2rem 1rem;">
     <div class="login-box" style="max-width:400px;text-align:center;">
         <div style="font-size:2.5rem;margin-bottom:.5rem">🔒</div>
-        <div class="pro-b-hero-barber" style="justify-content:center;margin-bottom:.5rem">
-            <span class="pro-hero-b">PRO<span class="apos">'</span></span><span class="apostrophe-b">B</span>
+        <div class="para o-b-hero-barber" style="justify-content:center;margin-bottom:.5rem">
+            <span class="para o-hero-b">PRO<span class="apos">'</span></span><span class="apostrophe-b">B</span>
         </div>
         <p style="font-size:.85rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.6">
             Olá, <strong id="bloq-nome" style="color:var(--text)"></strong>!<br>
@@ -555,8 +555,8 @@
 <section class="screen active" id="screen-login">
     <div class="login-box">
         <div class="logo">
-            <div class="pro-b-hero-barber">
-                <span class="pro-hero-b">PRO<span class="apos">'</span><span class="apostrophe-b">B</span>
+            <div class="para o-b-hero-barber">
+                <span class="para o-hero-b">PRO<span class="apos">'</span><span class="apostrophe-b">B</span>
             </div>
             <div class="logo-sub">Painel do Barbeiro</div>
             <div style="font-size:.6rem;color:rgba(255,255,255,.18);letter-spacing:1.5px;text-transform:uppercase;margin-top:.3rem">Desenvolvido por Alexandre Lima</div>
@@ -618,8 +618,8 @@
 <section class="screen" id="screen-convite" style="min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,180,255,0.08) 0%, transparent 55%),linear-gradient(180deg,#060a12,#0a1018);">
     <div class="login-box">
         <div class="logo">
-            <div class="pro-b-hero-barber">
-                <span class="pro-hero-b">PRO<span class="apos">'</span><span class="apostrophe-b">B</span>
+            <div class="para o-b-hero-barber">
+                <span class="para o-hero-b">PRO<span class="apos">'</span><span class="apostrophe-b">B</span>
             </div>
             <div class="logo-sub">Convite da equipe</div>
         </div>
@@ -870,7 +870,7 @@
             <div style="font-size:1.05rem;font-weight:800;color:var(--red);margin-bottom:.75rem">⚠️ Confirmar exclusão</div>
             <p style="font-size:.82rem;color:var(--text);margin-bottom:.6rem">Isso vai apagar <strong>de verdade</strong>, sem volta:</p>
             <ul id="zp-resumo" style="font-size:.82rem;color:var(--text);margin:0 0 1rem 1.1rem;line-height:1.7"></ul>
-            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Pra confirmar, digite <strong style="color:var(--red)">APAGAR</strong> abaixo:</p>
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Para confirmar, digite <strong style="color:var(--red)">APAGAR</strong> abaixo:</p>
             <input type="text" id="zp-confirma-texto" placeholder="Digite APAGAR" autocomplete="off"
                 style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:.65rem .85rem;color:var(--text);font-size:.9rem;outline:none;margin-bottom:1rem;box-sizing:border-box">
             <div style="display:flex;gap:.6rem">
@@ -880,7 +880,7 @@
         </div>
     </div>
 
-    <!-- ══ Vender produto pra um cliente (Agenda ou Estoque) ══ -->
+    <!-- ══ Vender produto para um cliente (Agenda ou Estoque) ══ -->
     <div id="modal-venda-cliente" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:1.2rem">
         <div style="background:var(--card2);border:1.5px solid rgba(0,255,136,.4);border-radius:14px;max-width:400px;width:100%;padding:1.3rem">
             <div style="font-size:1.05rem;font-weight:800;color:var(--green);margin-bottom:1rem">🛒 Vender Produto</div>
@@ -1222,7 +1222,7 @@
                 </div>
                 <div id="promo-campos-individual" style="display:none">
                     <div class="input-group" style="margin-bottom:.6rem">
-                        <label>Pra quem vale</label>
+                        <label>Para quem vale</label>
                         <select id="promo-i-alvo" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
                             <option value="cliente">👤 Um cliente específico (aplica sozinho)</option>
                             <option value="codigo">🔑 Cupom por código (cliente digita)</option>
@@ -1386,7 +1386,7 @@
     <!-- TAB Insumos -->
     <div class="tab-content" id="tab-insumos">
         <div class="card" style="margin-bottom:1.2rem;border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04)">
-            <p style="font-size:.78rem;color:var(--muted)">Aqui é pro que a barbearia <strong>usa</strong>, não vende: café, biscoito, copo descartável, água oxigenada, papel toalha, etc. Diferente da aba Estoque (que é pra produto de venda), esses itens só saem por uso mesmo — não geram venda nem entram no faturamento.</p>
+            <p style="font-size:.78rem;color:var(--muted)">Esta seção é destinada aos itens de uso interno da barbearia, que não são comercializados: café, biscoitos, copos descartáveis, água oxigenada, papel toalha, entre outros. Diferente da aba Estoque (destinada a produtos de venda), esses itens são apenas consumidos — não geram receita nem entram no faturamento.</p>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin-bottom:1.2rem">
@@ -1796,15 +1796,15 @@
         </div>
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.85rem" id="cli-filtro-ausencia">
             <button class="filtro-ausencia-btn active" data-min="0" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--blue);background:rgba(0,212,255,.12);color:var(--blue);font-size:.72rem;cursor:pointer">Todos</button>
-            <button class="filtro-ausencia-btn" data-min="5" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">5+ dias sumido</button>
+            <button class="filtro-ausencia-btn" data-min="5" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">5+ dias ausente</button>
             <button class="filtro-ausencia-btn" data-min="10" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">10+ dias</button>
             <button class="filtro-ausencia-btn" data-min="15" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">15+ dias</button>
-            <button class="filtro-ausencia-btn" data-min="30" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">30+ dias (sumidos)</button>
+            <button class="filtro-ausencia-btn" data-min="30" style="padding:.4rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer">30+ dias (ausentes)</button>
         </div>
         <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.2rem;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px">
             <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:#00d4ff;display:inline-block"></span>Novo</div>
             <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:#00ff88;display:inline-block"></span>Recorrente</div>
-            <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(148,163,184);display:inline-block"></span>5+ dias sumido</div>
+            <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(148,163,184);display:inline-block"></span>5+ dias ausente</div>
             <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(245,166,35);display:inline-block"></span>10+ dias</div>
             <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(255,140,66);display:inline-block"></span>15+ dias</div>
             <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(255,75,43);display:inline-block"></span>30+ dias (sumido)</div>
@@ -2385,7 +2385,7 @@ async function mostrarModalAviso(dias){
         icone.textContent='🔴';
         titulo.textContent='Acesso expira hoje!';
         titulo.style.color='var(--red)';
-        msgEl.textContent='Seu acesso ao Pro\'B expira hoje. Renove agora para não perder o acesso e continuar atendendo seus clientes.';
+        msgEl.textContent='Seu acesso ao Para o\'B expira hoje. Renove agora para não perder o acesso e continuar atendendo seus clientes.';
     } else if(dias<=3){
         icone.textContent='🟡';
         titulo.textContent=`Expira em ${dias} dias`;
@@ -2540,7 +2540,7 @@ async function carregarConvite(bId, equipeId){
                 console.error(e);
                 errEl.textContent = e.code==='auth/email-already-in-use'
                     ? 'Esse e-mail já está em uso. Se já tem conta, entre normalmente pela tela de login.'
-                    : 'Não deu pra criar a conta. Confira os dados e tente de novo.';
+                    : 'Não deu para criar a conta. Confira os dados e tente de novo.';
                 btn.disabled=false;btn.textContent='Criar minha conta e entrar';
             }
         });
@@ -2915,7 +2915,7 @@ function initDash(){
         $('btn-fechar-drawer').addEventListener('click', fecharDrawer);
         $('drawer-overlay').addEventListener('click', fecharDrawer);
 
-        // Aviso ao recarregar/sair sem querer (comum puxar a tela pra baixo no celular)
+        // Aviso ao recarregar/sair sem querer (comum puxar a tela para baixo no celular)
         window.addEventListener('beforeunload', (e) => {
             e.preventDefault();
             e.returnValue = '';
@@ -2999,19 +2999,19 @@ const TOUR_STEPS = [
         texto:'Aqui ficam os horários marcados de hoje e dos próximos dias, atualizando sozinho conforme os clientes agendam.'},
     {selector:'[data-tab="fila"]', drawer:true,
         titulo:'🪑 Fila de Espera',
-        texto:'Cliente chegou sem hora marcada? Entra na fila por aqui. Dá até pra deixar numa TV/monitor da barbearia mostrando quem é o próximo.'},
+        texto:'Cliente chegou sem hora marcada? Entra na fila por aqui. Dá até para deixar numa TV/monitor da barbearia mostrando quem é o próximo.'},
     {selector:'[data-tab="cortes"]', drawer:true,
         titulo:'✂️ Cortes',
         texto:'Cadastre seus serviços: nome, preço, duração e até foto. É o catálogo que o cliente vê na hora de agendar.'},
     {selector:'[data-tab="promocoes"]', drawer:true,
         titulo:'🎁 Promoções',
-        texto:'Crie descontos gerais, um desconto só pra um cliente específico, ou até um cupom pra divulgar.'},
+        texto:'Crie descontos gerais, um desconto só para um cliente específico, ou até um cupom para divulgar.'},
     {selector:'[data-tab="equipe"]', drawer:true,
         titulo:'👥 Equipe',
-        texto:'Cadastre barbeiros e recepcionistas. Cada um recebe um convite pra criar login e senha próprios — vendo só o que precisa ver.'},
+        texto:'Cadastre barbeiros e recepcionistas. Cada um recebe um convite para criar login e senha próprios — vendo só o que precisa ver.'},
     {selector:'[data-tab="clientes"]', drawer:true,
         titulo:'🧑 Clientes',
-        texto:'Veja sua base de clientes, quem tá recorrente, quem sumiu — e mande mensagem de WhatsApp pronta direto daqui.'},
+        texto:'Veja sua base de clientes, quem está recorrente, quem sumiu — e mande mensagem de WhatsApp pronta direto daqui.'},
     {selector:'[data-tab="painel-chamada"]', drawer:true,
         titulo:'📺 Painel de Chamada',
         texto:'Deixe essa tela aberta numa TV ou monitor da barbearia — mostra sozinho, em tempo real, quem é o próximo da fila.'},
@@ -3025,11 +3025,11 @@ const TOUR_STEPS = [
 
 const TOPICOS_AJUDA = [
     {titulo:'📋 Como funciona a Agenda', texto:'Os agendamentos de hoje e dos próximos dias aparecem automaticamente, feitos pelos seus clientes ou por você (agendamento presencial). Marque como concluído ou cancelado direto no card.', tab:'agendamentos', selector:'[data-tab="agendamentos"]'},
-    {titulo:'🪑 Como funciona a Fila de Espera', texto:'Pra clientes que chegam sem hora marcada. Adicione o nome e o corte escolhido — o corte é obrigatório, pra manter o controle de faturamento certinho.', tab:'fila', selector:'[data-tab="fila"]'},
-    {titulo:'✂️ Cadastrando serviços', texto:'Em Cortes, adicione cada serviço com nome, preço, duração e, se quiser, uma foto. Isso é o que aparece pro cliente escolher ao agendar.', tab:'cortes', selector:'[data-tab="cortes"]'},
-    {titulo:'🎁 Criando uma promoção', texto:'Em Promoções, escolha entre desconto geral, pacote, ou promoção individual pra um cliente específico (com desconto e quantidade de usos definida por você).', tab:'promocoes', selector:'[data-tab="promocoes"]'},
+    {titulo:'🪑 Como funciona a Fila de Espera', texto:'Para clientes que chegam sem hora marcada. Adicione o nome e o corte escolhido — o corte é obrigatório, para manter o controle financeiro adequado.', tab:'fila', selector:'[data-tab="fila"]'},
+    {titulo:'✂️ Cadastrando serviços', texto:'Em Cortes, adicione cada serviço com nome, preço, duração e, se quiser, uma foto. Isso é o que aparece para o cliente escolher ao agendar.', tab:'cortes', selector:'[data-tab="cortes"]'},
+    {titulo:'🎁 Criando uma promoção', texto:'Em Promoções, escolha entre desconto geral, pacote, ou promoção individual para um cliente específico (com desconto e quantidade de usos definida por você).', tab:'promocoes', selector:'[data-tab="promocoes"]'},
     {titulo:'👥 Convidando sua equipe', texto:'Em Equipe, cadastre um barbeiro ou recepcionista e copie o link de convite gerado — manda por WhatsApp. A pessoa cria a própria senha ao abrir o link.', tab:'equipe', selector:'[data-tab="equipe"]'},
-    {titulo:'⚠️ Clientes sumidos', texto:'Na aba Clientes, use os filtros de "dias sem aparecer" pra achar rapidinho quem tá sumido e mandar um WhatsApp de reativação com um clique.', tab:'clientes', selector:'[data-tab="clientes"]'},
+    {titulo:'⚠️ Clientes sumidos', texto:'Na aba Clientes, use os filtros de "dias sem aparecer" para identificar rapidamente os clientes inativos e enviar uma mensagem de reativação com um clique.', tab:'clientes', selector:'[data-tab="clientes"]'},
     {titulo:'📺 Painel de TV da barbearia', texto:'Em Painel de Chamada, copie o link e abra numa TV ou monitor — atualiza sozinho mostrando a fila e quem é o próximo.', tab:'painel-chamada', selector:'[data-tab="painel-chamada"]'},
     {titulo:'💼 Relatórios financeiros', texto:'Em Gestão da Barbearia, veja faturamento e despesas, e exporte um relatório completo em Excel ou PDF quando precisar.', tab:'gestao', selector:'[data-tab="gestao"]'},
     {titulo:'🔗 Link de agendamento', texto:'Na aba Clientes tem o link público de agendamento — copie e mande pros seus clientes pelo WhatsApp, Instagram, onde quiser.', tab:'clientes', selector:'[data-tab="clientes"]'},
@@ -3085,7 +3085,7 @@ function initAjudaETour(){
 
 function verificarPrimeiroAcesso(){
     try{
-        if(window.__recepcionista) return; // tour é só pro dono, por enquanto
+        if(window.__recepcionista) return; // tour é só para o dono, por enquanto
         if(!localStorage.getItem('probTourFeito')){
             setTimeout(iniciarTour, 900);
         }
@@ -3559,7 +3559,7 @@ async function confirmarPresencial(){
 }
 
 // Cache de promoções individuais e fidelidade por WhatsApp do cliente,
-// usado pra mostrar um selo na Agenda quando o cliente tem algo ativo.
+// usado para mostrar um selo na Agenda quando o cliente tem algo ativo.
 let cachePromoPorWpp = {};
 let cacheFidelidadePorWpp = {};
 async function carregarCachePromoCliente(){
@@ -3596,7 +3596,7 @@ async function carregarCachePromoCliente(){
     if(ultimaListaFila.length) renderFila(ultimaListaFila);
 }
 
-// Monta o selinho pra mostrar no card do agendamento, se o cliente tiver
+// Monta o selinho para mostrar no card do agendamento, se o cliente tiver
 // promoção individual ativa e/ou estiver no programa de fidelidade.
 function gerarBadgePromoCliente(wpp){
     if(!wpp) return '';
@@ -3703,7 +3703,7 @@ function renderAppts(container,lista,emptyMsg){
                 ${!concluido&&!cancelado?`<span class="badge badge-pend">pend</span>`:''}
             </div>
             <span class="appt-price">R$${Number(a.preco).toFixed(0)}</span>
-            <button style="padding:.2rem .5rem;background:transparent;border:1px solid var(--blue);border-radius:5px;color:var(--blue);font-size:.68rem;font-weight:600;cursor:pointer;flex-shrink:0" title="Vender produto pra esse cliente" onclick="abrirModalVendaCliente('${escAttr(a.clienteNome||'')}','${escAttr(a.clienteWhatsapp||'')}')">🛒</button>
+            <button style="padding:.2rem .5rem;background:transparent;border:1px solid var(--blue);border-radius:5px;color:var(--blue);font-size:.68rem;font-weight:600;cursor:pointer;flex-shrink:0" title="Vender produto para esse cliente" onclick="abrirModalVendaCliente('${escAttr(a.clienteNome||'')}','${escAttr(a.clienteWhatsapp||'')}')">🛒</button>
             ${btnWpp}
             ${btnAcoes}
         </div>`;
@@ -3828,7 +3828,7 @@ async function renderLinksEquipe(){
         if(!authInfo){
             // Ainda não aceitou o convite — mostra o link de convite
             const conviteLink = `${baseUrl}barbeiro.html?convite=${encodeURIComponent(b.id)}&bId=${barbeiroData.uid}`;
-            const msgWpp = encodeURIComponent(`Olá ${b.nome}! Você foi convidado(a) pra trabalhar como ${cargo.toLowerCase()} — é só abrir esse link e criar sua senha de acesso: ${conviteLink}`);
+            const msgWpp = encodeURIComponent(`Olá ${b.nome}! Você foi convidado(a) para trabalhar como ${cargo.toLowerCase()} — é só abrir esse link e criar sua senha de acesso: ${conviteLink}`);
             return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem">
                 <div style="font-weight:700;font-size:.88rem;margin-bottom:.2rem">${escapeHtml(b.nome)} <span style="font-size:.65rem;color:var(--yellow);font-weight:400">· convite pendente</span></div>
                 <div style="font-size:.7rem;color:var(--muted);word-break:break-all;margin:.4rem 0 .6rem;background:var(--card);padding:.4rem .65rem;border-radius:6px;border:1px solid var(--border)">${conviteLink}</div>
@@ -4433,7 +4433,7 @@ function renderPromocoes(promos){
             ? (p.validoAte?`Válido até ${p.validoAte}`:'Sem validade definida')
             : ({permanente:'Permanente',semanal:'Semanal',mensal:'Mensal',personalizado:`${p.dataInicio} até ${p.dataFim}`}[p.periodo]||p.periodo);
 
-        const wppBtn = (p.tipo==='individual' && p.clienteWpp) ? `<a href="https://wa.me/55${p.clienteWpp}?text=${encodeURIComponent(`Olá ${p.clienteNome||''}! Preparei um desconto especial pra você: ${p.descontoTipo==='percentual'?p.descontoValor+'% off':'R$'+Number(p.descontoValor).toFixed(2)+' off'} no seu próximo corte na ${barbeiroData.nome||'barbearia'}. Corre lá! 🎁`)}" target="_blank" class="btn-wpp" style="text-align:center;text-decoration:none">Avisar WPP</a>` : '';
+        const wppBtn = (p.tipo==='individual' && p.clienteWpp) ? `<a href="https://wa.me/55${p.clienteWpp}?text=${encodeURIComponent(`Olá ${p.clienteNome||''}! Preparei um desconto especial para você: ${p.descontoTipo==='percentual'?p.descontoValor+'% off':'R$'+Number(p.descontoValor).toFixed(2)+' off'} no seu próximo corte na ${barbeiroData.nome||'barbearia'}. Corre lá! 🎁`)}" target="_blank" class="btn-wpp" style="text-align:center;text-decoration:none">Avisar WPP</a>` : '';
         const codigoBtn = (p.tipo==='individual' && p.codigo) ? `<button class="btn-edit" onclick="navigator.clipboard.writeText('${p.codigo}').then(()=>toast('Código copiado!'))">Copiar código</button>` : '';
 
         return `<div style="background:var(--card2);border:1px solid ${ativaNoPeriodo?'rgba(0,255,136,.2)':'var(--border)'};border-radius:10px;padding:1rem;margin-bottom:.6rem;">
@@ -4666,7 +4666,7 @@ function initAddCliente(){
                 toast(`✓ ${importados} contato(s) importado(s)!`);
                 carregarClientes();
             }catch(e){
-                if(e.name!=='AbortError') toast('Não deu pra acessar os contatos: '+e.message,'var(--red)');
+                if(e.name!=='AbortError') toast('Não deu para acessar os contatos: '+e.message,'var(--red)');
             }
             btnImportar.disabled = false;
             btnImportar.textContent = '📱 Importar dos Contatos';
@@ -4677,12 +4677,12 @@ function initAddCliente(){
     }
 }
 
-// Classifica o cliente pelo tempo sem aparecer — usado pra cor do card e pro aviso
+// Classifica o cliente pelo tempo sem aparecer — usado para cor do card e para o aviso
 function nivelAusencia(dias){
-    if(dias>=30) return {cor:'255,75,43',  label:'⚠️ Sumiu há '+dias+' dias',        peso:4};
-    if(dias>=15) return {cor:'255,140,66', label:'😐 '+dias+' dias sem aparecer',    peso:3};
-    if(dias>=10) return {cor:'245,166,35', label:'🕐 '+dias+' dias sem aparecer',    peso:2};
-    if(dias>=5)  return {cor:'148,163,184',label:dias+' dias sem aparecer',          peso:1};
+    if(dias>=30) return {cor:'255,75,43',  label:'⚠️ Ausente há '+dias+' dias',        peso:4};
+    if(dias>=15) return {cor:'255,140,66', label:dias+' dias sem retornar',    peso:3};
+    if(dias>=10) return {cor:'245,166,35', label:'🕐 '+dias+' dias sem retornar',    peso:2};
+    if(dias>=5)  return {cor:'148,163,184',label:dias+' dias sem retornar',          peso:1};
     return null;
 }
 
@@ -4725,8 +4725,8 @@ function renderClientes(lista){
         const diasTexto = diasDesde<999 ? diasDesde : null;
         const wppMsg = encodeURIComponent(
             diasTexto
-            ? `Oi ${c.nome}! Notei que já faz ${diasTexto} dias desde seu último corte na ${barbeiroData.nome||'barbearia'}. Bora marcar um horário? Tô te esperando! 💈`
-            : `Oi ${c.nome}! Faz tempo que você não aparece na ${barbeiroData.nome||'barbearia'}. Bora marcar um horário? Tô te esperando! 💈`
+            ? `Olá, ${c.nome}! Notamos que já se passaram ${diasTexto} dias desde seu último corte na ${barbeiroData.nome||'barbearia'}. Que tal agendar um novo horário? Ficaremos felizes em atendê-lo(a) novamente! 💈`
+            : `Olá, ${c.nome}! Faz um tempo que você não visita a ${barbeiroData.nome||'barbearia'}. Que tal agendar um novo horário? Ficaremos felizes em atendê-lo(a) novamente! 💈`
         );
 
         return `<div style="background:${corFundo};border:1px solid ${corBorda};border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
@@ -4737,7 +4737,7 @@ function renderClientes(lista){
                 <div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">Última visita: ${ultimaVisita} ${alertaSumiu}</div>
             </div>
             <div style="display:flex;gap:.35rem;flex-shrink:0">
-                <button class="btn-edit" title="Criar promoção individual pra esse cliente" onclick="criarPromoParaCliente('${escAttr(c.nome||'')}','${wppNum}')">🎯 Promoção</button>
+                <button class="btn-edit" title="Criar promoção individual para esse cliente" onclick="criarPromoParaCliente('${escAttr(c.nome||'')}','${wppNum}')">🎯 Promoção</button>
                 ${wppNum?`<a href="https://wa.me/55${wppNum}?text=${wppMsg}" target="_blank" class="btn-wpp" title="Chamar pelo WhatsApp">WPP</a>`:''}
             </div>
         </div>`;
@@ -5124,7 +5124,7 @@ function initZonaPerigo(){
 
     document.getElementById('btn-abrir-zona-perigo').addEventListener('click', async ()=>{
         const marcados = Array.from(document.querySelectorAll('.zona-perigo-check:checked')).map(c=>c.value);
-        if(!marcados.length){ toast('Marque pelo menos uma categoria pra apagar','var(--red)'); return; }
+        if(!marcados.length){ toast('Marque pelo menos uma categoria para apagar','var(--red)'); return; }
 
         const btn = document.getElementById('btn-abrir-zona-perigo');
         btn.disabled = true; btn.textContent = 'Contando...';
@@ -5138,7 +5138,7 @@ function initZonaPerigo(){
         }
         btn.disabled = false; btn.textContent = '🗑️ Apagar o que eu marquei';
 
-        if(!algumComDados){ toast('Não tem nada pra apagar nas categorias marcadas'); return; }
+        if(!algumComDados){ toast('Não tem nada para apagar nas categorias marcadas'); return; }
 
         document.getElementById('zp-confirma-texto').value = '';
         document.getElementById('btn-confirmar-zona-perigo').disabled = true;
@@ -5219,7 +5219,7 @@ function initEstoque(){
 // ══════════════════════════════════════════════════════════
 // CONTROLE DE INSUMOS — itens de uso interno (café, copo
 // descartável, água oxigenada...). Só quantidade, sem preço de
-// venda nem código de barras — não é pra vender, é pra controlar gasto.
+// venda nem código de barras — não é para vender, é para controlar gasto.
 // ══════════════════════════════════════════════════════════
 let insumosCache = [];
 let unsubInsumos = null;
@@ -5314,7 +5314,7 @@ function renderInsumos(){
             const qtd = prompt(`Quanto de "${item.nome}" foi usado? (${UNIDADE_ABREV[item.unidade]||item.unidade})\nEm estoque: ${item.quantidade}`, '1');
             const n = parseFloat(qtd);
             if(!qtd || isNaN(n) || n<=0) return;
-            if(n > item.quantidade){ toast('Não tem tanto assim pra dar baixa','var(--red)'); return; }
+            if(n > item.quantidade){ toast('Não tem tanto assim para dar baixa','var(--red)'); return; }
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',item.id), {quantidade:increment(-n)});
             toast(`✓ Baixa de ${n} em "${item.nome}"`);
         });
@@ -5453,7 +5453,7 @@ function atualizarMargemCadastro(){
     el.style.display = 'block';
     if(margemReais < 0){
         el.style.background = 'rgba(255,75,43,.1)'; el.style.color='var(--red)';
-        el.textContent = `⚠️ Prejuízo de R$${Math.abs(margemReais).toFixed(2)} por unidade — o custo tá maior que o preço de venda.`;
+        el.textContent = `⚠️ Prejuízo de R$${Math.abs(margemReais).toFixed(2)} por unidade — o custo está maior que o preço de venda.`;
     } else if(margemPct < 15){
         el.style.background = 'rgba(245,166,35,.1)'; el.style.color='var(--yellow)';
         el.textContent = `😐 Margem apertada: R$${margemReais.toFixed(2)} por unidade (${margemPct.toFixed(0)}%)`;
@@ -5495,7 +5495,7 @@ async function resolverClienteDaVenda(nomeDigitado){
     const existente = todosClientes.find(c=>(c.nome||'').toLowerCase()===nome.toLowerCase());
     if(existente) return {nome:existente.nome, wpp:existente.wpp||''};
     await salvarClienteManual(nome, '');
-    carregarClientes(); // atualiza a base em segundo plano pra próxima venda já achar
+    carregarClientes(); // atualiza a base em segundo plano para a próxima venda já achar
     return {nome, wpp:''};
 }
 
@@ -5632,7 +5632,7 @@ function renderProdutos(){
     });
 }
 
-// Leitor de código de barras pela câmera do celular (bônus pra quem não
+// Leitor de código de barras pela câmera do celular (bônus para quem não
 // tem leitor físico). Carrega a biblioteca só quando realmente usada.
 let scannerCameraCarregado = false;
 function abrirScannerCamera(aoLer){
@@ -5641,7 +5641,7 @@ function abrirScannerCamera(aoLer){
         overlay.style.cssText = 'position:fixed;inset:0;z-index:9997;background:#000;display:flex;flex-direction:column;';
         overlay.innerHTML = `
             <div style="padding:1rem;display:flex;justify-content:space-between;align-items:center;background:var(--card2)">
-                <span style="color:#fff;font-weight:700;font-size:.9rem">📷 Aponte pro código de barras</span>
+                <span style="color:#fff;font-weight:700;font-size:.9rem">📷 Aponte para o código de barras</span>
                 <button id="btn-fechar-scanner" style="background:transparent;border:1.5px solid var(--border);color:#fff;border-radius:8px;padding:.4rem .8rem;cursor:pointer">Fechar</button>
             </div>
             <div id="scanner-camera-view" style="flex:1"></div>
@@ -5669,7 +5669,7 @@ function abrirScannerCamera(aoLer){
             fps: 15,
             qrbox: {width:280,height:130},
             aspectRatio: 1.6,
-            // Pede foco contínuo pra câmera (muitos celulares travam o foco
+            // Pede foco contínuo para a câmera (muitos celulares travam o foco
             // uma vez só por padrão, o que atrapalha muito num código de
             // barras de perto). Se o aparelho não suportar, ignora sozinho.
             videoConstraints: {
@@ -5685,7 +5685,7 @@ function abrirScannerCamera(aoLer){
             {facingMode:'environment'}, config,
             (codigo)=>{ parar(); aoLer(codigo); },
             ()=>{}
-        ).catch(e=>{ toast('Não deu pra acessar a câmera: '+e.message,'var(--red)'); overlay.remove(); });
+        ).catch(e=>{ toast('Não deu para acessar a câmera: '+e.message,'var(--red)'); overlay.remove(); });
 
         overlay.querySelector('#btn-refocar-scanner').addEventListener('click', ()=>{
             scanner.stop().catch(()=>{}).then(()=>tentarIniciar());
@@ -5698,7 +5698,7 @@ function abrirScannerCamera(aoLer){
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
     script.onload = ()=>{ scannerCameraCarregado = true; iniciar(); };
-    script.onerror = ()=> toast('Não deu pra carregar o leitor de câmera. Confira sua internet.','var(--red)');
+    script.onerror = ()=> toast('Não deu para carregar o leitor de câmera. Confira sua internet.','var(--red)');
     document.head.appendChild(script);
 }
 
@@ -5770,7 +5770,7 @@ async function renderHours(){
 }
 
 // Link de agendamento do cliente — mora na aba Clientes, mas não depende de
-// nada exclusivo de Configurações, então roda pra dono E recepcionista.
+// nada exclusivo de Configurações, então roda para dono E recepcionista.
 function initLinkCliente(){
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
     const baseUrl = isLocal
@@ -6568,7 +6568,7 @@ async function initRecepcionistaMode(bId,bData,equipeId){
     const secaoGanhos=document.getElementById('secao-ganhos-equipe'); if(secaoGanhos)secaoGanhos.style.display='none';
 
     initDash(); // liga os cliques do menu e carrega os dados (financeiro/links ficam bloqueados pelo próprio initDash)
-    initLinkCliente(); // recepcionista também pode enviar o link de agendamento pro cliente
+    initLinkCliente(); // recepcionista também pode enviar o link de agendamento para o cliente
     const btnAjudaR=document.getElementById('btn-ajuda'); if(btnAjudaR) btnAjudaR.style.display='none';
 
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -7197,7 +7197,7 @@ async function carregarResumoGestao(){
 
     const receitaServicosMes=concMes.reduce((s,a)=>s+Number(a.preco||0),0);
 
-    // Vendas de produtos — busca tudo de uma vez, reaproveita pro mês atual e pro gráfico
+    // Vendas de produtos — busca tudo de uma vez, reaproveita para o mês atual e para o gráfico
     let todasVendas=[];
     try{
         const snapVendas=await getDocs(collection(db,'barbeiros',barbeiroData.uid,'vendas'));
