@@ -815,6 +815,7 @@
         <div class="tab" data-tab="promocoes">🎁 Promoções</div>
         <div class="tab" data-tab="horarios">🕐 Horários</div>
         <div class="tab" data-tab="estoque">📦 Estoque</div>
+        <div class="tab" data-tab="insumos">🧴 Controle de Insumos</div>
 
         <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Pessoas</div>
         <div class="tab" data-tab="equipe">👥 Equipe</div>
@@ -1380,6 +1381,50 @@
 
         <div class="section-title">Produtos Cadastrados</div>
         <div id="lista-produtos"><div class="empty-state"><div class="icon">📦</div>Nenhum produto cadastrado ainda.</div></div>
+    </div>
+
+    <!-- TAB Insumos -->
+    <div class="tab-content" id="tab-insumos">
+        <div class="card" style="margin-bottom:1.2rem;border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04)">
+            <p style="font-size:.78rem;color:var(--muted)">Aqui é pro que a barbearia <strong>usa</strong>, não vende: café, biscoito, copo descartável, água oxigenada, papel toalha, etc. Diferente da aba Estoque (que é pra produto de venda), esses itens só saem por uso mesmo — não geram venda nem entram no faturamento.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin-bottom:1.2rem">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem;text-align:center">
+                <div style="font-family:'Courier New',monospace;font-size:1.3rem;font-weight:900;color:var(--blue)" id="insumo-kpi-total">0</div>
+                <div style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem">Itens cadastrados</div>
+            </div>
+            <div style="background:var(--card);border:1px solid rgba(255,75,43,.35);border-radius:10px;padding:.85rem;text-align:center">
+                <div style="font-family:'Courier New',monospace;font-size:1.3rem;font-weight:900;color:var(--red)" id="insumo-kpi-baixo">0</div>
+                <div style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem">Acabando</div>
+            </div>
+        </div>
+
+        <div class="section-title">Cadastrar Insumo</div>
+        <div class="card" style="margin-bottom:1.2rem">
+            <div class="input-group"><label>Nome</label><input type="text" id="insumo-nome" placeholder="Ex: Café em pó, Copo descartável, Água oxigenada..."></div>
+            <div class="form-row">
+                <div class="input-group" style="margin-bottom:0">
+                    <label>Unidade</label>
+                    <select id="insumo-unidade" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
+                        <option value="unidade">Unidade</option>
+                        <option value="pacote">Pacote</option>
+                        <option value="caixa">Caixa</option>
+                        <option value="litro">Litro</option>
+                        <option value="ml">Mililitro (ml)</option>
+                        <option value="kg">Quilo (kg)</option>
+                        <option value="g">Grama (g)</option>
+                        <option value="rolo">Rolo</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-bottom:0"><label id="insumo-qtd-label">Quantidade</label><input type="number" id="insumo-qtd" placeholder="20" min="0" step="0.5"></div>
+            </div>
+            <div class="input-group" style="margin-top:.6rem"><label>Avisar quando chegar em (opcional)</label><input type="number" id="insumo-qtd-min" placeholder="5" min="0" step="0.5"></div>
+            <button class="btn-add" id="btn-add-insumo">+ Adicionar Insumo</button>
+        </div>
+
+        <div class="section-title">Insumos Cadastrados</div>
+        <div id="lista-insumos"><div class="empty-state"><div class="icon">🧴</div>Nenhum insumo cadastrado ainda.</div></div>
     </div>
 
     <!-- TAB Visual -->
@@ -5168,6 +5213,120 @@ function initEstoque(){
     $('prod-preco').addEventListener('input', atualizarMargemCadastro);
 
     initModalVendaCliente();
+    initInsumos();
+}
+
+// ══════════════════════════════════════════════════════════
+// CONTROLE DE INSUMOS — itens de uso interno (café, copo
+// descartável, água oxigenada...). Só quantidade, sem preço de
+// venda nem código de barras — não é pra vender, é pra controlar gasto.
+// ══════════════════════════════════════════════════════════
+let insumosCache = [];
+let unsubInsumos = null;
+
+function initInsumos(){
+    if(window.__insumosBound) return;
+    window.__insumosBound = true;
+
+    if(unsubInsumos) unsubInsumos();
+    unsubInsumos = onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'insumos'), snap=>{
+        insumosCache = [];
+        snap.forEach(d=>insumosCache.push({id:d.id,...d.data()}));
+        insumosCache.sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+        renderInsumos();
+    }, e=>console.error('insumos:',e));
+
+    $('btn-add-insumo').addEventListener('click', adicionarInsumo);
+}
+
+async function adicionarInsumo(){
+    const nome = $('insumo-nome').value.trim();
+    const unidade = $('insumo-unidade').value;
+    const qtd = parseFloat($('insumo-qtd').value);
+    const qtdMinima = $('insumo-qtd-min').value ? parseFloat($('insumo-qtd-min').value) : null;
+    if(!nome){ toast('Digite o nome do insumo','var(--red)'); return; }
+    if(isNaN(qtd) || qtd<0){ toast('Informe a quantidade','var(--red)'); return; }
+
+    const btn = $('btn-add-insumo');
+    btn.disabled = true;
+
+    // Já existe um insumo com esse nome? Soma na quantidade em vez de duplicar.
+    const existente = insumosCache.find(i=>(i.nome||'').toLowerCase()===nome.toLowerCase());
+
+    try{
+        if(existente){
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',existente.id), {quantidade:increment(qtd)});
+            toast(`✓ +${qtd} ${unidade} adicionado(s) a "${existente.nome}"`);
+        } else {
+            await addDoc(collection(db,'barbeiros',barbeiroData.uid,'insumos'), {
+                nome, unidade, quantidade:qtd, quantidadeMinima:qtdMinima,
+                criadoEm: new Date().toISOString()
+            });
+            toast('✓ Insumo cadastrado!');
+        }
+        $('insumo-nome').value=''; $('insumo-qtd').value=''; $('insumo-qtd-min').value='';
+    }catch(e){ toast('Erro ao cadastrar: '+e.message,'var(--red)'); }
+    btn.disabled = false;
+}
+
+const UNIDADE_ABREV = {unidade:'un', pacote:'pct', caixa:'cx', litro:'L', ml:'ml', kg:'kg', g:'g', rolo:'rl'};
+
+function renderInsumos(){
+    const cont = $('lista-insumos');
+    if(!cont) return;
+
+    $('insumo-kpi-total').textContent = insumosCache.length;
+    $('insumo-kpi-baixo').textContent = insumosCache.filter(i=>i.quantidadeMinima!=null && i.quantidade<=i.quantidadeMinima).length;
+
+    if(!insumosCache.length){ cont.innerHTML = '<div class="empty-state"><div class="icon">🧴</div>Nenhum insumo cadastrado ainda.</div>'; return; }
+
+    cont.innerHTML = insumosCache.map(i=>{
+        const baixo = i.quantidadeMinima!=null && i.quantidade<=i.quantidadeMinima;
+        const un = UNIDADE_ABREV[i.unidade] || i.unidade || 'un';
+        return `<div class="service-item" style="flex-wrap:wrap;${baixo?'border-color:rgba(255,75,43,.4)':''}">
+            <div style="flex:1;min-width:140px">
+                <div class="service-name" style="padding-right:0">${escapeHtml(i.nome)}${baixo?'<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">⚠️ Acabando</span>':''}</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">
+                    Quantidade: <span style="color:${baixo?'var(--red)':'var(--text)'};font-weight:700">${i.quantidade}</span> ${un}
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
+                <button class="btn-del" data-baixa-insumo="${i.id}" style="border-color:rgba(245,166,35,.4);color:var(--yellow)">− Dar baixa</button>
+                <button class="btn-edit" data-add-insumo="${i.id}">+ Repor</button>
+                <button class="btn-del" data-del-insumo="${i.id}">Remover</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    cont.querySelectorAll('[data-add-insumo]').forEach(btn=>{
+        btn.addEventListener('click', async()=>{
+            const item = insumosCache.find(i=>i.id===btn.dataset.addInsumo);
+            const qtd = prompt(`Quanto de "${item.nome}" chegou? (${UNIDADE_ABREV[item.unidade]||item.unidade})`, '10');
+            const n = parseFloat(qtd);
+            if(!qtd || isNaN(n) || n<=0) return;
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',item.id), {quantidade:increment(n)});
+            toast(`✓ +${n} adicionado(s) a "${item.nome}"`);
+        });
+    });
+    cont.querySelectorAll('[data-baixa-insumo]').forEach(btn=>{
+        btn.addEventListener('click', async()=>{
+            const item = insumosCache.find(i=>i.id===btn.dataset.baixaInsumo);
+            const qtd = prompt(`Quanto de "${item.nome}" foi usado? (${UNIDADE_ABREV[item.unidade]||item.unidade})\nEm estoque: ${item.quantidade}`, '1');
+            const n = parseFloat(qtd);
+            if(!qtd || isNaN(n) || n<=0) return;
+            if(n > item.quantidade){ toast('Não tem tanto assim pra dar baixa','var(--red)'); return; }
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',item.id), {quantidade:increment(-n)});
+            toast(`✓ Baixa de ${n} em "${item.nome}"`);
+        });
+    });
+    cont.querySelectorAll('[data-del-insumo]').forEach(btn=>{
+        btn.addEventListener('click', async()=>{
+            const item = insumosCache.find(i=>i.id===btn.dataset.delInsumo);
+            if(!confirm(`Remover "${item.nome}" do controle de insumos?`)) return;
+            await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',item.id));
+            toast('Insumo removido');
+        });
+    });
 }
 
 // ── Modal "Vender Produto" — aberto direto de um agendamento na Agenda,
@@ -6394,6 +6553,7 @@ async function initRecepcionistaMode(bId,bData,equipeId){
         <div class="tab" data-tab="promocoes">🎁 Promoções</div>
         <div class="tab" data-tab="horarios">🕐 Horários</div>
         <div class="tab" data-tab="estoque">📦 Estoque</div>
+        <div class="tab" data-tab="insumos">🧴 Controle de Insumos</div>
 
         <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Pessoas</div>
         <div class="tab" data-tab="equipe">👥 Equipe</div>
