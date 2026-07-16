@@ -305,14 +305,6 @@
                     <div id="lista-ofertas"><div class="empty-state" style="padding:1rem 0"><div class="icon">🏷️</div>Nenhum link de venda criado ainda.</div></div>
                 </div>
 
-                <div class="section-title">🗄️ Backup Completo</div>
-                <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
-                    <p style="font-size:.72rem;color:var(--muted);margin-bottom:.6rem">Baixa uma cópia de tudo (barbearias, agendamentos, clientes, produtos, vendas, promoções) num arquivo só. Guarda num lugar seguro — pen drive, Google Drive, onde preferir. Não substitui nada, é só uma foto do momento.</p>
-                    <div id="backup-ultimo" style="font-size:.75rem;font-weight:700;margin-bottom:.75rem"></div>
-                    <button class="btn-sm btn-ativar" style="padding:.6rem 1.2rem;font-size:.82rem" id="btn-backup-completo">📥 Baixar Backup Completo</button>
-                    <span id="backup-status" style="font-size:.72rem;color:var(--muted);margin-left:.6rem"></span>
-                </div>
-
                 <div class="section-title">Barbeiros cadastrados</div>
         <input type="text" class="search-bar" id="search" placeholder="Buscar por nome ou e-mail...">
         <div class="filter-row">
@@ -380,7 +372,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, getDocs, collection, collectionGroup, deleteDoc, query, where, onSnapshot, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, getDocs, collection, deleteDoc, query, where, onSnapshot, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = PROB_CONFIG.firebase;
 
@@ -499,102 +491,6 @@ window.toggleOferta=async(id,novoAtivo)=>{
 };
 
 carregarOfertas();
-
-// ══════════════════════════════════════════════════════════
-// BACKUP COMPLETO — baixa uma cópia de tudo em um arquivo JSON.
-// Não é automático (isso é opção 1, a mais simples): você precisa
-// clicar de vez em quando e guardar o arquivo em lugar seguro.
-// ══════════════════════════════════════════════════════════
-// Mostra quando foi o último backup, sempre que a página carrega — não só
-// durante a sessão em que você clicou (fica salvo no navegador).
-function mostrarUltimoBackup(){
-    const el = document.getElementById('backup-ultimo');
-    if(!el) return;
-    const salvo = localStorage.getItem('probUltimoBackup');
-    if(!salvo){
-        el.textContent = '⚪ Nenhum backup feito neste navegador ainda';
-        el.style.color = 'var(--muted)';
-        return;
-    }
-    const data = new Date(salvo);
-    const dias = Math.floor((new Date() - data) / (1000*60*60*24));
-    const dataFmt = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    const rel = dias===0 ? 'hoje' : dias===1 ? 'há 1 dia' : `há ${dias} dias`;
-
-    el.textContent = `🕐 Último backup: ${dataFmt} (${rel})`;
-    el.style.color = dias >= 14 ? 'var(--red)' : dias >= 7 ? 'var(--yellow)' : 'var(--green)';
-}
-mostrarUltimoBackup();
-
-async function exportarBackupCompleto(){
-    const btn = document.getElementById('btn-backup-completo');
-    const status = document.getElementById('backup-status');
-    btn.disabled = true;
-    const original = btn.textContent;
-
-    try{
-        const backup = { geradoEm: new Date().toISOString() };
-
-        const passos = [
-            ['barbearias',            () => getDocs(collection(db,'barbeiros'))],
-            ['acessos',               () => getDocs(collection(db,'acessos'))],
-            ['agendamentos',          () => getDocs(collection(db,'agendamentos'))],
-            ['fila',                  () => getDocs(collection(db,'fila'))],
-            ['ofertas',               () => getDocs(collection(db,'ofertas'))],
-            ['funcionarios',          () => getDocs(collection(db,'funcionarios'))],
-            ['clientes_por_barbearia',() => getDocs(collectionGroup(db,'clientes'))],
-            ['fidelidade',            () => getDocs(collectionGroup(db,'fidelidade'))],
-            ['promocoes',             () => getDocs(collectionGroup(db,'promocoes'))],
-            ['produtos',              () => getDocs(collectionGroup(db,'produtos'))],
-            ['vendas',                () => getDocs(collectionGroup(db,'vendas'))],
-            ['equipeAuth',            () => getDocs(collectionGroup(db,'equipeAuth'))],
-            ['bloqueios_horario',     () => getDocs(collectionGroup(db,'bloqueios'))],
-        ];
-
-        for(const [nome, buscar] of passos){
-            btn.textContent = 'Baixando ' + nome + '...';
-            try{
-                const snap = await buscar();
-                backup[nome] = [];
-                snap.forEach(d => backup[nome].push({ _caminho: d.ref.path, ...d.data() }));
-            }catch(e){
-                console.error('Erro ao baixar', nome, e);
-                backup[nome] = { erro: e.message };
-            }
-        }
-
-        // Configuração global (documento único)
-        try{
-            const cfgSnap = await getDoc(doc(db,'config','admin'));
-            backup['config_global'] = cfgSnap.exists() ? cfgSnap.data() : null;
-        }catch(e){ backup['config_global'] = { erro: e.message }; }
-
-        const json = JSON.stringify(backup, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const dataStr = new Date().toISOString().split('T')[0];
-        a.href = url;
-        a.download = `backup-probsistema-${dataStr}.json`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-
-        status.textContent = '✓ Backup baixado às ' + new Date().toLocaleTimeString('pt-BR');
-        status.style.color = 'var(--green)';
-        localStorage.setItem('probUltimoBackup', new Date().toISOString());
-        mostrarUltimoBackup();
-        toast('✓ Backup completo baixado!');
-    }catch(e){
-        status.textContent = 'Erro: ' + e.message;
-        status.style.color = 'var(--red)';
-        toast('Erro ao gerar backup: ' + e.message, 'var(--red)');
-    }
-    btn.disabled = false;
-    btn.textContent = original;
-}
-document.getElementById('btn-backup-completo').addEventListener('click', exportarBackupCompleto);
 
 // Garante que o número sempre tenha o código do país (55 Brasil) na frente
 function normalizarWpp(numero){
