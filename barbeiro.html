@@ -323,6 +323,7 @@
         <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Catálogo</div>
         <div class="tab" data-tab="cortes">✂️ Cortes</div>
         <div class="tab" data-tab="promocoes">🎁 Promoções</div>
+        <div class="tab" data-tab="acordos">🤝 Acordos com Cliente</div>
         <div class="tab" data-tab="horarios">🕐 Horários</div>
         <div class="tab" data-tab="estoque">📦 Estoque</div>
         <div class="tab" data-tab="insumos">🧴 Controle de Insumos</div>
@@ -849,8 +850,12 @@
 
             <div class="section-title" style="font-size:.85rem;margin-top:1rem">Carteirinhas de Fidelidade</div>
             <div id="lista-fidelidade"><div class="empty-state"><div class="icon">⭐</div>Nenhum cliente no programa ainda.</div></div>
+        </div>
+    </div>
 
-            <div class="section-title" style="color:#a855f7;margin-top:1.5rem">🤝 Acordos com Cliente</div>
+    <div class="tab-content" id="tab-acordos">
+        <div style="margin-top:0;border-top:none;padding-top:0">
+            <div class="section-title" style="color:#a855f7">🤝 Acordos com Cliente</div>
             <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Pra combinados fixos, tipo "4 cortes por mês por R$120". Não é desconto — é um plano vinculado ao cliente, contando quantas vezes ele já usou.</p>
             <div class="card">
                 <div class="input-group" style="margin-bottom:.6rem">
@@ -2590,6 +2595,7 @@ async function initDash(){
             if(window.setParticlesVisible) window.setParticlesVisible(false);
             // Carrega dados específicos ao abrir aba
             if(tab.dataset.tab==='promocoes') carregarPromocoes();
+            if(tab.dataset.tab==='acordos' && typeof carregarAcordos==='function') carregarAcordos();
             if(tab.dataset.tab==='horarios' && typeof initHorarios==='function') initHorarios();
             if(tab.dataset.tab==='gestao' && typeof carregarResumoGestao==='function') carregarResumoGestao();
             if(tab.dataset.tab==='painel-chamada'){
