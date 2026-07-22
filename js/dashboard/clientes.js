@@ -102,12 +102,15 @@ function renderClientes(lista){
     if(dl) dl.innerHTML = todosClientes.map(c=>`<option value="${escAttr(c.nome||'')}">`).join('');
 
     // Select de cliente da Promoção Individual — toda promoção individual
-    // precisa estar vinculada a um cliente de verdade da base.
+    // precisa estar vinculada a um cliente de verdade da base. Usamos o ID
+    // do cliente como valor (não o WhatsApp), porque clientes cadastrados
+    // sem WhatsApp teriam valor "" — igual à opção em branco, impossível
+    // de selecionar.
     const selPromo = document.getElementById('promo-i-cliente-select');
     if(selPromo){
         const selecionado = selPromo.value;
         selPromo.innerHTML = '<option value="">Selecione um cliente da sua base...</option>' +
-            todosClientes.map(c=>`<option value="${escAttr(c.wpp||'')}">${escapeHtml(c.nome||c.wpp||'Sem nome')}</option>`).join('');
+            todosClientes.map(c=>`<option value="${escAttr(c.id||'')}">${escapeHtml(c.nome||c.wpp||'Sem nome')}</option>`).join('');
         if(selecionado) selPromo.value = selecionado;
     }
 
@@ -116,7 +119,7 @@ function renderClientes(lista){
     if(selAcordo){
         const selecionado = selAcordo.value;
         selAcordo.innerHTML = '<option value="">Selecione um cliente da sua base...</option>' +
-            todosClientes.map(c=>`<option value="${escAttr(c.wpp||'')}">${escapeHtml(c.nome||c.wpp||'Sem nome')}</option>`).join('');
+            todosClientes.map(c=>`<option value="${escAttr(c.id||'')}">${escapeHtml(c.nome||c.wpp||'Sem nome')}</option>`).join('');
         if(selecionado) selAcordo.value = selecionado;
     }
 

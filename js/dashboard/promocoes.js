@@ -81,9 +81,11 @@ document.getElementById('btn-add-promo').addEventListener('click', async()=>{
         if(!promo.meta||!promo.brinde){ toast('Preencha meta e brinde','var(--red)'); return; }
     }
     if(tipo==='individual'){
-        const clienteWpp = document.getElementById('promo-i-cliente-select').value;
-        if(!clienteWpp){ toast('Selecione um cliente da sua base','var(--red)'); return; }
-        const clienteEscolhido = todosClientes.find(c=>c.wpp===clienteWpp);
+        const clienteId = document.getElementById('promo-i-cliente-select').value;
+        if(!clienteId){ toast('Selecione um cliente da sua base','var(--red)'); return; }
+        const clienteEscolhido = todosClientes.find(c=>c.id===clienteId);
+        if(!clienteEscolhido){ toast('Cliente não encontrado — atualize a lista e tente de novo','var(--red)'); return; }
+        const clienteWpp = clienteEscolhido.wpp||'';
 
         promo.descontoTipo  = document.getElementById('promo-i-desconto-tipo').value;
         promo.descontoValor = parseFloat(document.getElementById('promo-i-desconto-valor').value)||0;
@@ -247,14 +249,24 @@ window.criarPromoParaCliente = (nome, wpp) => {
     tipoSel.value = 'individual';
     tipoSel.dispatchEvent(new Event('change'));
     const clienteSel = document.getElementById('promo-i-cliente-select');
-    clienteSel.value = wpp;
-    if(clienteSel.value !== wpp){
+
+    // O select usa o ID do cliente como valor (não o WhatsApp) — busca o
+    // cliente certo na base pra achar esse ID.
+    let clienteEncontrado = wpp ? todosClientes.find(c=>c.wpp===wpp) : null;
+    if(!clienteEncontrado) clienteEncontrado = todosClientes.find(c=>c.nome===nome);
+
+    if(clienteEncontrado){
+        clienteSel.value = clienteEncontrado.id;
+    } else {
         // Esse cliente ainda não estava na lista do select (base pode não
         // ter recarregado ainda) — adiciona ele na hora, pra não travar.
+        const idTemp = 'temp_'+(wpp||nome||Math.random());
         const opt = document.createElement('option');
-        opt.value = wpp; opt.textContent = nome;
+        opt.value = idTemp; opt.textContent = nome;
         clienteSel.appendChild(opt);
-        clienteSel.value = wpp;
+        clienteSel.value = idTemp;
+        // Garante que existe um registro correspondente pra busca posterior funcionar
+        todosClientes.push({id:idTemp, nome, wpp:wpp||''});
     }
     setTimeout(()=>{
         document.getElementById('promo-i-desconto-valor').scrollIntoView({behavior:'smooth',block:'center'});
@@ -464,14 +476,13 @@ async function carregarAcordos(){
 
 function initAcordosExtras(){
     document.getElementById('btn-add-acordo').addEventListener('click', async()=>{
-        const wpp = document.getElementById('acordo-cliente-select').value;
-        const nomeOpt = document.getElementById('acordo-cliente-select').selectedOptions[0];
-        const nome = nomeOpt ? nomeOpt.textContent : '';
+        const clienteId = document.getElementById('acordo-cliente-select').value;
+        const cliente = todosClientes.find(c=>c.id===clienteId);
         const qtd = parseInt(document.getElementById('acordo-qtd').value);
         const valor = parseFloat(document.getElementById('acordo-valor').value);
         const periodo = document.getElementById('acordo-periodo').value;
 
-        if(!wpp){ toast('Selecione um cliente','var(--red)'); return; }
+        if(!clienteId || !cliente){ toast('Selecione um cliente','var(--red)'); return; }
         if(!qtd || qtd<1){ toast('Informe a quantidade de cortes','var(--red)'); return; }
         if(isNaN(valor) || valor<0){ toast('Informe o valor combinado','var(--red)'); return; }
 
@@ -479,7 +490,7 @@ function initAcordosExtras(){
         btn.disabled = true;
         try{
             await addDoc(collection(db,'barbeiros',barbeiroData.uid,'acordosCliente'), {
-                clienteNome: nome, clienteWhatsapp: wpp,
+                clienteNome: cliente.nome||'', clienteWhatsapp: cliente.wpp||'',
                 qtdTotal: qtd, qtdUsada: 0,
                 valorAcordado: valor, periodo,
                 ativo: true,

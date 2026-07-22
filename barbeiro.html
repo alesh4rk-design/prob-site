@@ -2671,6 +2671,7 @@ async function initDash(){
 
     carregarAgendamentos();
     carregarAvisos1h();
+    if(typeof carregarClientes==='function') carregarClientes();
     if(!window.__recepcionista){
         // Financeiro/comissões — recepcionista nunca carrega esses dados, nem escondidos
         carregarFaturamento();
