@@ -14,6 +14,7 @@ function initVisual(){
     visNome=p.nomeCliente||barbeiroData.nome||'';
     visFonte=p.fonte||'';visTamanho=p.tamanho||2.6;
     visIcone=p.icone||'';visPole=p.barberpole||false;
+    visIconeAnim=p.iconeAnim||'balanca';
     coresPorLetra=p.coresPorLetra||{};
     visBtnCor=p.btnCor||'#00d4ff';
     visFundo=p.fundo||'foto';
@@ -202,6 +203,11 @@ function initVisual(){
         if(visPole){visIcone='';document.querySelectorAll('.emoji-btn').forEach(b=>b.classList.remove('active'));}
         atualizarPreview();
     });
+    const selIconeAnim=document.getElementById('vis-icone-anim');
+    if(selIconeAnim){
+        selIconeAnim.value=visIconeAnim;
+        selIconeAnim.addEventListener('change',e=>{visIconeAnim=e.target.value;atualizarPreview();});
+    }
     document.getElementById('vis-fonte').addEventListener('change',e=>{visFonte=e.target.value;atualizarPreview();});
     document.getElementById('vis-tamanho').addEventListener('input',e=>{
         visTamanho=parseFloat(e.target.value);
@@ -219,7 +225,7 @@ function initVisual(){
     document.getElementById('btn-salvar-visual').addEventListener('click',async()=>{
         const personalizacao={
             nomeCliente:visNome,fonte:visFonte,tamanho:visTamanho,
-            icone:visIcone,barberpole:visPole,coresPorLetra,
+            icone:visIcone,barberpole:visPole,iconeAnim:visIconeAnim,coresPorLetra,
             btnCor:visBtnCor,fundo:visFundo,temaCard:visTemaCard,
             animacao:visAnimacao,animCor1:visAnimCor1,animCor2:visAnimCor2,
             animacao2:visAnimacao2,anim2Cor1:visAnim2Cor1,anim2Cor2:visAnim2Cor2,
@@ -318,6 +324,7 @@ function atualizarPreview(){
     if(phIcon){
         if(visLogo){phIcon.innerHTML=`<img src="${visLogo}" style="width:36px;height:36px;object-fit:cover;border-radius:6px">`;phIcon.style.display='block';}
         else{phIcon.textContent=visIcone;phIcon.style.display=visIcone?'block':'none';}
+        phIcon.className = visIconeAnim && visIconeAnim!=='nenhuma' ? 'icone-anim-'+visIconeAnim : '';
     }
 
     // Badge de efeito no preview

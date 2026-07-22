@@ -1245,6 +1245,23 @@
                 <button class="emoji-btn" data-emoji="🦁">🦁</button>
                 <button class="emoji-btn" data-emoji="">❌</button>
             </div>
+            <div style="margin-top:1rem">
+                <label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:.4rem">Animação do ícone</label>
+                <select id="vis-icone-anim" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
+                    <option value="balanca">Balanço suave (padrão)</option>
+                    <option value="bounce">Quicar</option>
+                    <option value="spin">Girar</option>
+                    <option value="float">Flutuar</option>
+                    <option value="pulse">Pulsar</option>
+                    <option value="wiggle">Balançar rápido</option>
+                    <option value="shake">Tremer</option>
+                    <option value="flip">Girar 3D</option>
+                    <option value="swing">Pêndulo</option>
+                    <option value="heartbeat">Batida de coração</option>
+                    <option value="rubber">Elástico</option>
+                    <option value="nenhuma">Sem animação (parado)</option>
+                </select>
+            </div>
         </div>
 
         <!-- TEMA DO CARD DO CLIENTE -->
@@ -1898,6 +1915,7 @@ let visAnimacao='nenhuma', visAnimCor1='#00d4ff', visAnimCor2='#00ff88';
 let visAnimacao2='nenhuma', visAnim2Cor1='#00d4ff', visAnim2Cor2='#00ff88';
 let visFundoCor1='#0a0e14', visFundoGrad1='#0a0e14', visFundoGrad2='#1a2838';
 let visMsgBV='', visLogo='';
+let visIconeAnim='balanca';
 let letraSelecionada=null;
 const COR_PADRAO='#00d4ff';
 
@@ -1921,7 +1939,7 @@ window.COR_PADRAO = COR_PADRAO;
 window.TEMAS = TEMAS;
 ['visNome','visFonte','visTamanho','visIcone','visPole','coresPorLetra','visBtnCor','visFundo',
  'visTemaCard','visAnimacao','visAnimCor1','visAnimCor2','visAnimacao2','visAnim2Cor1','visAnim2Cor2',
- 'visFundoCor1','visFundoGrad1','visFundoGrad2','visMsgBV','visLogo','letraSelecionada'
+ 'visFundoCor1','visFundoGrad1','visFundoGrad2','visMsgBV','visLogo','letraSelecionada','visIconeAnim'
 ].forEach(nomeVar=>{
     Object.defineProperty(window, nomeVar, {
         get: ()=>eval(nomeVar),
