@@ -27,6 +27,17 @@
             --muted: #7a9fb5;
             --font:  'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
+        #barber-icon-wrap{
+            animation:emojiBalancaCliente 2.6s ease-in-out infinite;
+            transform-origin:center 70%;
+        }
+        @keyframes emojiBalancaCliente{
+            0%,100%{transform:rotate(0deg) translateY(0);}
+            25%{transform:rotate(-6deg) translateY(-1px);}
+            50%{transform:rotate(0deg) translateY(-2px);}
+            75%{transform:rotate(6deg) translateY(-1px);}
+        }
         * { margin:0; padding:0; box-sizing:border-box; }
 
         body {
@@ -1043,10 +1054,10 @@ function conferirPromoCliente(wppLimpo, cupomDigitado){
     promoAplicada = null;
     const cupom = (cupomDigitado||'').trim().toUpperCase();
     if(cupom){
-        promoAplicada = promosIndividuais.find(p=>p.alvo==='codigo' && p.codigo===cupom) || null;
+        promoAplicada = promosIndividuais.find(p=>p.codigo===cupom) || null;
     }
     if(!promoAplicada && wppLimpo){
-        promoAplicada = promosIndividuais.find(p=>p.alvo==='cliente' && p.clienteWpp===wppLimpo) || null;
+        promoAplicada = promosIndividuais.find(p=>p.clienteWpp===wppLimpo) || null;
     }
 
     const banner = $('promo-cliente-banner');
