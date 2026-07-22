@@ -10,13 +10,13 @@
 <meta name="description" content="O sistema que organiza sua barbearia: agenda, fila de espera, financeiro e clientes — tudo no celular.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
     --bg:#0a0e14;--card:#12161c;--card2:#0e1319;--border:#22303f;
-    --blue:#00d4ff;--green:#00ff88;--red:#ff4b2b;--yellow:#f5a623;
+    --blue:#00d4ff;--green:#00ff88;--red:#ff4b2b;--yellow:#f5a623;--gold:#d4af6a;
     --text:#e8f4f8;--muted:#7a9fb5;
-    --font:'Inter',system-ui,sans-serif;
+    --font:'Inter',system-ui,sans-serif;--font-display:'Space Grotesk','Inter',system-ui,sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
@@ -69,7 +69,8 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;padding:
 .hero-logo .apo{color:var(--green);text-shadow:0 0 14px rgba(0,255,136,.95);vertical-align:super;font-size:.55em;}
 @keyframes flicker{0%,92%,96%,100%{opacity:1;}93%{opacity:.85;}94%{opacity:1;}95%{opacity:.72;}}
 h1{
-    font-size:clamp(1.8rem,4.4vw,3rem);font-weight:800;line-height:1.15;
+    font-family:var(--font-display);
+    font-size:clamp(1.8rem,4.4vw,3rem);font-weight:700;line-height:1.15;
     max-width:760px;margin:1.2rem auto .9rem;letter-spacing:-.5px;
 }
 h1 .hl{color:var(--blue);}
@@ -120,22 +121,44 @@ section{padding:4.5rem 0;}
     color:var(--green);margin-bottom:.7rem;
 }
 .section-head{text-align:center;max-width:600px;margin:0 auto 3rem;}
-.section-head h2{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;letter-spacing:-.3px;margin-bottom:.7rem;}
+.section-head h2{font-family:var(--font-display);font-size:clamp(1.5rem,3vw,2.1rem);font-weight:700;letter-spacing:-.3px;margin-bottom:.7rem;}
 .section-head p{color:var(--muted);font-size:1rem;}
 
+/* ══ divisor "poste de barbearia" — o elemento assinatura da página.
+   Uma faixa fina, diagonal, nas cores do poste giratório clássico,
+   marcando a transição entre os grandes blocos de conteúdo. ══ */
+.pole-divider{
+    height:3px;width:100%;overflow:hidden;position:relative;
+    background:repeating-linear-gradient(-45deg,
+        var(--red) 0 14px, var(--text) 14px 28px, var(--blue) 28px 42px);
+    background-size:200% 100%;
+    animation:poleSlide 6s linear infinite;
+    opacity:.55;
+}
+@keyframes poleSlide{from{background-position:0 0;}to{background-position:-84px 0;}}
+@media(prefers-reduced-motion:reduce){.pole-divider{animation:none;}}
+
 /* grid de recursos */
+.feature-groups{display:flex;flex-direction:column;gap:3rem;}
+.feature-group-head{display:flex;align-items:baseline;gap:.7rem;margin-bottom:1.2rem;}
+.feature-group-num{font-family:var(--font-display);font-size:.78rem;font-weight:700;color:var(--group-c,var(--blue));letter-spacing:1px;}
+.feature-group-head h3{font-family:var(--font-display);font-size:1.05rem;font-weight:700;letter-spacing:.3px;}
+.feature-group-head span{color:var(--muted);font-size:.82rem;}
 .features{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;}
 .feature-card{
     background:var(--card2);border:1px solid var(--border);border-radius:14px;
     padding:1.5rem 1.4rem;transition:border-color .2s,transform .2s;
 }
-.feature-card:hover{border-color:rgba(0,212,255,.35);transform:translateY(-3px);}
+.feature-card:hover{border-color:var(--group-c,rgba(0,212,255,.35));transform:translateY(-3px);}
 .feature-icon{
     width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;
-    font-size:1.3rem;margin-bottom:1rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);
+    font-size:1.3rem;margin-bottom:1rem;
+    background:color-mix(in srgb, var(--group-c,var(--blue)) 12%, transparent);
+    border:1px solid color-mix(in srgb, var(--group-c,var(--blue)) 30%, transparent);
 }
 .feature-card h3{font-size:1rem;font-weight:700;margin-bottom:.45rem;}
 .feature-card p{font-size:.84rem;color:var(--muted);line-height:1.55;}
+.feature-card .tag-new{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--bg);background:var(--group-c,var(--green));border-radius:5px;padding:.12rem .4rem;margin-left:.4rem;vertical-align:middle;}
 
 /* carrossel de telas */
 .carousel-wrap{
@@ -235,10 +258,10 @@ footer a{color:var(--blue);text-decoration:none;}
 
 <header class="hero">
     <div class="wrap">
-        <div class="hero-badge">✂️ Projetado para acompanhar a rotina da sua barbearia</div>
+        <div class="hero-badge">✂️ Da agenda ao caixa, projetado pra rotina de barbearia</div>
         <div class="hero-logo">PRO<span class="apo">'</span><span class="b">B</span></div>
-        <h1>Sua barbearia organizada <span class="hl">sem planilha, sem caderno, sem esquecimento.</span></h1>
-        <p class="hero-sub">Agenda online, fila de espera com painel de TV, financeiro automático e cobrança de cliente sumido — tudo pelo celular, funcionando desde o primeiro dia.</p>
+        <h1>Sua barbearia organizada <span class="hl">do agendamento ao pagamento, sem planilha nem caderno.</span></h1>
+        <p class="hero-sub">Agenda online, fila de espera com painel de TV, controle de quem já pagou e financeiro automático — tudo pelo celular, funcionando desde o primeiro dia.</p>
         <div class="hero-ctas">
             <a href="barbeiro.html" class="btn-primary-cta cta-cadastro">Testar grátis por 7 dias</a>
             <a href="demo.html" class="btn-secondary-cta">Ver demonstração</a>
@@ -262,6 +285,13 @@ footer a{color:var(--blue);text-decoration:none;}
                         </div>
                         <span class="pv-badge">🎁 15% off · 2x restantes</span>
                     </div>
+                    <div class="pv-row">
+                        <div>
+                            <div class="nm">15:10 · Ana Paula</div>
+                            <div class="sub">Corte · pagamento confirmado</div>
+                        </div>
+                        <span class="pv-badge" style="background:rgba(0,212,255,.12);color:var(--blue);border-color:rgba(0,212,255,.3)">📱 Pix</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -273,57 +303,132 @@ footer a{color:var(--blue);text-decoration:none;}
         <div class="section-head">
             <div class="eyebrow" style="text-align:center">O que já vem pronto</div>
             <h2>Tudo que uma barbearia precisa, num lugar só</h2>
-            <p>Nada de módulo separado, nada de app a mais para instalar.</p>
+            <p>Organizado exatamente como o sistema é usado no dia a dia — nada de módulo separado, nada de app a mais para instalar.</p>
         </div>
-        <div class="features">
-            <div class="feature-card">
-                <div class="feature-icon">📋</div>
-                <h3>Agenda online</h3>
-                <p>Cliente marca o próprio horário pelo celular, você recebe avisado na hora — sem trocar mensagem pra combinar horário.</p>
+
+        <div class="feature-groups">
+
+            <div class="feature-group" style="--group-c:var(--blue)">
+                <div class="feature-group-head">
+                    <span class="feature-group-num">OPERAÇÃO</span>
+                    <h3>O dia a dia no balcão</h3>
+                </div>
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">📋</div>
+                        <h3>Agenda online</h3>
+                        <p>Cliente marca o próprio horário pelo celular, você recebe avisado na hora — sem trocar mensagem pra combinar horário.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🪑</div>
+                        <h3>Fila de espera com painel de TV</h3>
+                        <p>Chegou sem hora marcada? Entra na fila e o próximo da vez aparece sozinho numa tela ou monitor na barbearia.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">✂️</div>
+                        <h3>Combo de serviços numa reserva<span class="tag-new">Novo</span></h3>
+                        <p>Corte e barba no mesmo agendamento, com o valor somando sozinho. O cliente escolhe até um serviço de cada categoria.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>Menu de ações por cliente<span class="tag-new">Novo</span></h3>
+                        <p>Clica no nome de qualquer cliente e já tem tudo ali: WhatsApp, mensagem pronta, forma de pagamento, desconto na hora.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚠️</div>
+                        <h3>Cliente sumido? O sistema avisa</h3>
+                        <p>Mostra sozinho quem não aparece há 5, 10, 15 ou 30 dias, com mensagem de WhatsApp pronta pra mandar num clique.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎓</div>
+                        <h3>Tutoriais dentro do próprio sistema</h3>
+                        <p>Um tour guiado mostra cada parte da tela na primeira vez que você entra, e fica sempre disponível pra rever quando precisar.</p>
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">🪑</div>
-                <h3>Fila de espera com painel de TV</h3>
-                <p>Chegou sem hora marcada? Entra na fila e o próximo da vez aparece sozinho numa tela ou monitor na barbearia.</p>
+
+            <div class="feature-group" style="--group-c:var(--green)">
+                <div class="feature-group-head">
+                    <span class="feature-group-num">CATÁLOGO</span>
+                    <h3>Serviços, produtos e insumos</h3>
+                </div>
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">📦</div>
+                        <h3>Estoque e venda de produtos</h3>
+                        <p>Cadastra pomada, óleo, o que vender no balcão. Passa o leitor de código de barras (ou a câmera do celular) e a venda já desconta do estoque sozinha.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🧴</div>
+                        <h3>Controle de insumos<span class="tag-new">Novo</span></h3>
+                        <p>Café, toalha, produto de uso interno — separado do que é vendido. O sistema mostra sozinho quanto isso pesa no seu custo mensal.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎁</div>
+                        <h3>Promoções e cupons</h3>
+                        <p>Desconto pra um cliente específico com quantidade de usos que você define, cupom pra divulgar, e carteirinha de fidelidade — "a cada 10 cortes, 1 grátis".</p>
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">📦</div>
-                <h3>Estoque e venda de produtos</h3>
-                <p>Cadastra pomada, óleo, o que vender no balcão. Passa o leitor de código de barras (ou a câmera do celular) e a venda já desconta do estoque sozinha.</p>
+
+            <div class="feature-group" style="--group-c:var(--gold)">
+                <div class="feature-group-head">
+                    <span class="feature-group-num">PESSOAS</span>
+                    <h3>Equipe e clientes</h3>
+                </div>
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">👥</div>
+                        <h3>Equipe com login e permissão própria</h3>
+                        <p>Cada barbeiro ou recepcionista cria a própria senha por um link de convite. Você decide o que cada um vê — e pode desativar o acesso na hora que quiser.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🤝</div>
+                        <h3>Acordos fixos com cliente<span class="tag-new">Novo</span></h3>
+                        <p>"4 cortes por mês por um valor combinado" — sem aparecer como desconto. O sistema conta sozinho quantos o cliente já usou, e reinicia no período que você escolher.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔑</div>
+                        <h3>Cliente com login próprio<span class="tag-new">Novo</span></h3>
+                        <p>Depois do primeiro cadastro, seu cliente entra só com email e senha — de qualquer aparelho, sem preencher tudo de novo.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Tela do cliente do seu jeito</h3>
+                        <p>Nome, cores, ícone animado, poste giratório — a tela onde o cliente agenda fica com a cara da sua barbearia, não a nossa.</p>
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">💼</div>
-                <h3>Financeiro automático</h3>
-                <p>Faturamento de cortes e de produtos, comissão por barbeiro e despesas fixas, tudo calculado sozinho. Exporta relatório em Excel ou PDF quando quiser.</p>
+
+            <div class="feature-group" style="--group-c:var(--blue)">
+                <div class="feature-group-head">
+                    <span class="feature-group-num">NEGÓCIO</span>
+                    <h3>Financeiro e gestão</h3>
+                </div>
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">💼</div>
+                        <h3>Financeiro automático</h3>
+                        <p>Faturamento de cortes e de produtos, comissão por barbeiro e despesas fixas, tudo calculado sozinho.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💳</div>
+                        <h3>Pagamento e desconto na hora<span class="tag-new">Novo</span></h3>
+                        <p>Marca dinheiro, Pix, débito ou crédito com um toque — e vê certinho quem ainda não pagou, separado por forma de pagamento.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Relatórios em Excel e PDF</h3>
+                        <p>Exporta o faturamento, comissões e movimento de estoque quando quiser, sem precisar montar planilha do zero.</p>
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎁</div>
-                <h3>Promoções e fidelidade</h3>
-                <p>Desconto pra um cliente específico com quantidade de usos que você define, cupom pra divulgar, e carteirinha de fidelidade — "a cada 10 cortes, 1 grátis".</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚠️</div>
-                <h3>Cliente sumido? O sistema avisa</h3>
-                <p>Mostra sozinho quem não aparece há 5, 10, 15 ou 30 dias, com mensagem de WhatsApp pronta pra mandar num clique.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">👥</div>
-                <h3>Equipe com login e permissão própria</h3>
-                <p>Cada barbeiro ou recepcionista cria a própria senha por um link de convite. Você decide o que cada um vê — e pode desativar o acesso na hora que quiser.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎓</div>
-                <h3>Tutoriais dentro do próprio sistema</h3>
-                <p>Um tour guiado mostra cada parte da tela na primeira vez que você entra, e fica sempre disponível pra rever quando precisar.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Funciona como app</h3>
-                <p>Sem baixar nada de loja de aplicativo. Abre pelo navegador e pode ser "instalado" na tela inicial do celular em um toque.</p>
-            </div>
+
         </div>
     </div>
 </section>
+
+<div class="pole-divider"></div>
 
 <section id="telas" style="padding-top:0">
     <div class="wrap">
@@ -418,14 +523,15 @@ footer a{color:var(--blue);text-decoration:none;}
             <div class="price-val" id="preco-valor">R$45<small>/mês</small></div>
             <div class="price-per">Cancele quando quiser, sem multa</div>
             <ul class="price-list">
-                <li>Agenda online ilimitada</li>
+                <li>Agenda online ilimitada, com combo de serviços</li>
                 <li>Fila de espera + painel de TV</li>
-                <li>Estoque e venda de produtos com leitor de código de barras</li>
+                <li>Estoque, insumos e venda de produtos com leitor de código de barras</li>
+                <li>Pagamento, desconto e controle de quem ainda deve</li>
+                <li>Acordos fixos com cliente, promoções e cupons</li>
                 <li>Relatórios financeiros completos (Excel/PDF)</li>
-                <li>Promoções e programa de fidelidade</li>
                 <li>Equipe com login próprio e permissões por cargo</li>
+                <li>Tela do cliente personalizável, com login próprio dele</li>
                 <li>Tutoriais guiados dentro do sistema</li>
-                <li>Funciona no celular como app (PWA)</li>
                 <li>Suporte direto pelo WhatsApp</li>
             </ul>
             <a href="barbeiro.html" class="btn-primary-cta cta-cadastro" style="display:block;width:100%">Começar teste grátis</a>
@@ -457,11 +563,17 @@ footer a{color:var(--blue);text-decoration:none;}
             <p>Não é obrigatório. Se você já tem um leitor USB ou Bluetooth comum, ele funciona direto, sem configurar nada. Se não tiver, dá pra escanear pela câmera do próprio celular.</p>
         </div>
         <div class="faq-item">
+            <h3>O cliente precisa criar login toda vez que for agendar?</h3>
+            <p>Só na primeira vez. Depois disso, ele entra só com email e senha — de qualquer aparelho, sem preencher nome e telefone de novo.</p>
+        </div>
+        <div class="faq-item">
             <h3>E se eu quiser parar de usar?</h3>
             <p>Cancela quando quiser, sem multa nem fidelidade. Seus dados continuam seus.</p>
         </div>
     </div>
 </section>
+
+<div class="pole-divider"></div>
 
 <section id="contato">
     <div class="wrap">
