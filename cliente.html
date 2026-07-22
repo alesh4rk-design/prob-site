@@ -77,7 +77,7 @@
         }
 
         .container {
-            width:100%;max-width:420px;
+            width:100%;max-width:420px;min-width:0;
             position:relative;z-index:1;
         }
 
@@ -604,7 +604,7 @@
         </div>
 
         <div class="form-box">
-            <div class="form-title">👤 Seus dados</div>
+            <div class="form-title" id="form-title-s0">🔑 Entrar</div>
 
             <!-- Aparece só quando já existe sessão salva nesse navegador -->
             <div id="cliente-reconhecido" style="display:none;margin-bottom:1rem;padding:.85rem 1rem;background:rgba(0,255,136,.06);border:1.5px solid rgba(0,255,136,.25);border-radius:10px;">
@@ -616,7 +616,28 @@
                 </div>
             </div>
 
-            <div id="form-dados-completo">
+            <!-- ══ LOGIN — email + senha, tela inicial ══ -->
+            <div id="form-login-cliente">
+                <div class="input-group">
+                    <label>📧 Email</label>
+                    <input type="email" id="cli-login-email" placeholder="seuemail@exemplo.com" autocomplete="email">
+                </div>
+                <div class="input-group">
+                    <label>🔒 Senha</label>
+                    <input type="password" id="cli-login-senha" placeholder="Sua senha" autocomplete="current-password">
+                </div>
+                <p id="cli-login-msg" style="display:none;font-size:.76rem;margin:-.4rem 0 .85rem;color:var(--red)"></p>
+                <p style="font-size:.68rem;color:var(--muted);margin:-.5rem 0 .85rem;text-align:right">
+                    <a href="#" id="link-esqueci-senha" style="color:var(--blue)">Esqueci minha senha</a>
+                </p>
+                <button class="btn-primary" id="btn-login-cliente">Entrar →</button>
+                <p style="text-align:center;margin-top:1rem;font-size:.82rem;color:rgba(232,244,248,.7)">
+                    Não tem cadastro? <a href="#" id="link-ir-cadastro" style="color:var(--blue);font-weight:700">Se cadastre aqui</a>
+                </p>
+            </div>
+
+            <!-- ══ CADASTRO — só aparece ao clicar em "se cadastre aqui" ══ -->
+            <div id="form-dados-completo" style="display:none">
             <div class="input-group">
                 <label>Nome ou apelido</label>
                 <input type="text" id="cli-nome" placeholder="Como quer ser chamado" autocomplete="name">
@@ -634,19 +655,10 @@
             </div>
             <div class="input-group">
                 <label>🔒 Senha</label>
-                <input type="password" id="cli-senha" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
+                <input type="password" id="cli-senha" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
                 <span class="err" id="err-senha">Senha deve ter pelo menos 6 caracteres.</span>
             </div>
             <p id="cli-auth-msg" style="display:none;font-size:.76rem;margin:-.4rem 0 .85rem;"></p>
-            <p style="font-size:.68rem;color:var(--muted);margin:-.5rem 0 .85rem;line-height:1.5">
-                Já tem conta aqui? É só digitar o mesmo email e senha de novo — a gente reconhece você automaticamente.
-                <a href="#" id="link-esqueci-senha" style="color:var(--blue)">Esqueci minha senha</a>
-            </p>
-            <div class="input-group">
-                <label>🎁 Cupom de desconto (opcional)</label>
-                <input type="text" id="cli-cupom" placeholder="Ex: VOLTA10" style="text-transform:uppercase">
-            </div>
-            <div id="promo-cliente-banner" style="display:none;margin-bottom:.85rem;padding:.7rem .9rem;background:rgba(0,255,136,.08);border:1.5px solid rgba(0,255,136,.3);border-radius:10px;font-size:.8rem;color:var(--green);font-weight:600;text-align:center"></div>
             <!-- LGPD — Aceite obrigatório -->
         <div id="lgpd-wrap" style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem;background:rgba(0,212,255,.04);border:1.5px solid rgba(0,212,255,.2);border-radius:10px;margin-bottom:.85rem;cursor:pointer;">
             <input type="checkbox" id="lgpd-check" style="width:18px;height:18px;flex-shrink:0;accent-color:var(--blue);margin-top:.1rem;cursor:pointer;">
@@ -672,7 +684,11 @@
             <span class="err" id="err-captcha">Resposta incorreta. Tente novamente.</span>
         </div>
 
-        <button class="btn-primary" id="btn-s0">✂️ Entrar e Escolher Corte →</button>
+        <button class="btn-primary" id="btn-s0">Criar Conta e Continuar →</button>
+        <p style="text-align:center;margin-top:1rem;font-size:.82rem;color:rgba(232,244,248,.7)">
+            Já tem cadastro? <a href="#" id="link-ir-login" style="color:var(--blue);font-weight:700">Entrar</a>
+        </p>
+        </div>
         </div>
         </div>
 
@@ -692,6 +708,16 @@
         </div>
         <div class="form-box">
             <div class="form-title">✂️ Escolha o corte</div>
+
+            <div class="input-group" style="margin-bottom:1rem">
+                <label>🎁 Tem um cupom de desconto?</label>
+                <div style="display:flex;gap:.5rem">
+                    <input type="text" id="cli-cupom" placeholder="Ex: VOLTA10" style="text-transform:uppercase;flex:1;min-width:0">
+                    <button type="button" id="btn-aplicar-cupom" style="flex-shrink:0;padding:0 1rem;background:rgba(0,212,255,.1);border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-weight:700;font-size:.85rem;cursor:pointer">Aplicar</button>
+                </div>
+            </div>
+            <div id="promo-cliente-banner" style="display:none;margin-bottom:.85rem;padding:.7rem .9rem;background:rgba(0,255,136,.08);border:1.5px solid rgba(0,255,136,.3);border-radius:10px;font-size:.8rem;color:var(--green);font-weight:600;text-align:center"></div>
+
             <div class="services-grid" id="services-grid">
                 <div class="loading">Carregando cortes</div>
             </div>
@@ -1188,6 +1214,7 @@ onAuthStateChanged(auth, (user) => {
         $('reconhecido-nome').textContent  = salvo.nome;
         $('reconhecido-email').textContent = user.email || '';
         $('cliente-reconhecido').style.display = 'block';
+        $('form-login-cliente').style.display = 'none';
         $('form-dados-completo').style.display = 'none';
     }
     // Se não tem nome/wpp salvos (ex: limpou cache mas Firebase manteve sessão),
@@ -1212,7 +1239,11 @@ $('btn-nao-sou-eu').addEventListener('click', async () => {
     try { await signOut(auth); } catch(e) {}
     try { localStorage.removeItem('probCliente'); } catch(e) {}
     $('cliente-reconhecido').style.display = 'none';
-    $('form-dados-completo').style.display = 'block';
+    $('form-login-cliente').style.display = 'block';
+    $('form-dados-completo').style.display = 'none';
+    $('form-title-s0').textContent = '🔑 Entrar';
+    $('cli-login-email').value = '';
+    $('cli-login-senha').value = '';
     $('cli-nome').value = '';
     $('cli-wpp').value  = '';
     $('cli-email').value = '';
@@ -1232,7 +1263,65 @@ function mapAuthError(code){
     return mapa[code] || 'Não foi possível continuar. Confira seus dados e tente de novo.';
 }
 
-/* ── STEP 0: Identificação + login (tudo numa tela só) ── */
+/* ── Alternar entre tela de Login e tela de Cadastro ── */
+$('link-ir-cadastro').addEventListener('click', (ev) => {
+    ev.preventDefault();
+    $('form-login-cliente').style.display = 'none';
+    $('form-dados-completo').style.display = 'block';
+    $('form-title-s0').textContent = '👤 Criar cadastro';
+});
+$('link-ir-login').addEventListener('click', (ev) => {
+    ev.preventDefault();
+    $('form-dados-completo').style.display = 'none';
+    $('form-login-cliente').style.display = 'block';
+    $('form-title-s0').textContent = '🔑 Entrar';
+});
+
+/* ── LOGIN — email + senha, quem já tem cadastro ── */
+$('btn-login-cliente').addEventListener('click', async () => {
+    const email = $('cli-login-email').value.trim();
+    const senha = $('cli-login-senha').value;
+    $('cli-login-msg').style.display = 'none';
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !senha) {
+        $('cli-login-msg').textContent = 'Preencha email e senha corretamente.';
+        $('cli-login-msg').style.display = 'block';
+        return;
+    }
+
+    const btn = $('btn-login-cliente');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+
+    try {
+        const cred = await signInWithEmailAndPassword(auth, email, senha);
+        clienteUid = cred.user.uid;
+        clienteEmail = email;
+
+        // Busca nome/WhatsApp vinculados à conta (funciona de qualquer
+        // aparelho, não depende do navegador ter sessão salva)
+        const perfilSnap = await getDoc(doc(db,'clientesApp',clienteUid));
+        if (perfilSnap.exists()) {
+            const perfil = perfilSnap.data();
+            clienteNome = perfil.nome || '';
+            clienteWpp  = perfil.wpp || '';
+            try{ localStorage.setItem('probCliente', JSON.stringify({nome:clienteNome, wpp:clienteWpp})); }catch(e){}
+        }
+
+        goStep(1);
+        carregarCortes();
+    } catch(e) {
+        console.error('Login erro:', e.code, e.message);
+        $('cli-login-msg').textContent = mapAuthError(e.code);
+        $('cli-login-msg').style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+    }
+});
+
+/* ── CADASTRO — quem ainda não tem conta ── */
 $('btn-s0').addEventListener('click', async () => {
     // Valida LGPD
     const lgpdCheck = document.getElementById('lgpd-check');
@@ -1292,39 +1381,42 @@ $('btn-s0').addEventListener('click', async () => {
     const btn = $('btn-s0');
     const textoOriginal = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Verificando...';
+    btn.textContent = 'Criando conta...';
 
     try {
-        let cred;
-        try {
-            // Tenta criar conta nova
-            cred = await createUserWithEmailAndPassword(auth, email, senha);
-        } catch(e) {
-            if (e.code === 'auth/email-already-in-use') {
-                // Já existe conta com esse email — tenta logar
-                btn.textContent = 'Email já cadastrado, entrando...';
-                cred = await signInWithEmailAndPassword(auth, email, senha);
-            } else {
-                throw e;
-            }
-        }
+        const cred = await createUserWithEmailAndPassword(auth, email, senha);
 
         clienteUid   = cred.user.uid;
         clienteEmail = email;
         clienteNome  = nome;
         clienteWpp   = wpp;
         try{ localStorage.setItem('probCliente', JSON.stringify({nome, wpp})); }catch(e){}
-        conferirPromoCliente(wpp, $('cli-cupom') ? $('cli-cupom').value : '');
+
+        // Salva nome/WhatsApp vinculados à conta — assim o login puro
+        // (email+senha) reconhece o cliente de qualquer aparelho depois
+        try{
+            await setDoc(doc(db,'clientesApp',clienteUid), {nome, wpp, email, criadoEm:new Date().toISOString()});
+        }catch(e){ console.error('Erro ao salvar perfil do cliente:', e); }
+
         goStep(1);
         carregarCortes();
 
     } catch(e) {
         console.error('Auth erro:', e.code, e.message);
-        $('cli-auth-msg').textContent = mapAuthError(e.code);
-        $('cli-auth-msg').style.color = 'var(--red)';
-        $('cli-auth-msg').style.display = 'block';
-        if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
-            $('cli-senha').style.borderColor = 'var(--red)';
+        if (e.code === 'auth/email-already-in-use') {
+            $('cli-auth-msg').innerHTML = 'Esse email já tem cadastro. <a href="#" id="link-ja-tenho-conta" style="color:var(--blue);font-weight:700">Fazer login</a>';
+            $('cli-auth-msg').style.color = 'var(--red)';
+            $('cli-auth-msg').style.display = 'block';
+            const linkJaTenho = document.getElementById('link-ja-tenho-conta');
+            if(linkJaTenho) linkJaTenho.addEventListener('click', (ev)=>{
+                ev.preventDefault();
+                $('cli-login-email').value = email;
+                $('link-ir-login').click();
+            });
+        } else {
+            $('cli-auth-msg').textContent = mapAuthError(e.code);
+            $('cli-auth-msg').style.color = 'var(--red)';
+            $('cli-auth-msg').style.display = 'block';
         }
     } finally {
         btn.disabled = false;
@@ -1332,26 +1424,35 @@ $('btn-s0').addEventListener('click', async () => {
     }
 });
 
-// Esqueci minha senha
+// Esqueci minha senha (tela de login)
 $('link-esqueci-senha').addEventListener('click', async (ev) => {
     ev.preventDefault();
-    const email = $('cli-email').value.trim();
+    const email = $('cli-login-email').value.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        $('err-email').style.display = 'block';
-        $('cli-email').style.borderColor = 'var(--red)';
-        $('cli-email').scrollIntoView({behavior:'smooth', block:'center'});
+        $('cli-login-msg').textContent = 'Digite seu email ali em cima primeiro.';
+        $('cli-login-msg').style.display = 'block';
+        $('cli-login-email').style.borderColor = 'var(--red)';
+        $('cli-login-email').scrollIntoView({behavior:'smooth', block:'center'});
         return;
     }
     try {
         await sendPasswordResetEmail(auth, email);
-        $('cli-auth-msg').textContent = '📩 Enviamos um link de redefinição de senha pro seu email.';
-        $('cli-auth-msg').style.color = 'var(--green)';
-        $('cli-auth-msg').style.display = 'block';
+        $('cli-login-msg').textContent = '📩 Enviamos um link de redefinição de senha pro seu email.';
+        $('cli-login-msg').style.color = 'var(--green)';
+        $('cli-login-msg').style.display = 'block';
     } catch(e) {
-        $('cli-auth-msg').textContent = mapAuthError(e.code);
-        $('cli-auth-msg').style.color = 'var(--red)';
-        $('cli-auth-msg').style.display = 'block';
+        $('cli-login-msg').textContent = mapAuthError(e.code);
+        $('cli-login-msg').style.color = 'var(--red)';
+        $('cli-login-msg').style.display = 'block';
     }
+});
+
+// Aplicar cupom — agora fica na tela de escolha de corte, funciona tanto
+// pra quem acabou de se cadastrar quanto pra quem só fez login
+$('btn-aplicar-cupom').addEventListener('click', () => {
+    const cupom = $('cli-cupom').value.trim();
+    if(!cupom){ return; }
+    conferirPromoCliente(clienteWpp, cupom);
 });
 
 /* ── STEP 1: Cortes (multi-seleção por sessão) ── */
@@ -1399,6 +1500,15 @@ async function carregarCortes() {
                 servicosEscolhidos = servicosEscolhidos.filter(s => s._idx !== idx);
                 card.classList.remove('selected');
             } else {
+                // Só permite um serviço selecionado por categoria — escolher
+                // um novo da mesma categoria desmarca o anterior sozinho.
+                const sessaoDoNovo = cortes[idx].sessao || 'Geral';
+                const outroDaMesmaCategoria = servicosEscolhidos.find(s => (cortes[s._idx].sessao || 'Geral') === sessaoDoNovo);
+                if (outroDaMesmaCategoria) {
+                    servicosEscolhidos = servicosEscolhidos.filter(s => s._idx !== outroDaMesmaCategoria._idx);
+                    const cardAntigo = grid.querySelector(`.service-card[data-idx="${outroDaMesmaCategoria._idx}"]`);
+                    if (cardAntigo) cardAntigo.classList.remove('selected');
+                }
                 servicosEscolhidos.push({...cortes[idx], _idx: idx});
                 card.classList.add('selected');
             }
