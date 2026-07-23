@@ -744,9 +744,6 @@
             <div class="form-title">📅 Escolha o dia</div>
             <div class="date-scroll" id="date-scroll"></div>
             <div class="form-title" style="margin-top:1.2rem">🕐 Horários disponíveis</div>
-            <div style="display:flex;justify-content:center;margin:.5rem 0 1rem;">
-                <canvas id="radar-canvas" width="160" height="160" style="display:block;"></canvas>
-            </div>
             <div class="hours-grid" id="hours-grid">
                 <div class="loading">Carregando horários</div>
             </div>
@@ -851,6 +848,7 @@ let clienteNome  = '';
 let clienteWpp   = '';
 let clienteUid   = '';
 let clienteEmail = '';
+let completandoPerfilExistente = false;
 let servicosEscolhidos = []; // array de objetos {nome,preco,duracao,obs,sessao}
 let barbeiroCortador = null; // barbeiro da equipe escolhido
 
@@ -1264,14 +1262,24 @@ function mapAuthError(code){
 }
 
 /* ── Alternar entre tela de Login e tela de Cadastro ── */
+function restaurarCamposCadastro(){
+    $('cli-email').parentElement.style.display = '';
+    $('cli-senha').parentElement.style.display = '';
+    document.getElementById('captcha-wrap').style.display = '';
+    document.getElementById('lgpd-wrap').style.display = '';
+    $('btn-s0').textContent = 'Criar Conta e Continuar →';
+    completandoPerfilExistente = false;
+}
 $('link-ir-cadastro').addEventListener('click', (ev) => {
     ev.preventDefault();
+    restaurarCamposCadastro();
     $('form-login-cliente').style.display = 'none';
     $('form-dados-completo').style.display = 'block';
     $('form-title-s0').textContent = '👤 Criar cadastro';
 });
 $('link-ir-login').addEventListener('click', (ev) => {
     ev.preventDefault();
+    restaurarCamposCadastro();
     $('form-dados-completo').style.display = 'none';
     $('form-login-cliente').style.display = 'block';
     $('form-title-s0').textContent = '🔑 Entrar';
@@ -1307,10 +1315,23 @@ $('btn-login-cliente').addEventListener('click', async () => {
             clienteNome = perfil.nome || '';
             clienteWpp  = perfil.wpp || '';
             try{ localStorage.setItem('probCliente', JSON.stringify({nome:clienteNome, wpp:clienteWpp})); }catch(e){}
+            goStep(1);
+            carregarCortes();
+        } else {
+            // Conta existe (login funcionou), mas nunca salvou nome/WhatsApp
+            // vinculados — provavelmente uma conta de antes dessa função
+            // existir. Pede pra completar em vez de seguir com dados vazios.
+            completandoPerfilExistente = true;
+            $('form-login-cliente').style.display = 'none';
+            $('form-dados-completo').style.display = 'block';
+            $('form-title-s0').textContent = '👤 Complete seu cadastro';
+            $('cli-email').value = email;
+            $('cli-email').parentElement.style.display = 'none';
+            $('cli-senha').parentElement.style.display = 'none';
+            document.getElementById('captcha-wrap').style.display = 'none';
+            document.getElementById('lgpd-wrap').style.display = 'none';
+            $('btn-s0').textContent = 'Salvar e continuar →';
         }
-
-        goStep(1);
-        carregarCortes();
     } catch(e) {
         console.error('Login erro:', e.code, e.message);
         $('cli-login-msg').textContent = mapAuthError(e.code);
@@ -1323,6 +1344,43 @@ $('btn-login-cliente').addEventListener('click', async () => {
 
 /* ── CADASTRO — quem ainda não tem conta ── */
 $('btn-s0').addEventListener('click', async () => {
+    // Conta já existe e já está autenticada (veio do login) — só falta
+    // salvar nome/WhatsApp. Não precisa criar conta nem validar captcha/LGPD
+    // de novo.
+    if (completandoPerfilExistente) {
+        const nome = $('cli-nome').value.trim();
+        const wpp  = $('cli-wpp').value.replace(/\D/g,'');
+        $('err-nome').style.display = 'none'; $('cli-nome').style.borderColor = 'var(--border)';
+        $('err-wpp').style.display  = 'none'; $('cli-wpp').style.borderColor  = 'var(--border)';
+        let ok = true;
+        if (nome.length < 3) { $('err-nome').style.display = 'block'; $('cli-nome').style.borderColor = 'var(--red)'; ok = false; }
+        if (wpp.length !== 11) { $('err-wpp').style.display = 'block'; $('cli-wpp').style.borderColor = 'var(--red)'; ok = false; }
+        if (!ok) return;
+
+        const btn = $('btn-s0');
+        const textoOriginal = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Salvando...';
+        try {
+            await setDoc(doc(db,'clientesApp',clienteUid), {nome, wpp, email:clienteEmail, criadoEm:new Date().toISOString()});
+            clienteNome = nome;
+            clienteWpp  = wpp;
+            try{ localStorage.setItem('probCliente', JSON.stringify({nome, wpp})); }catch(e){}
+            completandoPerfilExistente = false;
+            goStep(1);
+            carregarCortes();
+        } catch(e) {
+            console.error('Erro ao salvar perfil:', e);
+            $('cli-auth-msg').textContent = 'Não deu pra salvar. Tenta de novo em instantes.';
+            $('cli-auth-msg').style.color = 'var(--red)';
+            $('cli-auth-msg').style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = textoOriginal;
+        }
+        return;
+    }
+
     // Valida LGPD
     const lgpdCheck = document.getElementById('lgpd-check');
     const lgpdWrap  = document.getElementById('lgpd-wrap');
@@ -1879,98 +1937,6 @@ carregarBarbeiro();
 
 <script>
 (function(){
-    const cv=document.getElementById('radar-canvas');
-    if(!cv)return;
-    const ctx=cv.getContext('2d');
-    const W=160,CX=80,CY=80,R=64;
-    let t=0,radarSlots=[],selectedHora=null;
-
-    // Called from main app to update radar with available slots
-    window.radarSetSlots=function(slots,chosen){
-        radarSlots=slots||[];
-        selectedHora=chosen||null;
-    };
-
-    function horaToAngle(hora){
-        const[hh,mm]=hora.split(':').map(Number);
-        const total=hh*60+mm;
-        const start=8*60,end=20*60;
-        return((total-start)/(end-start))*Math.PI*2-Math.PI/2;
-    }
-
-    function draw(){
-        ctx.clearRect(0,0,W,W);
-
-        // Background rings
-        for(let r=16;r<=R;r+=16){
-            ctx.beginPath();ctx.arc(CX,CY,r,0,Math.PI*2);
-            ctx.strokeStyle='rgba(0,212,255,0.08)';ctx.lineWidth=1;ctx.stroke();
-        }
-        // Cross lines
-        ctx.strokeStyle='rgba(0,212,255,0.06)';ctx.lineWidth=1;
-        ctx.beginPath();ctx.moveTo(CX-R,CY);ctx.lineTo(CX+R,CY);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(CX,CY-R);ctx.lineTo(CX,CY+R);ctx.stroke();
-
-        // Radar sweep
-        const sweepA=(t*0.03)%(Math.PI*2);
-        ctx.save();ctx.translate(CX,CY);
-        ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,sweepA-1.1,sweepA);ctx.closePath();
-        ctx.fillStyle='rgba(0,212,255,0.10)';ctx.fill();
-        ctx.restore();
-        // Sweep arm
-        ctx.beginPath();ctx.moveTo(CX,CY);
-        ctx.lineTo(CX+Math.cos(sweepA)*R,CY+Math.sin(sweepA)*R);
-        ctx.strokeStyle='rgba(0,212,255,0.7)';ctx.lineWidth=1.5;ctx.stroke();
-
-        // Slot dots
-        if(radarSlots.length){
-            radarSlots.forEach(s=>{
-                const a=horaToAngle(s.hora);
-                const rr=R-6;
-                const x=CX+Math.cos(a)*rr,y=CY+Math.sin(a)*rr;
-                const sweepDist=((sweepA-a+Math.PI*6)%(Math.PI*2));
-                const glow=sweepDist<0.4?Math.max(0,1-sweepDist/0.4):0;
-                const isSelected=selectedHora&&selectedHora===s.hora;
-                const col=s.ocupado?'rgba(255,75,43,0.7)':isSelected?'#00ff88':'rgba(0,212,255,0.6)';
-
-                ctx.beginPath();ctx.arc(x,y,isSelected?5:3+glow*3,0,Math.PI*2);
-                ctx.fillStyle=col;
-                if(glow>0.1||isSelected){ctx.shadowColor=isSelected?'#00ff88':'#00d4ff';ctx.shadowBlur=8+glow*6;}
-                ctx.fill();ctx.shadowBlur=0;
-
-                // Hour label on sweep hit
-                if(glow>0.4){
-                    ctx.font='bold 9px monospace';ctx.fillStyle='#00d4ff';
-                    ctx.textAlign='center';
-                    ctx.fillText(s.hora,x,y-10);
-                }
-            });
-        } else {
-            // Default clock dots when no slots loaded
-            for(let i=0;i<12;i++){
-                const a=(i/12)*Math.PI*2-Math.PI/2;
-                const x=CX+Math.cos(a)*(R-8),y=CY+Math.sin(a)*(R-8);
-                const sweepDist=((sweepA-a+Math.PI*6)%(Math.PI*2));
-                const glow=sweepDist<0.4?Math.max(0,1-sweepDist/0.4):0;
-                ctx.beginPath();ctx.arc(x,y,2+glow*2.5,0,Math.PI*2);
-                ctx.fillStyle=`rgba(0,212,255,${0.25+glow*0.6})`;
-                if(glow>0.2){ctx.shadowColor='#00d4ff';ctx.shadowBlur=6;}
-                ctx.fill();ctx.shadowBlur=0;
-            }
-        }
-
-        // Center dot
-        ctx.beginPath();ctx.arc(CX,CY,3,0,Math.PI*2);
-        ctx.fillStyle='#00d4ff';ctx.shadowColor='#00d4ff';ctx.shadowBlur=6;
-        ctx.fill();ctx.shadowBlur=0;
-
-        t++;requestAnimationFrame(draw);
-    }
-    draw();
-})();
-</script>
-<script>
-(function(){
     const cv=document.getElementById('particles-canvas');
     if(!cv)return;
     const ctx=cv.getContext('2d');
@@ -2215,10 +2181,19 @@ const PASSOS = [
         step: 0,
     },
     {
+        emoji: '🆕',
+        titulo: 'Primeira vez aqui?',
+        desc: 'Toque em "Se cadastre aqui" pra criar sua conta com nome, WhatsApp, email e senha. Depois disso, é só entrar com email e senha de qualquer aparelho.',
+        alvo: 'link-ir-cadastro',
+        precisaCadastro: false,
+        step: 0,
+    },
+    {
         emoji: '🪪',
         titulo: 'Seu nome ou apelido',
         desc: 'Digite como quer ser chamado na barbearia. Pode ser apelido mesmo — o barbeiro vai te chamar assim!',
         alvo: 'cli-nome',
+        precisaCadastro: true,
         step: 0,
     },
     {
@@ -2226,6 +2201,7 @@ const PASSOS = [
         titulo: 'Seu WhatsApp',
         desc: 'O barbeiro pode te mandar uma mensagem confirmando o horário. Coloque com DDD.',
         alvo: 'cli-wpp',
+        precisaCadastro: true,
         step: 0,
     },
     {
@@ -2350,6 +2326,21 @@ function mostrarPasso(idx){
     nextBtn.textContent   = idx === PASSOS.length - 1 ? '✅ Entendi!' : 'Próximo →';
 
     atualizarDots();
+
+    // Alguns passos precisam da tela de Cadastro visível (ela fica
+    // escondida por padrão agora — a tela inicial é o Login). Sem isso,
+    // o elemento-alvo tem tamanho zero e o destaque fica todo torto.
+    if (p.step === 0) {
+        const formLogin = document.getElementById('form-login-cliente');
+        const formCadastro = document.getElementById('form-dados-completo');
+        if (p.precisaCadastro) {
+            formLogin.style.display = 'none';
+            formCadastro.style.display = 'block';
+        } else {
+            formCadastro.style.display = 'none';
+            formLogin.style.display = 'block';
+        }
+    }
 
     // Spotlight
     const PAD = 10;
