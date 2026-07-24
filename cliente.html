@@ -241,7 +241,7 @@
         .step-dot.done   { background:var(--green); }
 
         /* ── Screen system ── */
-        .screen { display:none; flex-direction:column; gap:1.5rem; }
+        .screen { display:none; flex-direction:column; gap:1.5rem; min-width:0; width:100%; }
         .screen.active { display:flex; }
 
         /* ── Header ── */
@@ -276,7 +276,7 @@
             padding:2rem 1.5rem;
             box-shadow:0 0 40px rgba(var(--card-accent-rgb),.1);
             clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
-            position:relative;
+            position:relative;min-width:0;width:100%;
         }
         .form-box::before {
             content:'';position:absolute;top:0;left:0;
@@ -387,7 +387,7 @@
         /* ── Date selector ── */
         .date-scroll {
             display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.4rem;
-            scrollbar-width:none;
+            scrollbar-width:none;min-width:0;
         }
         .date-scroll::-webkit-scrollbar { display:none; }
         .date-chip {
@@ -403,7 +403,7 @@
         /* ── Time grid ── */
         .hours-grid {
             display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));
-            gap:.45rem;margin-top:1rem;
+            gap:.45rem;margin-top:1rem;min-width:0;
         }
         .hour-btn {
             padding:.6rem .3rem;text-align:center;
@@ -2217,13 +2217,6 @@ const PASSOS = [
         desc: 'Deslize os dias para escolher a data. Os horários em 🟢 verde estão livres — toque para selecionar.',
         alvo: 'date-scroll',
         step: 2,
-    },
-    {
-        emoji: '🎟️',
-        titulo: 'Comprovante gerado!',
-        desc: 'Pronto! Tire um PRINT desta tela para apresentar na barbearia. Seu atendimento está garantido!',
-        alvo: null,
-        step: 3,
     },
 ];
 
