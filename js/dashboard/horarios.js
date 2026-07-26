@@ -207,34 +207,44 @@ function initLinkCliente(){
     }
 }
 
-// ── QR Code do link de agendamento (carrega a lib sob demanda) ──
-let qrCodeLibCarregada = false;
-function carregarQrCodeLib(aoCarregar){
-    if(qrCodeLibCarregada){ aoCarregar(); return; }
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-    script.onload = ()=>{ qrCodeLibCarregada = true; aoCarregar(); };
-    script.onerror = ()=> toast('Não deu para carregar o gerador de QR Code. Confira sua internet.','var(--red)');
-    document.head.appendChild(script);
-}
-
+// ── QR Code do link de agendamento ──
+// Gera a imagem via API pública (api.qrserver.com) em vez de carregar uma
+// lib de terceiro por <script> — em alguns celulares (bloqueador de
+// anúncios, DNS da operadora, navegador com bloqueio de rastreadores) o
+// carregamento do script externo era bloqueado silenciosamente e o botão
+// parecia não fazer nada. Uma tag <img> comum é muito mais confiável.
 function gerarQrCliente(){
     if(!linkClienteAtual){ toast('Link ainda não disponível.','var(--red)'); return; }
-    carregarQrCodeLib(()=>{
-        const container=$('qr-cliente-container');
-        container.innerHTML='';
-        new QRCode(container, { text: linkClienteAtual, width: 220, height: 220, colorDark: '#000000', colorLight: '#ffffff' });
+    const container=$('qr-cliente-container');
+    container.innerHTML='';
+    const img=document.createElement('img');
+    img.crossOrigin='anonymous';
+    img.width=220; img.height=220;
+    img.alt='QR Code de agendamento';
+    img.src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(linkClienteAtual);
+    img.onload=()=>{
         $('qr-cliente-wrap').style.display='block';
         $('btn-baixar-qr-pdf').style.display='inline-block';
-    });
+    };
+    img.onerror=()=> toast('Não deu para gerar o QR Code. Confira sua internet.','var(--red)');
+    container.appendChild(img);
 }
 
 function obterQrClienteDataUrl(){
     const container=$('qr-cliente-container');
-    const canvas=container.querySelector('canvas');
-    if(canvas) return canvas.toDataURL('image/png');
     const img=container.querySelector('img');
-    return img ? img.src : null;
+    if(!img || !img.complete || !img.naturalWidth) return null;
+    // Converte a <img> (carregada com CORS liberado pela api.qrserver.com)
+    // num data URL via canvas, que é o formato que o jsPDF precisa.
+    try{
+        const canvas=document.createElement('canvas');
+        canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+        canvas.getContext('2d').drawImage(img,0,0);
+        return canvas.toDataURL('image/png');
+    }catch(e){
+        console.error('Erro ao converter QR Code para PDF:',e);
+        return null;
+    }
 }
 
 // Logo "PRO'B" grande — o mesmo usado na topbar e no relatório financeiro
