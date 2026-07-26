@@ -1227,6 +1227,7 @@ function renderPbLista(){
             <span class="badge ${bc[s]||'badge-bloq'}">${s}</span>
             <div class="barb-actions">
                 ${s==='pendente'?`<button class="btn-sm btn-ativar-trial" onclick="pbAtivarTrial('${n.id}')">🎁 Ativar Trial (7 dias)</button>`:''}
+                <a class="btn-sm btn-ativar" style="text-decoration:none" href="https://alesh4rk-design.github.io/prob-bronze-site/esteticista.html" target="_blank">🔗 Painel do Dono</a>
                 <button class="btn-sm btn-renovar" onclick="pbAbrirRenovar('${n.id}','${escAttr(n.nome||'negócio')}')">Renovar</button>
                 ${s!=='expirado'?`<button class="btn-sm btn-bloquear" onclick="pbBloquear('${n.id}')">Bloquear</button>`:`<button class="btn-sm btn-ativar" onclick="pbAtivar('${n.id}')">Reativar</button>`}
                 ${wpp}
