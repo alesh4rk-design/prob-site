@@ -301,6 +301,15 @@
         </div>
         <div class="topbar-user">
             <button id="btn-ajuda" title="Ajuda e tutoriais" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--blue);font-weight:900;font-size:.9rem;cursor:pointer;flex-shrink:0">?</button>
+            <div style="position:relative;flex-shrink:0">
+                <button id="btn-sininho" title="Notificações" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--text);font-size:1rem;cursor:pointer">🔔</button>
+                <span id="sininho-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:.62rem;font-weight:800;border-radius:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px">0</span>
+                <div id="sininho-painel" style="display:none;position:absolute;top:40px;right:0;width:260px;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:.75rem;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.4)">
+                    <div style="font-size:.8rem;font-weight:800;margin-bottom:.5rem">Notificações</div>
+                    <div id="sininho-lista" style="display:flex;flex-direction:column;gap:.4rem"></div>
+                    <div id="sininho-vazio" style="display:none;font-size:.78rem;color:var(--muted);padding:.5rem 0;text-align:center">Nada por aqui agora 👍</div>
+                </div>
+            </div>
             <div class="user-avatar" id="avatar-initials" title="">?</div>
             <button class="btn-logout" id="btn-logout">Sair</button>
         </div>

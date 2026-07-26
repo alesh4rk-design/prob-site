@@ -526,6 +526,7 @@ function carregarAgendamentos(){
 
         renderPagtoPendente('pagto-pendente-wrap','pagto-pendente-badge','lista-pagto-pendente-agendamentos',pagtoPendente);
         renderPagtoPendente('pagto-pendente-wrap-fila','pagto-pendente-badge-fila','lista-pagto-pendente-fila',pagtoPendente);
+        if(typeof atualizarSininho==='function') atualizarSininho();
     },e=>console.error('Erro agendamentos:',e));
 }
 
@@ -807,3 +808,48 @@ function initAcoesClienteExtras(){
         });
     });
 }
+
+// ── Sininho de notificações — junta o que já é calculado em outros
+// lugares (pagamento pendente + lembretes de 1h) num único contador,
+// sem duplicar nenhuma lógica de cálculo.
+function atualizarSininho(){
+    const badge = document.getElementById('sininho-badge');
+    const lista = document.getElementById('sininho-lista');
+    const vazio = document.getElementById('sininho-vazio');
+    if(!badge) return;
+
+    const qtdPendente = (ultimosAgendamentos.pagtoPendente||[]).length;
+    const qtdAvisos1h = parseInt(document.getElementById('avisos-1h-badge')?.textContent) || 0;
+    const total = qtdPendente + qtdAvisos1h;
+
+    badge.style.display = total>0 ? 'flex' : 'none';
+    badge.textContent = total;
+
+    const itens = [];
+    if(qtdPendente>0) itens.push({texto:`💳 ${qtdPendente} pagamento(s) pendente(s)`, tab:'agendamentos'});
+    if(qtdAvisos1h>0) itens.push({texto:`⏰ ${qtdAvisos1h} cliente(s) chegando na próxima hora`, tab:'agendamentos'});
+
+    if(lista) lista.innerHTML = itens.map(it=>
+        `<button class="sininho-item" data-tab-alvo="${it.tab}" style="text-align:left;padding:.55rem .6rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.78rem;cursor:pointer">${it.texto}</button>`
+    ).join('');
+    if(vazio) vazio.style.display = itens.length ? 'none' : 'block';
+
+    if(lista) lista.querySelectorAll('.sininho-item').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+            document.querySelector(`.tab[data-tab="${btn.dataset.tabAlvo}"]`)?.click();
+            document.getElementById('sininho-painel').style.display = 'none';
+        });
+    });
+}
+
+document.getElementById('btn-sininho')?.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    const painel = document.getElementById('sininho-painel');
+    painel.style.display = painel.style.display==='none' ? 'block' : 'none';
+});
+document.addEventListener('click', (ev)=>{
+    const painel = document.getElementById('sininho-painel');
+    if(painel && painel.style.display==='block' && !painel.contains(ev.target) && ev.target.id!=='btn-sininho'){
+        painel.style.display = 'none';
+    }
+});
