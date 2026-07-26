@@ -304,6 +304,7 @@
                         <button class="btn-sm btn-ativar" style="padding:.55rem 1.1rem;font-size:.8rem" id="btn-pb-login">Entrar</button>
                     </div>
                     <p class="err" id="pb-login-erro" style="display:none">Login inválido ou sem permissão de admin.</p>
+                    <p style="margin-top:.4rem"><a href="#" id="pb-link-esqueci-senha" style="font-size:.78rem;color:var(--blue)">Esqueci minha senha</a></p>
                 </div>
                 <div id="pb-painel" style="display:none">
                     <div class="kpis" style="margin-bottom:1rem">
@@ -391,7 +392,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, getDocs, collection, deleteDoc, query, where, onSnapshot, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = PROB_CONFIG.firebase;
@@ -1121,6 +1122,20 @@ $('btn-pb-login').addEventListener('click',async()=>{
     }
 });
 $('btn-pb-logout').addEventListener('click',()=>signOut(pbAuth));
+
+$('pb-link-esqueci-senha').addEventListener('click',async e=>{
+    e.preventDefault();
+    const email=$('pb-email').value.trim();
+    if(!email){$('pb-login-erro').style.display='block';$('pb-login-erro').textContent='Digite seu e-mail no campo acima e clique em "Esqueci minha senha" de novo.';return;}
+    try{
+        await sendPasswordResetEmail(pbAuth,email);
+        $('pb-login-erro').style.display='none';
+        toast(`Enviamos um link de redefinição de senha pra ${email}.`);
+    }catch(err){
+        $('pb-login-erro').style.display='block';
+        $('pb-login-erro').textContent='Não foi possível enviar o e-mail de redefinição.';
+    }
+});
 
 function pbDiasRestantes(config){
     const fim=config.trialFim?.toDate?config.trialFim.toDate():(config.trialFim?new Date(config.trialFim):null);
