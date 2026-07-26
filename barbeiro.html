@@ -1406,6 +1406,20 @@
             </div>
         </div>
 
+        <div class="section-title" style="margin-bottom:.6rem">💳 QR Code do PIX</div>
+        <div class="card" style="margin-bottom:1.2rem">
+            <p style="font-size:.85rem;color:var(--muted);margin-bottom:.85rem" id="pix-qr-explicacao">Gere um QR Code pra cliente pagar direto pela chave PIX cadastrada em Configurações. <strong>Esse QR Code é do PIX</strong> — é pra receber pagamento, não tem relação com agendamento.</p>
+            <div id="pix-qr-sem-chave" style="display:none;font-size:.82rem;color:var(--yellow)">Cadastre sua chave PIX em <strong>Configurações → Perfil</strong> antes de gerar o QR Code.</div>
+            <div id="pix-qr-acoes" style="display:flex;gap:.6rem;flex-wrap:wrap">
+                <button class="btn-add" style="font-size:.8rem;padding:.5rem 1rem" id="btn-gerar-qr-pix">💳 Gerar QR Code do PIX</button>
+                <button class="btn-add" style="font-size:.8rem;padding:.5rem 1rem;display:none" id="btn-baixar-qr-pix-pdf">⬇️ Baixar QR Code do PIX em PDF</button>
+            </div>
+            <div id="qr-pix-wrap" style="display:none;text-align:center;margin-top:1rem">
+                <div id="qr-pix-container" style="display:inline-block;background:#fff;padding:10px;border-radius:8px"></div>
+                <p style="font-size:.72rem;color:var(--muted);margin-top:.6rem">📌 Este QR Code é do PIX (pagamento) — os clientes escaneiam pelo app do banco pra pagar.</p>
+            </div>
+        </div>
+
         <div class="section-title" style="margin-bottom:.6rem">➕ Adicionar Cliente</div>
         <div class="card" style="margin-bottom:1.2rem">
             <div class="form-row">

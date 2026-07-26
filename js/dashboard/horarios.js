@@ -205,6 +205,25 @@ function initLinkCliente(){
         btnBaixarQrPdf.dataset.bound='1';
         btnBaixarQrPdf.addEventListener('click', baixarQrClientePdf);
     }
+
+    // QR Code do PIX — some ou aparece dependendo se o dono já cadastrou
+    // a chave em Configurações (roda de novo toda vez que initLinkCliente
+    // é chamada, então atualiza sozinho se a chave for cadastrada depois).
+    const temChavePix = !!(barbeiroData.pix && barbeiroData.pix.trim());
+    const acoesPix=$('pix-qr-acoes'), avisoPix=$('pix-qr-sem-chave');
+    if(acoesPix) acoesPix.style.display = temChavePix ? 'flex' : 'none';
+    if(avisoPix) avisoPix.style.display = temChavePix ? 'none' : 'block';
+
+    const btnGerarQrPix=$('btn-gerar-qr-pix');
+    if(btnGerarQrPix && !btnGerarQrPix.dataset.bound){
+        btnGerarQrPix.dataset.bound='1';
+        btnGerarQrPix.addEventListener('click', gerarQrPix);
+    }
+    const btnBaixarQrPixPdf=$('btn-baixar-qr-pix-pdf');
+    if(btnBaixarQrPixPdf && !btnBaixarQrPixPdf.dataset.bound){
+        btnBaixarQrPixPdf.dataset.bound='1';
+        btnBaixarQrPixPdf.addEventListener('click', baixarQrPixPdf);
+    }
 }
 
 // ── QR Code do link de agendamento ──
@@ -245,6 +264,170 @@ function obterQrClienteDataUrl(){
         console.error('Erro ao converter QR Code para PDF:',e);
         return null;
     }
+}
+
+// ── QR Code do PIX (BR Code / EMV, o mesmo padrão dos QRs de banco) ──
+// Diferente do QR do link de agendamento (que é só um link comum), o QR
+// do PIX precisa seguir o formato oficial do Banco Central (EMV/BR Code)
+// pra ser reconhecido pelo app do banco do cliente — não basta codificar
+// a chave como texto solto.
+function tlvPix(id, valor){
+    return id + String(valor.length).padStart(2,'0') + valor;
+}
+function normalizarTextoPix(txt, maxLen){
+    const limpo = (txt||'')
+        .normalize('NFD').replace(/[̀-ͯ]/g,'')
+        .replace(/[^A-Za-z0-9 ]/g,'')
+        .toUpperCase()
+        .trim();
+    return (limpo || 'NAO INFORMADO').slice(0,maxLen);
+}
+function crc16Pix(payload){
+    let crc=0xFFFF;
+    for(let i=0;i<payload.length;i++){
+        crc ^= (payload.charCodeAt(i) << 8);
+        for(let j=0;j<8;j++){
+            crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+        }
+    }
+    return crc.toString(16).toUpperCase().padStart(4,'0');
+}
+function montarPayloadPix({ chave, nome, cidade }){
+    const merchantAccount = tlvPix('26', tlvPix('00','br.gov.bcb.pix') + tlvPix('01',chave));
+    const adicional = tlvPix('62', tlvPix('05','***'));
+    let payload =
+        tlvPix('00','01') +
+        merchantAccount +
+        tlvPix('52','0000') +
+        tlvPix('53','986') +
+        tlvPix('58','BR') +
+        tlvPix('59', normalizarTextoPix(nome,25)) +
+        tlvPix('60', normalizarTextoPix(cidade,15)) +
+        adicional +
+        '6304';
+    return payload + crc16Pix(payload);
+}
+
+function gerarQrPix(){
+    const chave=(barbeiroData.pix||'').trim();
+    if(!chave){ toast('Cadastre sua chave PIX em Configurações primeiro.','var(--red)'); return; }
+    const payload = montarPayloadPix({ chave, nome: barbeiroData.nome, cidade: barbeiroData.endereco });
+    const container=$('qr-pix-container');
+    container.innerHTML='';
+    const img=document.createElement('img');
+    img.crossOrigin='anonymous';
+    img.width=220; img.height=220;
+    img.alt='QR Code do PIX';
+    img.src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(payload);
+    img.onload=()=>{
+        $('qr-pix-wrap').style.display='block';
+        $('btn-baixar-qr-pix-pdf').style.display='inline-block';
+    };
+    img.onerror=()=> toast('Não deu para gerar o QR Code do PIX. Confira sua internet.','var(--red)');
+    container.appendChild(img);
+}
+
+function obterQrPixDataUrl(){
+    const container=$('qr-pix-container');
+    const img=container.querySelector('img');
+    if(!img || !img.complete || !img.naturalWidth) return null;
+    try{
+        const canvas=document.createElement('canvas');
+        canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+        canvas.getContext('2d').drawImage(img,0,0);
+        return canvas.toDataURL('image/png');
+    }catch(e){
+        console.error('Erro ao converter QR Code do PIX para PDF:',e);
+        return null;
+    }
+}
+
+// ── Cartaz do QR Code do PIX (uma página, pra imprimir e deixar no balcão) ──
+function baixarQrPixPdf(){
+    const dataUrl = obterQrPixDataUrl();
+    if(!dataUrl){ toast('Gere o QR Code do PIX primeiro.','var(--red)'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    const W=210, H=297;
+    const nomeBarbearia = barbeiroData.nome || "Pro'B";
+
+    const bg=[7,11,18], azul=[0,212,255], vermelho=[255,75,43], branco=[255,255,255], cinza=[150,165,180];
+
+    doc.setFillColor(...bg);
+    doc.rect(0,0,W,H,'F');
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.8);
+    doc.rect(8,8,W-16,H-16);
+    doc.setLineWidth(0.3);
+    doc.rect(11,11,W-22,H-22);
+
+    montarLogoProB(doc, W/2, 48, 44);
+
+    doc.setFont('helvetica','bold');
+    let fonteTitulo=30;
+    doc.setFontSize(fonteTitulo);
+    const larguraMaxTitulo=W-60;
+    while(fonteTitulo>13 && (doc.getStringUnitWidth(nomeBarbearia)*fonteTitulo/doc.internal.scaleFactor)>larguraMaxTitulo){
+        fonteTitulo-=1;
+        doc.setFontSize(fonteTitulo);
+    }
+    doc.setTextColor(...branco);
+    doc.text(nomeBarbearia, W/2, 78, { align:'center' });
+
+    // Selo "PIX" bem visível — deixa claro que esse QR é de pagamento,
+    // não de agendamento (pedido explícito: evitar confusão entre os
+    // dois cartazes de QR Code que o painel gera).
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    doc.setTextColor(...vermelho);
+    doc.text('PAGAMENTO VIA PIX', W/2, 90, { align:'center' });
+
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.5);
+    doc.line(55,97,W-55,97);
+
+    let y=110;
+
+    const qrTam=78;
+    const cartaoTam=qrTam+14;
+    const cartaoX=(W-cartaoTam)/2;
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(cartaoX,y,cartaoTam,cartaoTam,4,4,'F');
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.6);
+    doc.roundedRect(cartaoX,y,cartaoTam,cartaoTam,4,4);
+    doc.addImage(dataUrl,'PNG',cartaoX+7,y+7,qrTam,qrTam);
+    y+=cartaoTam+14;
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(12.5);
+    doc.setTextColor(...branco);
+    doc.text('Escaneie com a câmera do app do seu banco', W/2, y, { align:'center' });
+    y+=7;
+    doc.setFontSize(10.5);
+    doc.setTextColor(...cinza);
+    doc.text('pra pagar direto pelo PIX — sem precisar digitar nada.', W/2, y, { align:'center' });
+    y+=14;
+
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.3);
+    doc.line(30,y,W-30,y);
+    y+=8;
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...vermelho);
+    doc.text('ATENÇÃO: ESTE QR CODE É PARA PAGAMENTO (PIX) — NÃO SERVE PARA AGENDAR HORÁRIO', W/2, y, { align:'center', maxWidth: W-40 });
+    y+=10;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...cinza);
+    doc.text("Feito com Pro'B", W/2, y, { align:'center' });
+    y+=5;
+    doc.setFontSize(6.5);
+    doc.setTextColor(90,105,120);
+    doc.text('Desenvolvido por Alexandre Lima', W/2, y, { align:'center' });
+
+    doc.save(`qrcode-pix-${nomeBarbearia.replace(/\s+/g,'-')}.pdf`);
 }
 
 // Logo "PRO'B" grande — o mesmo usado na topbar e no relatório financeiro
