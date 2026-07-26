@@ -326,7 +326,7 @@ function baixarQrClientePdf(){
     doc.setLineWidth(0.6);
     doc.roundedRect(cartaoX,y,cartaoTam,cartaoTam,4,4);
     doc.addImage(dataUrl,'PNG',cartaoX+7,y+7,qrTam,qrTam);
-    y+=cartaoTam+18;
+    y+=cartaoTam+14;
 
     // Passo a passo
     const passos=[
@@ -345,15 +345,15 @@ function baixarQrClientePdf(){
         doc.setFontSize(12.5);
         doc.setTextColor(...branco);
         doc.text(texto, W/2-52, y+1, { align:'left' });
-        y+=12;
+        y+=11;
     });
-    y+=8;
+    y+=6;
 
     // Rodapé com o link por extenso (caso a câmera falhe) + marca
     doc.setDrawColor(...azul);
     doc.setLineWidth(0.3);
     doc.line(30,y,W-30,y);
-    y+=8;
+    y+=6;
     doc.setFont('helvetica','normal');
     doc.setFontSize(8.5);
     doc.setTextColor(...cinza);
@@ -366,6 +366,10 @@ function baixarQrClientePdf(){
     doc.setFontSize(7.5);
     doc.setTextColor(...cinza);
     doc.text("Agendamento rápido e gratuito — feito com Pro'B", W/2, y, { align:'center' });
+    y+=5;
+    doc.setFontSize(6.5);
+    doc.setTextColor(90,105,120);
+    doc.text('Desenvolvido por Alexandre Lima', W/2, y, { align:'center' });
 
     doc.save(`qrcode-agendamento-${nomeBarbearia.replace(/\s+/g,'-')}.pdf`);
 }
