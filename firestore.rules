@@ -52,11 +52,29 @@ service cloud.firestore {
         allow read: if true;
         // Criado/atualizado tanto pelo dono quanto pelo modo funcionário (sem
         // login próprio) sempre que um corte é concluído — por isso não exige
-        // auth, só valida o formato dos campos.
-        allow write: if request.resource.data.nome is string
+        // auth, só valida o formato dos campos. Delete é ação separada (não
+        // "write" genérico), porque numa exclusão request.resource é nulo e
+        // essas validações de formato sempre dariam falso, bloqueando o dono
+        // de sempre — é exatamente o que travava a Zona de Perigo.
+        allow create, update: if request.resource.data.nome is string
                     && request.resource.data.nome.size() < 100
                     && request.resource.data.wpp is string
                     && request.resource.data.wpp.size() < 20;
+        allow delete: if isOwner(bId) || isAdmin();
+      }
+      // Vendas de produtos, estoque e insumos — dados só do painel do dono,
+      // nunca lidos pela tela pública da cliente ou pelo painel de chamada.
+      match /vendas/{doc} {
+        allow read, write: if isOwner(bId) || isAdmin();
+      }
+      match /produtos/{doc} {
+        allow read, write: if isOwner(bId) || isAdmin();
+      }
+      match /insumos/{doc} {
+        allow read, write: if isOwner(bId) || isAdmin();
+      }
+      match /gastosInsumos/{doc} {
+        allow read, write: if isOwner(bId) || isAdmin();
       }
     }
 
@@ -100,7 +118,10 @@ service cloud.firestore {
       allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
                     && request.resource.data.status in ['pendente','concluido','cancelado'];
 
-      allow delete: if isAdmin();
+      // O dono pode apagar os próprios agendamentos (ex: Zona de Perigo,
+      // limpando dados de teste) — só o admin apagando de outra barbearia
+      // além disso.
+      allow delete: if isOwner(resource.data.barbeiroId) || isAdmin();
     }
 
     // ── Fila de espera ──
@@ -116,7 +137,8 @@ service cloud.firestore {
       allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','atendidoEm'])
                     && request.resource.data.status in ['aguardando','atendido','removido'];
 
-      allow delete: if isAdmin();
+      // Mesma lógica dos agendamentos: o dono pode apagar a própria fila.
+      allow delete: if isOwner(resource.data.barbeiroId) || isAdmin();
     }
 
   }
