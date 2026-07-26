@@ -179,12 +179,14 @@ async function renderHours(){
 
 // Link de agendamento do cliente — mora na aba Clientes, mas não depende de
 // nada exclusivo de Configurações, então roda para dono E recepcionista.
+let linkClienteAtual = '';
 function initLinkCliente(){
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
     const baseUrl = isLocal
         ? window.location.origin + '/'
         : 'https://alesh4rk-design.github.io/prob-site/';
     const link = baseUrl + 'cliente.html?b=' + barbeiroData.uid;
+    linkClienteAtual = link;
     const linkEl=$('link-cliente');
     if(linkEl) linkEl.textContent=link;
     const btnCopy=$('btn-copy-link');
@@ -192,4 +194,176 @@ function initLinkCliente(){
         btnCopy.dataset.bound='1';
         btnCopy.addEventListener('click',()=>{navigator.clipboard.writeText(link).then(()=>toast('Link copiado!'));});
     }
+
+    const btnGerarQr=$('btn-gerar-qr-cliente');
+    if(btnGerarQr && !btnGerarQr.dataset.bound){
+        btnGerarQr.dataset.bound='1';
+        btnGerarQr.addEventListener('click', gerarQrCliente);
+    }
+    const btnBaixarQrPdf=$('btn-baixar-qr-pdf');
+    if(btnBaixarQrPdf && !btnBaixarQrPdf.dataset.bound){
+        btnBaixarQrPdf.dataset.bound='1';
+        btnBaixarQrPdf.addEventListener('click', baixarQrClientePdf);
+    }
+}
+
+// ── QR Code do link de agendamento (carrega a lib sob demanda) ──
+let qrCodeLibCarregada = false;
+function carregarQrCodeLib(aoCarregar){
+    if(qrCodeLibCarregada){ aoCarregar(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    script.onload = ()=>{ qrCodeLibCarregada = true; aoCarregar(); };
+    script.onerror = ()=> toast('Não deu para carregar o gerador de QR Code. Confira sua internet.','var(--red)');
+    document.head.appendChild(script);
+}
+
+function gerarQrCliente(){
+    if(!linkClienteAtual){ toast('Link ainda não disponível.','var(--red)'); return; }
+    carregarQrCodeLib(()=>{
+        const container=$('qr-cliente-container');
+        container.innerHTML='';
+        new QRCode(container, { text: linkClienteAtual, width: 220, height: 220, colorDark: '#000000', colorLight: '#ffffff' });
+        $('qr-cliente-wrap').style.display='block';
+        $('btn-baixar-qr-pdf').style.display='inline-block';
+    });
+}
+
+function obterQrClienteDataUrl(){
+    const container=$('qr-cliente-container');
+    const canvas=container.querySelector('canvas');
+    if(canvas) return canvas.toDataURL('image/png');
+    const img=container.querySelector('img');
+    return img ? img.src : null;
+}
+
+// Emblema em vetor no estilo barber pole (vermelho/branco/azul-neon) — as
+// fontes padrão do PDF não têm emoji (💈/✂️), então desenhamos na mão,
+// igual ao "sol" do Pro'Bronze.
+function montarEmblemaBarbeiro(doc, cx, cy, raio){
+    const AZUL=[0,212,255], VERMELHO=[255,75,43], BRANCO=[255,255,255];
+    doc.setFillColor(...AZUL);
+    doc.circle(cx, cy, raio, 'F');
+    doc.setLineWidth(1.4);
+    for(let i=0;i<16;i++){
+        const ang=(i*Math.PI)/8;
+        const cor = i%2===0 ? VERMELHO : BRANCO;
+        doc.setDrawColor(...cor);
+        const x1=cx+Math.cos(ang)*(raio*0.55), y1=cy+Math.sin(ang)*(raio*0.55);
+        const x2=cx+Math.cos(ang)*(raio*1.5), y2=cy+Math.sin(ang)*(raio*1.5);
+        doc.line(x1,y1,x2,y2);
+    }
+    doc.setFillColor(...AZUL);
+    doc.circle(cx, cy, raio*0.62, 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(raio*1.55);
+    doc.setTextColor(...BRANCO);
+    doc.text('B', cx, cy + raio*0.34, { align:'center' });
+}
+
+// ── Cartaz do QR Code (uma página, pra imprimir e deixar no balcão) ──
+function baixarQrClientePdf(){
+    const dataUrl = obterQrClienteDataUrl();
+    if(!dataUrl){ toast('Gere o QR Code primeiro.','var(--red)'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    const W=210, H=297;
+    const nomeBarbearia = barbeiroData.nome || "Pro'B";
+    const link = linkClienteAtual;
+
+    const bg=[7,11,18], azul=[0,212,255], vermelho=[255,75,43], branco=[255,255,255], cinza=[150,165,180];
+
+    // Fundo escuro de ponta a ponta + moldura azul neon dupla
+    doc.setFillColor(...bg);
+    doc.rect(0,0,W,H,'F');
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.8);
+    doc.rect(8,8,W-16,H-16);
+    doc.setLineWidth(0.3);
+    doc.rect(11,11,W-22,H-22);
+
+    // Emblema em vetor (estilo barber pole)
+    montarEmblemaBarbeiro(doc, W/2, 42, 20);
+
+    // Nome da barbearia sempre numa linha só — encolhe a fonte conforme
+    // necessário em vez de quebrar linha
+    doc.setFont('helvetica','bold');
+    let fonteTitulo=30;
+    doc.setFontSize(fonteTitulo);
+    const larguraMaxTitulo=W-60;
+    while(fonteTitulo>13 && (doc.getStringUnitWidth(nomeBarbearia)*fonteTitulo/doc.internal.scaleFactor)>larguraMaxTitulo){
+        fonteTitulo-=1;
+        doc.setFontSize(fonteTitulo);
+    }
+    doc.setTextColor(...branco);
+    doc.text(nomeBarbearia, W/2, 78, { align:'center' });
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(14);
+    doc.setTextColor(...cinza);
+    doc.text('Agende seu horário em segundos', W/2, 88, { align:'center' });
+
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.5);
+    doc.line(55,95,W-55,95);
+
+    // Tudo daqui pra baixo flui de cima pra baixo a partir de um único
+    // cursor "y" — nada é ancorado no rodapé, então não tem como um nome
+    // de barbearia comprido ou um link comprido fazer um elemento
+    // atropelar o outro, não importa o tamanho de cada um.
+    let y=108;
+
+    // QR Code num cartão branco arredondado (fundo branco garante boa
+    // leitura da câmera, mesmo com o resto do cartaz escuro)
+    const qrTam=78;
+    const cartaoTam=qrTam+14;
+    const cartaoX=(W-cartaoTam)/2;
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(cartaoX,y,cartaoTam,cartaoTam,4,4,'F');
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.6);
+    doc.roundedRect(cartaoX,y,cartaoTam,cartaoTam,4,4);
+    doc.addImage(dataUrl,'PNG',cartaoX+7,y+7,qrTam,qrTam);
+    y+=cartaoTam+18;
+
+    // Passo a passo
+    const passos=[
+        'Aponte a câmera do celular pro código acima',
+        'Toque no link que aparecer na tela',
+        'Escolha o serviço e o horário — pronto!'
+    ];
+    passos.forEach((texto,i)=>{
+        doc.setFillColor(...vermelho);
+        doc.circle(W/2-62, y-2, 5, 'F');
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(11);
+        doc.setTextColor(...bg);
+        doc.text(String(i+1), W/2-62, y+0.8, { align:'center' });
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(12.5);
+        doc.setTextColor(...branco);
+        doc.text(texto, W/2-52, y+1, { align:'left' });
+        y+=12;
+    });
+    y+=8;
+
+    // Rodapé com o link por extenso (caso a câmera falhe) + marca
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.3);
+    doc.line(30,y,W-30,y);
+    y+=8;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...cinza);
+    doc.text('Ou acesse diretamente:', W/2, y, { align:'center' });
+    y+=5;
+    doc.setTextColor(...azul);
+    const linkLinhas=doc.splitTextToSize(link, W-40);
+    doc.text(linkLinhas, W/2, y, { align:'center', lineHeightFactor:1.3 });
+    y+=linkLinhas.length*4.2+5;
+    doc.setFontSize(7.5);
+    doc.setTextColor(...cinza);
+    doc.text("Agendamento rápido e gratuito — feito com Pro'B", W/2, y, { align:'center' });
+
+    doc.save(`qrcode-agendamento-${nomeBarbearia.replace(/\s+/g,'-')}.pdf`);
 }

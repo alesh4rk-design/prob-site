@@ -1396,6 +1396,13 @@
                 <code style="background:var(--card2);padding:.5rem .85rem;border-radius:6px;font-size:.8rem;color:var(--blue);border:1px solid var(--border);flex:1;word-break:break-all;" id="link-cliente"></code>
                 <button class="btn-add" style="font-size:.8rem;padding:.5rem 1rem" id="btn-copy-link">Copiar</button>
             </div>
+            <div style="display:flex;gap:.6rem;margin-top:.85rem;flex-wrap:wrap">
+                <button class="btn-add" style="font-size:.8rem;padding:.5rem 1rem" id="btn-gerar-qr-cliente">📱 Gerar QR Code</button>
+                <button class="btn-add" style="font-size:.8rem;padding:.5rem 1rem;display:none" id="btn-baixar-qr-pdf">⬇️ Baixar QR Code em PDF</button>
+            </div>
+            <div id="qr-cliente-wrap" style="display:none;text-align:center;margin-top:1rem">
+                <div id="qr-cliente-container" style="display:inline-block;background:#fff;padding:10px;border-radius:8px"></div>
+            </div>
         </div>
 
         <div class="section-title" style="margin-bottom:.6rem">➕ Adicionar Cliente</div>
