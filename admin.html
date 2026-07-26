@@ -316,6 +316,32 @@
                     <button class="btn-sm" style="border-color:var(--border);color:var(--muted);margin-top:.75rem" id="btn-pb-logout">Sair do Pro'Bronze</button>
                 </div>
 
+                <!-- MODAL Renovar assinatura Pro'Bronze -->
+                <div id="pb-modal-renovar" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;">
+                    <div style="background:var(--card);border-radius:16px;padding:1.5rem;width:100%;max-width:380px;border:1px solid var(--border);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+                            <div style="font-size:1rem;font-weight:700;color:var(--green)">Renovar assinatura Pro'Bronze</div>
+                            <button onclick="document.getElementById('pb-modal-renovar').style.display='none'" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
+                        </div>
+                        <p style="font-size:.82rem;color:var(--text);margin-bottom:1.2rem">Negócio: <strong id="pb-ren-nome" style="color:var(--blue)"></strong></p>
+                        <div class="input-group">
+                            <label>Plano</label>
+                            <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+                                <button class="pb-plano-btn active" data-dias="30" data-plano="Mensal" style="flex:1;padding:.6rem;background:var(--card2);border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-size:.78rem;cursor:pointer">Mensal<br><span style="font-size:.65rem;opacity:.7">30 dias</span></button>
+                                <button class="pb-plano-btn" data-dias="90" data-plano="Trimestral" style="flex:1;padding:.6rem;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer">Trimestral<br><span style="font-size:.65rem;opacity:.7">90 dias</span></button>
+                                <button class="pb-plano-btn" data-dias="365" data-plano="Anual" style="flex:1;padding:.6rem;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer">Anual<br><span style="font-size:.65rem;opacity:.7">365 dias</span></button>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Valor cobrado (R$)</label>
+                            <input type="number" id="pb-ren-valor" placeholder="45.00" step="0.01" min="0" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:1rem;outline:none;">
+                        </div>
+                        <button id="btn-pb-confirmar-renovacao" style="width:100%;padding:.85rem;background:transparent;border:2px solid var(--green);border-radius:8px;color:var(--green);font-weight:700;cursor:pointer;font-size:.9rem;margin-top:.5rem">
+                            Confirmar Renovação
+                        </button>
+                    </div>
+                </div>
+
                 <div class="section-title">🏷️ Links de Venda (valor personalizado)</div>
                 <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
                     <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Vendeu por um valor diferente do padrão? Gera um link — quem se cadastrar por ele já vê esse preço, sem precisar você ajustar depois.</p>
@@ -1180,16 +1206,26 @@ function renderPbLista(){
         const d=pbDiasRestantes(n);
         const diasTxt=s==='trial'&&d!==null?`${d}d de trial restantes`:(s==='ativo'?'assinatura ativa':'vencido/bloqueado');
         const wpp=n.whatsappNegocio?`<a class="btn-sm btn-wpp-cobrar" style="text-decoration:none" href="https://wa.me/${n.whatsappNegocio.replace(/\D/g,'')}" target="_blank">💬 WPP</a>`:'';
+        const hist=n.historicoPagamentos||[];
+        const ultimoPag=hist.length?hist[hist.length-1]:null;
+        const totalPagoHist=hist.reduce((s,p)=>s+Number(p.valor||0),0);
+        const planoTag=ultimoPag
+            ?`<span style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:5px;padding:.15rem .5rem;color:var(--yellow)">💳 ${ultimoPag.plano} · R$${Number(ultimoPag.valor).toFixed(2)}</span>
+              <span style="background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);border-radius:5px;padding:.15rem .5rem;color:var(--green)">Total pago: R$${totalPagoHist.toFixed(2)}</span>`
+            :`<span style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:5px;padding:.15rem .5rem;color:var(--muted)">Nenhum pagamento registrado</span>`;
         return `<div class="barb-card">
             <div class="barb-info">
                 <div class="barb-nome">${escapeHtml(n.nome||'Sem nome')}</div>
                 <div class="barb-meta">${diasTxt}</div>
+                <div class="barb-meta" style="margin-top:.3rem;display:flex;gap:.6rem;flex-wrap:wrap">${planoTag}</div>
                 <div class="barb-meta" style="font-size:.68rem;font-family:'Courier New',monospace;color:var(--muted)">${n.id}</div>
             </div>
             <span class="badge ${bc[s]||'badge-bloq'}">${s}</span>
             <div class="barb-actions">
-                ${s!=='ativo'?`<button class="btn-sm btn-ativar" onclick="pbAtivar('${n.id}')">Ativar</button>`:`<button class="btn-sm btn-bloquear" onclick="pbBloquear('${n.id}')">Bloquear</button>`}
+                <button class="btn-sm btn-renovar" onclick="pbAbrirRenovar('${n.id}','${escAttr(n.nome||'negócio')}')">Renovar</button>
+                ${s!=='expirado'?`<button class="btn-sm btn-bloquear" onclick="pbBloquear('${n.id}')">Bloquear</button>`:`<button class="btn-sm btn-ativar" onclick="pbAtivar('${n.id}')">Reativar</button>`}
                 ${wpp}
+                <button class="btn-sm" style="border-color:rgba(255,75,43,.4);color:var(--red)" onclick="pbExcluir('${n.id}','${escAttr(n.nome||'negócio')}')">Excluir</button>
             </div>
         </div>`;
     }).join('');
@@ -1203,6 +1239,66 @@ window.pbBloquear=async id=>{
     if(!confirm('Bloquear o acesso desse negócio no Pro\'Bronze?'))return;
     await updateDoc(doc(pbDb,'negocios',id),{status:'expirado'});
     toast('Bloqueado','var(--red)');
+};
+
+let pbRenId=null,pbRenNome=null,pbRenDias=30,pbRenPlano='Mensal';
+window.pbAbrirRenovar=(id,nome)=>{
+    pbRenId=id;pbRenNome=nome;pbRenDias=30;pbRenPlano='Mensal';
+    $('pb-ren-nome').textContent=nome;
+    $('pb-ren-valor').value='45.00';
+    document.querySelectorAll('.pb-plano-btn').forEach(b=>{
+        const ativo=b.dataset.dias==='30';
+        b.classList.toggle('active',ativo);
+        b.style.borderColor=ativo?'var(--blue)':'var(--border)';
+        b.style.color=ativo?'var(--blue)':'var(--muted)';
+    });
+    $('pb-modal-renovar').style.display='flex';
+};
+document.querySelectorAll('.pb-plano-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        document.querySelectorAll('.pb-plano-btn').forEach(b=>{
+            b.classList.remove('active');
+            b.style.borderColor='var(--border)';b.style.color='var(--muted)';
+        });
+        btn.classList.add('active');
+        btn.style.borderColor='var(--blue)';btn.style.color='var(--blue)';
+        pbRenDias=Number(btn.dataset.dias);
+        pbRenPlano=btn.dataset.plano;
+    });
+});
+$('btn-pb-confirmar-renovacao').addEventListener('click',async()=>{
+    const valor=parseFloat($('pb-ren-valor').value);
+    if(!valor||valor<=0){toast('Informe um valor válido','var(--red)');return;}
+    const btn=$('btn-pb-confirmar-renovacao');
+    btn.disabled=true;btn.textContent='Salvando...';
+    try{
+        const n=pbNegocios.find(x=>x.id===pbRenId);
+        const historico=(n?.historicoPagamentos||[]).slice();
+        const validaAte=new Date();validaAte.setDate(validaAte.getDate()+pbRenDias);
+        historico.push({data:new Date().toISOString(),plano:pbRenPlano,dias:pbRenDias,valor});
+        await updateDoc(doc(pbDb,'negocios',pbRenId),{
+            status:'ativo',
+            assinaturaValidaAte:validaAte.toISOString(),
+            historicoPagamentos:historico
+        });
+        toast(`✓ ${pbRenNome} renovado — ${pbRenPlano} (R$${valor.toFixed(2)})`);
+        $('pb-modal-renovar').style.display='none';
+    }catch(e){
+        toast('Erro ao renovar: '+e.message,'var(--red)');
+    }
+    btn.disabled=false;btn.textContent='Confirmar Renovação';
+});
+
+window.pbExcluir=async(id,nome)=>{
+    if(!confirm(`⚠️ EXCLUIR "${nome}" permanentemente do Pro'Bronze?\n\nIsso vai remover o acesso e os dados de configuração do negócio.\n\nEssa ação NÃO pode ser desfeita!`))return;
+    if(!confirm(`Tem certeza que quer excluir "${nome}"?`))return;
+    try{
+        await deleteDoc(doc(pbDb,'usuarios',id));
+        await deleteDoc(doc(pbDb,'negocios',id));
+        toast(`${nome} excluído permanentemente`,'var(--red)');
+    }catch(e){
+        toast('Erro ao excluir: '+e.message,'var(--red)');
+    }
 };
 </script>
 
