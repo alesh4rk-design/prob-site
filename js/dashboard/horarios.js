@@ -237,28 +237,20 @@ function obterQrClienteDataUrl(){
     return img ? img.src : null;
 }
 
-// Emblema em vetor no estilo barber pole (vermelho/branco/azul-neon) — as
-// fontes padrão do PDF não têm emoji (💈/✂️), então desenhamos na mão,
-// igual ao "sol" do Pro'Bronze.
-function montarEmblemaBarbeiro(doc, cx, cy, raio){
-    const AZUL=[0,212,255], VERMELHO=[255,75,43], BRANCO=[255,255,255];
-    doc.setFillColor(...AZUL);
-    doc.circle(cx, cy, raio, 'F');
-    doc.setLineWidth(1.4);
-    for(let i=0;i<16;i++){
-        const ang=(i*Math.PI)/8;
-        const cor = i%2===0 ? VERMELHO : BRANCO;
-        doc.setDrawColor(...cor);
-        const x1=cx+Math.cos(ang)*(raio*0.55), y1=cy+Math.sin(ang)*(raio*0.55);
-        const x2=cx+Math.cos(ang)*(raio*1.5), y2=cy+Math.sin(ang)*(raio*1.5);
-        doc.line(x1,y1,x2,y2);
-    }
-    doc.setFillColor(...AZUL);
-    doc.circle(cx, cy, raio*0.62, 'F');
+// Logo "PRO'B" grande — o mesmo usado na topbar e no relatório financeiro
+// (PRO em azul neon + 'B em branco), só que em fonte bem maior aqui.
+function montarLogoProB(doc, cx, y, fontSize){
+    const AZUL=[0,212,255], BRANCO=[255,255,255];
     doc.setFont('helvetica','bold');
-    doc.setFontSize(raio*1.55);
+    doc.setFontSize(fontSize);
+    const larguraPro = doc.getTextWidth('PRO');
+    const larguraApo = doc.getTextWidth("'B");
+    const larguraTotal = larguraPro + larguraApo;
+    const xInicio = cx - larguraTotal / 2;
+    doc.setTextColor(...AZUL);
+    doc.text('PRO', xInicio, y);
     doc.setTextColor(...BRANCO);
-    doc.text('B', cx, cy + raio*0.34, { align:'center' });
+    doc.text("'B", xInicio + larguraPro, y);
 }
 
 // ── Cartaz do QR Code (uma página, pra imprimir e deixar no balcão) ──
@@ -282,8 +274,8 @@ function baixarQrClientePdf(){
     doc.setLineWidth(0.3);
     doc.rect(11,11,W-22,H-22);
 
-    // Emblema em vetor (estilo barber pole)
-    montarEmblemaBarbeiro(doc, W/2, 42, 20);
+    // Logo "PRO'B" grande no topo
+    montarLogoProB(doc, W/2, 48, 44);
 
     // Nome da barbearia sempre numa linha só — encolhe a fonte conforme
     // necessário em vez de quebrar linha
