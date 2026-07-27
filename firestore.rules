@@ -60,7 +60,11 @@ service cloud.firestore {
                     && request.resource.data.nome.size() < 100
                     && request.resource.data.wpp is string
                     && request.resource.data.wpp.size() < 20;
-        allow delete: if isOwner(bId) || isAdmin();
+        // TESTE TEMPORÁRIO DE DIAGNÓSTICO — qualquer usuário logado pode apagar,
+        // só para isolar se o problema é mesmo na regra ou em outra coisa
+        // (cache local do Firestore no celular, projeto Firebase errado, etc).
+        // Reverter para "isOwner(bId) || isAdmin()" assim que o teste terminar.
+        allow delete: if request.auth != null;
       }
       // Vendas de produtos, estoque e insumos — dados só do painel do dono,
       // nunca lidos pela tela pública da cliente ou pelo painel de chamada.
