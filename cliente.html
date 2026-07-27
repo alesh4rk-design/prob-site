@@ -850,6 +850,24 @@
     </div>
 </div>
 
+<!-- Botão flutuante: Fale comigo (WhatsApp + PIX do barbeiro) -->
+<div id="fale-comigo-wrap" style="display:none;position:fixed;bottom:1.5rem;right:1rem;z-index:700;">
+    <button type="button" id="btn-fale-comigo" style="width:56px;height:56px;border-radius:50%;background:var(--card);border:1.5px solid rgba(0,212,255,.4);box-shadow:0 0 16px rgba(0,212,255,.25);color:var(--blue);font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">💬</button>
+    <div id="painel-fale-comigo" style="display:none;position:fixed;bottom:5rem;right:1rem;width:280px;max-width:calc(100vw - 1.5rem);background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:1rem;box-shadow:0 4px 24px rgba(0,0,0,.4);">
+        <div style="font-size:.85rem;font-weight:800;color:#fff;margin-bottom:.75rem">📞 Fale comigo</div>
+        <a id="fale-comigo-wpp" href="#" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.65rem;background:transparent;border:1px solid #25d366;border-radius:8px;color:#25d366;font-size:.82rem;font-weight:600;text-decoration:none;margin-bottom:.6rem;">
+            📱 Chamar no WhatsApp
+        </a>
+        <div id="fale-comigo-pix-wrap" style="display:none">
+            <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:.35rem">Chave PIX</div>
+            <div style="display:flex;gap:.5rem;align-items:center;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:8px;padding:.55rem .75rem;">
+                <div id="fale-comigo-pix-key" style="flex:1;font-family:'Courier New',monospace;font-size:.78rem;color:var(--blue);word-break:break-all"></div>
+                <button type="button" id="fale-comigo-pix-copiar" style="padding:.3rem .55rem;background:transparent;border:1px solid rgba(0,212,255,.3);border-radius:6px;color:var(--blue);font-size:.68rem;cursor:pointer;white-space:nowrap;flex-shrink:0">Copiar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 
@@ -964,6 +982,47 @@ function hexToRgb(hex){
 }
 
 /* ── Load barber info ── */
+function initFaleComigo(){
+    const wrap = $('fale-comigo-wrap');
+    if(!wrap) return;
+    if(!barbeiroInfo.whatsapp && !barbeiroInfo.pix){ wrap.style.display='none'; return; }
+    wrap.style.display = 'block';
+
+    const wppBtn = $('fale-comigo-wpp');
+    if(barbeiroInfo.whatsapp){
+        wppBtn.style.display = 'flex';
+        wppBtn.href = `https://wa.me/55${barbeiroInfo.whatsapp}?text=${encodeURIComponent('Olá! Vi o agendamento na '+(barbeiroInfo.nome||'barbearia')+' e gostaria de falar com você.')}`;
+    } else {
+        wppBtn.style.display = 'none';
+    }
+
+    const pixWrap = $('fale-comigo-pix-wrap');
+    if(barbeiroInfo.pix){
+        pixWrap.style.display = 'block';
+        $('fale-comigo-pix-key').textContent = barbeiroInfo.pix;
+    } else {
+        pixWrap.style.display = 'none';
+    }
+
+    if(!window.__faleComigoBound){
+        window.__faleComigoBound = true;
+        const btn = $('btn-fale-comigo');
+        const painel = $('painel-fale-comigo');
+        btn.addEventListener('click', ev=>{
+            ev.stopPropagation();
+            painel.style.display = painel.style.display==='block' ? 'none' : 'block';
+        });
+        document.addEventListener('click', ev=>{
+            if(painel.style.display==='block' && !painel.contains(ev.target) && ev.target!==btn){
+                painel.style.display = 'none';
+            }
+        });
+        $('fale-comigo-pix-copiar').addEventListener('click', ()=>{
+            navigator.clipboard.writeText($('fale-comigo-pix-key').textContent).then(()=>toast('PIX copiado!'));
+        });
+    }
+}
+
 function aplicarPersonalizacao(data) {
     barbeiroInfo = data;
     const p = barbeiroInfo.personalizacao || {};
@@ -1091,6 +1150,8 @@ function aplicarPersonalizacao(data) {
         if(poleWrap){poleWrap.style.display=p.barberpole?'flex':'none';}
         if(p.barberpole&&iconWrap)iconWrap.style.display='none';
     }
+
+    initFaleComigo();
 }
 
 // Busca promoções ativas da barbearia: cupons (abertos, guardados em cache
