@@ -154,7 +154,7 @@ function renderClientes(lista){
             corBorda = 'rgba(0,212,255,.3)'; corFundo = 'rgba(0,212,255,.04)';
         }
 
-        return `<div style="background:${corFundo};border:1px solid ${corBorda};border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;cursor:pointer" title="Ver ações do cliente" onclick="abrirAcoesCliente('${escAttr(c.nome||'')}','${escAttr(wppNum)}',null,'','',null)">
+        return `<div style="background:${corFundo};border:1px solid ${corBorda};border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;cursor:pointer" title="Ver ações do cliente" onclick="abrirAcoesCliente('${escAttr(c.nome||'')}','${escAttr(wppNum)}',null,'','',null,null,'${escAttr(c.id||'')}')">
             <div style="width:38px;height:38px;border-radius:50%;background:rgba(0,212,255,.12);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:var(--blue);flex-shrink:0">${escapeHtml((c.nome||'?')[0].toUpperCase())}</div>
             <div style="flex:1;min-width:0">
                 <div style="font-weight:700;font-size:.9rem">${escapeHtml(c.nome||'—')} <span style="font-size:.7rem;font-weight:400;color:var(--muted)">${freq}</span></div>

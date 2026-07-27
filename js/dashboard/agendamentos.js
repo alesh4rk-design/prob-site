@@ -613,11 +613,12 @@ const MENSAGENS_PRONTAS = {
     atraso: (c) => `Olá, ${c.nome}! Pedimos desculpas, mas haverá um pequeno atraso no seu atendimento hoje. Agradecemos a compreensão!`,
 };
 
-window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status, filaId){
-    acClienteAtual = {nome, wpp, agendamentoId, data, hora, status: status||'pendente', filaId: filaId||null};
+window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status, filaId, clienteId){
+    acClienteAtual = {nome, wpp, agendamentoId, data, hora, status: status||'pendente', filaId: filaId||null, clienteId: clienteId||null};
     $('ac-nome-cliente').textContent = nome || 'Cliente';
     $('ac-wpp-cliente').textContent = wpp ? formatarWppExibicao(wpp) : 'WhatsApp não informado';
     $('ac-copiar-wpp').style.display = wpp ? 'inline' : 'none';
+    $('ac-btn-excluir-cliente').style.display = clienteId ? 'block' : 'none';
 
     const temAgendamento = !!agendamentoId;
     const temFila = !!filaId;
@@ -707,6 +708,23 @@ function initAcoesClienteExtras(){
         if(typeof criarPromoParaCliente!=='function'){ toast('Módulo de promoções ainda carregando, tenta de novo em instantes','var(--red)'); return; }
         $('modal-acoes-cliente').style.display = 'none';
         criarPromoParaCliente(acClienteAtual.nome, acClienteAtual.wpp);
+    });
+
+    $('ac-btn-excluir-cliente').addEventListener('click', async()=>{
+        if(!acClienteAtual.clienteId) return;
+        if(!confirm(`Apagar ${acClienteAtual.nome||'esse cliente'} da sua base de clientes?\n\nIsso não apaga agendamentos ou histórico já feitos, só remove o cadastro dele. Não tem como desfazer.`)) return;
+        const btn = $('ac-btn-excluir-cliente');
+        btn.disabled = true;
+        try{
+            await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'clientes',acClienteAtual.clienteId));
+            $('modal-acoes-cliente').style.display = 'none';
+            toast('✓ Cliente apagado da base');
+            if(typeof carregarClientes==='function') carregarClientes();
+        }catch(e){
+            console.error('excluirCliente:',e);
+            toast('Erro ao apagar: '+e.message,'var(--red)');
+        }
+        btn.disabled = false;
     });
 
     $('ac-btn-concluir').addEventListener('click', async()=>{
