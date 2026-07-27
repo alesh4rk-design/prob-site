@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/barbeiro.css?v=20260727f">
+    <link rel="stylesheet" href="css/barbeiro.css?v=20260727g">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -1785,6 +1785,20 @@
             </div>
         </div>
 
+        <div class="section-title" style="margin-top:1.5rem">💾 Backup</div>
+        <div class="card">
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Baixe uma cópia de todos os dados da sua barbearia (agendamentos, clientes, vendas, promoções etc) num arquivo salvo no seu celular. Se algo der errado um dia, é só restaurar esse arquivo de volta.</p>
+            <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem">
+                <button class="btn-sm btn-ativar" style="padding:.6rem 1.1rem;font-size:.82rem" id="btn-baixar-backup">⬇️ Baixar Backup Agora</button>
+                <button class="btn-sm" style="background:transparent;border:1.5px solid var(--border);color:var(--text);padding:.6rem 1.1rem;font-size:.82rem;border-radius:8px;cursor:pointer" id="btn-restaurar-backup">⬆️ Restaurar de um Arquivo</button>
+                <input type="file" id="input-restaurar-backup" accept="application/json" style="display:none">
+            </div>
+            <label style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;cursor:pointer">
+                <input type="checkbox" id="chk-backup-automatico" style="width:16px;height:16px;accent-color:var(--green)">
+                🛡️ Fazer backup automático (baixa sozinho) antes de qualquer exclusão na Zona de Perigo
+            </label>
+        </div>
+
         <div class="section-title" style="color:var(--red);margin-top:1.5rem">⚠️ Zona de Perigo</div>
         <div class="card" style="border-color:rgba(255,75,43,.4);background:rgba(255,75,43,.03)">
             <p style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Apaga dados de teste da sua barbearia. <strong style="color:var(--red)">Isso não tem como desfazer.</strong> Marque só o que você quer limpar — o que ficar desmarcado continua intacto.</p>
@@ -1848,7 +1862,7 @@
     </div>
 </div>
 
-<script src="js/barbeiro-particles.js?v=20260727f"></script>
+<script src="js/barbeiro-particles.js?v=20260727g"></script>
 <script>
     // ── Instalar o Pro'B como app (PWA) ──
     // No Android/Chrome/desktop o navegador dispara "beforeinstallprompt" e
@@ -1890,7 +1904,7 @@
     }
 </script>
 
-<script src="config.js?v=20260727f"></script>
+<script src="config.js?v=20260727g"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -2923,16 +2937,17 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20260727f"></script>
-<script defer src="js/dashboard/tour.js?v=20260727f"></script>
-<script defer src="js/dashboard/equipe.js?v=20260727f"></script>
-<script defer src="js/dashboard/promocoes.js?v=20260727f"></script>
-<script defer src="js/dashboard/clientes.js?v=20260727f"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20260727f"></script>
-<script defer src="js/dashboard/horarios.js?v=20260727f"></script>
-<script defer src="js/dashboard/financeiro.js?v=20260727f"></script>
-<script defer src="js/dashboard/auth.js?v=20260727f"></script>
-<script defer src="js/dashboard/visual.js?v=20260727f"></script>
+<script defer src="js/dashboard/estoque.js?v=20260727g"></script>
+<script defer src="js/dashboard/backup.js?v=20260727g"></script>
+<script defer src="js/dashboard/tour.js?v=20260727g"></script>
+<script defer src="js/dashboard/equipe.js?v=20260727g"></script>
+<script defer src="js/dashboard/promocoes.js?v=20260727g"></script>
+<script defer src="js/dashboard/clientes.js?v=20260727g"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20260727g"></script>
+<script defer src="js/dashboard/horarios.js?v=20260727g"></script>
+<script defer src="js/dashboard/financeiro.js?v=20260727g"></script>
+<script defer src="js/dashboard/auth.js?v=20260727g"></script>
+<script defer src="js/dashboard/visual.js?v=20260727g"></script>
 
 
 

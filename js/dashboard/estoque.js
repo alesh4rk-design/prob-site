@@ -132,6 +132,15 @@ function initZonaPerigo(){
             if(window.auth?.currentUser) await window.auth.currentUser.getIdToken(true);
         }catch(e){ console.error('Erro ao renovar token:', e); }
 
+        // Rede de segurança: baixa um backup completo sozinho antes de
+        // apagar qualquer coisa, se a dona/dono não tiver desativado isso
+        // em Configurações → Backup.
+        if(barbeiroData.backupAutomatico !== false && typeof baixarBackup==='function'){
+            btnConf.textContent = 'Fazendo backup de segurança...';
+            const ok = await baixarBackup(true);
+            if(ok) toast('📥 Backup de segurança baixado antes de apagar','var(--green)',4000);
+        }
+
         let totalApagado = 0;
         const categoriasComErro = [];
         for(const cat of categorias){

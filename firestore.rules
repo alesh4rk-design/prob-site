@@ -139,10 +139,11 @@ service cloud.firestore {
       // painel-chamada.html (TV sem login) e o modo funcionário (sem login próprio).
       allow read: if true;
 
-      // Criação: exige o formato correto de um agendamento válido.
-      // status só pode nascer como pendente (agendamento normal) ou concluído
-      // (quando o barbeiro atende alguém direto da fila).
-      allow create: if request.resource.data.keys().hasAll(
+      // Criação: exige o formato correto de um agendamento válido — exceto
+      // pro próprio dono, que também pode restaurar um backup (registro com
+      // qualquer status, ex: "cancelado", recuperando um dado apagado).
+      allow create: if isOwner(request.resource.data.barbeiroId) || isAdmin()
+                    || (request.resource.data.keys().hasAll(
                         ['barbeiroId','clienteNome','corte','preco','data','hora','status']
                       )
                     && request.resource.data.status in ['pendente','concluido']
@@ -152,18 +153,20 @@ service cloud.firestore {
                     && request.resource.data.corte.size() < 100
                     && request.resource.data.preco is number
                     && request.resource.data.preco >= 0
-                    && request.resource.data.preco < 10000;
+                    && request.resource.data.preco < 10000);
 
       // Atualização: status (concluir/cancelar), forma de pagamento, aviso de
       // lembrete 1h e ajuste de preço (desconto) — nada além disso, pra não
-      // deixar reescrever nome, telefone ou horário depois de criado.
-      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+      // deixar reescrever nome, telefone ou horário depois de criado. O dono
+      // pode editar o próprio livremente (ex: restaurar um backup).
+      allow update: if isOwner(resource.data.barbeiroId) || isAdmin()
+                    || (request.resource.data.diff(resource.data).affectedKeys()
                         .hasOnly(['status','formaPagamento','avisoEnviado','preco','precoOriginal'])
                     && request.resource.data.status in ['pendente','concluido','cancelado']
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['formaPagamento'])
                         || request.resource.data.formaPagamento in ['dinheiro','pix','debito','credito','pendente'])
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['preco'])
-                        || (request.resource.data.preco is number && request.resource.data.preco >= 0 && request.resource.data.preco < 10000));
+                        || (request.resource.data.preco is number && request.resource.data.preco >= 0 && request.resource.data.preco < 10000)));
 
       // O dono pode apagar os próprios agendamentos (ex: Zona de Perigo,
       // limpando dados de teste) — só o admin apagando de outra barbearia
@@ -175,20 +178,23 @@ service cloud.firestore {
     match /fila/{id} {
       allow read: if true;
 
-      allow create: if request.resource.data.keys().hasAll(['barbeiroId','clienteNome','status'])
+      allow create: if isOwner(request.resource.data.barbeiroId) || isAdmin()
+                    || (request.resource.data.keys().hasAll(['barbeiroId','clienteNome','status'])
                     && request.resource.data.status == 'aguardando'
                     && request.resource.data.clienteNome is string
-                    && request.resource.data.clienteNome.size() < 100;
+                    && request.resource.data.clienteNome.size() < 100);
 
       // Atualização: status (+ atendidoEm quando concluído), forma de
       // pagamento registrada antes de atender e ajuste de preço (desconto).
-      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+      // O dono pode editar a própria fila livremente (ex: restaurar backup).
+      allow update: if isOwner(resource.data.barbeiroId) || isAdmin()
+                    || (request.resource.data.diff(resource.data).affectedKeys()
                         .hasOnly(['status','atendidoEm','formaPagamento','preco','precoOriginal'])
                     && request.resource.data.status in ['aguardando','atendido','removido']
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['formaPagamento'])
                         || request.resource.data.formaPagamento in ['dinheiro','pix','debito','credito','pendente'])
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['preco'])
-                        || (request.resource.data.preco is number && request.resource.data.preco >= 0 && request.resource.data.preco < 10000));
+                        || (request.resource.data.preco is number && request.resource.data.preco >= 0 && request.resource.data.preco < 10000)));
 
       // Mesma lógica dos agendamentos: o dono pode apagar a própria fila.
       allow delete: if isOwner(resource.data.barbeiroId) || isAdmin();

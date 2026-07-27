@@ -74,6 +74,7 @@ function initPerfil(){
     }
 
     initZonaPerigo();
+    if(typeof initBackup==='function') initBackup();
 }
 
 function aplicarVisibilidadeAbaFila(modo){
