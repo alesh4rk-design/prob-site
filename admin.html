@@ -425,7 +425,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="config.js?v=20260727l"></script>
+<script src="config.js?v=20260727m"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
@@ -1138,11 +1138,22 @@ const pbDb=getFirestore(pbApp);
 let pbNegocios=[];
 let unsubPb=null;
 
+const PB_ADMIN_UID='vzgts23koAWeJeJ6ojMVdsLRJkJ3'; // ADMIN_UID do Pro'Bronze (js/admin-config.js daquele projeto)
+
 onAuthStateChanged(pbAuth,user=>{
-    if(user){
+    if(user && user.uid===PB_ADMIN_UID){
         $('pb-login-box').style.display='none';
         $('pb-painel').style.display='block';
         carregarPbNegocios();
+    }else if(user){
+        // Logado, mas não é a conta admin do Pro'Bronze — antes disso ficava
+        // preso mostrando o erro de permissão em vez de voltar pro login.
+        signOut(pbAuth);
+        $('pb-login-box').style.display='block';
+        $('pb-painel').style.display='none';
+        $('pb-login-erro').style.display='block';
+        $('pb-login-erro').textContent='Essa conta não tem permissão de admin no Pro\'Bronze.';
+        if(unsubPb){unsubPb();unsubPb=null;}
     }else{
         $('pb-login-box').style.display='block';
         $('pb-painel').style.display='none';
