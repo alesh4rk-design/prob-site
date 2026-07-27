@@ -77,16 +77,29 @@ function initPerfil(){
     if(typeof initBackup==='function') initBackup();
 }
 
+// Esconde a aba que não faz sentido pro modo de atendimento escolhido —
+// nos dois sentidos: só fila esconde Agendamentos, só agendamento esconde
+// Fila. Antes só existia a metade "esconder Fila", então quem trabalhava
+// só com fila de espera continuava vendo a aba Agendamentos à toa.
 function aplicarVisibilidadeAbaFila(modo){
     const tabFila=document.querySelector('.tab[data-tab="fila"]');
-    if(!tabFila)return;
-    tabFila.style.display=(modo==='fila'||modo==='ambos')?'block':'none';
-    // Se a aba Fila estava ativa e o modo mudou para não tê-la, volta para Agendamentos
-    if(tabFila.style.display==='none' && tabFila.classList.contains('active')){
-        tabFila.classList.remove('active');
-        document.getElementById('tab-fila').classList.remove('active');
-        document.querySelector('.tab[data-tab="agendamentos"]').classList.add('active');
-        document.getElementById('tab-agendamentos').classList.add('active');
+    const tabAgendamentos=document.querySelector('.tab[data-tab="agendamentos"]');
+    if(!tabFila || !tabAgendamentos) return;
+
+    const mostrarFila = (modo==='fila' || modo==='ambos');
+    const mostrarAgendamentos = (modo==='agendamento' || modo==='ambos');
+    tabFila.style.display = mostrarFila ? 'block' : 'none';
+    tabAgendamentos.style.display = mostrarAgendamentos ? 'block' : 'none';
+
+    // Se a aba que estava ativa sumiu, muda pra outra que ainda existe
+    const filaSumiuAtiva = !mostrarFila && tabFila.classList.contains('active');
+    const agendSumiuAtiva = !mostrarAgendamentos && tabAgendamentos.classList.contains('active');
+    if(filaSumiuAtiva || agendSumiuAtiva){
+        const destino = mostrarAgendamentos ? 'agendamentos' : 'fila';
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        document.querySelector(`.tab[data-tab="${destino}"]`)?.classList.add('active');
+        document.getElementById(`tab-${destino}`)?.classList.add('active');
     }
 }
 
