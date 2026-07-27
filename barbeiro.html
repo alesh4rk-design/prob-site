@@ -1906,9 +1906,15 @@ function escAttr(str){
 }
 const go=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');};
 
-function toast(msg,color='var(--green)'){
+function toast(msg,color='var(--green)',duracaoMs){
     const t=$('toast');t.textContent=msg;t.style.borderColor=color;t.style.color=color;
-    t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);
+    // Mensagens de erro (vermelhas) tendem a ser mais longas e importantes
+    // de dar tempo de ler — fica mais tempo na tela por padrão.
+    const duracao = duracaoMs || (color==='var(--red)' ? 7000 : 2800);
+    t.classList.add('show');
+    clearTimeout(t.dataset.timeoutId);
+    const id = setTimeout(()=>t.classList.remove('show'),duracao);
+    t.dataset.timeoutId = id;
 }
 function fecharDrawer(){
     const d=$('drawer-menu'), o=$('drawer-overlay');
