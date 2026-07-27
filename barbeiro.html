@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/barbeiro.css?v=20260727c">
+    <link rel="stylesheet" href="css/barbeiro.css?v=20260727d">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -345,6 +345,7 @@
         <div class="tab" data-tab="painel-chamada">📺 Painel de Chamada</div>
 
         <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Negócio</div>
+        <div class="tab" data-tab="cobranca">💰 Cobrança <span id="cobranca-badge-tab" style="display:none;background:var(--red);color:#fff;border-radius:20px;padding:.05rem .4rem;font-size:.65rem;font-weight:900;margin-left:.25rem"></span></div>
         <div class="tab" data-tab="perfil">⚙️ Configurações</div>
         <div class="tab" data-tab="gestao">💼 Gestão da Barbearia</div>
 
@@ -1475,6 +1476,21 @@
         <div id="lista-clientes-barb"><div class="empty-state"><div class="icon">👥</div>Nenhum cliente cadastrado ainda.</div></div>
     </div>
 
+<!-- ════════ TAB COBRANÇA ════════ -->
+    <div class="tab-content" id="tab-cobranca">
+        <div class="section-title" style="margin-bottom:.6rem">💰 Cobrança</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Toda vez que você marcar um atendimento como "⏳ Ainda não pagou", ele cai aqui — é o valor que os clientes ainda te devem.</p>
+
+        <div style="background:var(--card);border:1.5px solid var(--red);border-radius:12px;padding:1.1rem;text-align:center;margin-bottom:1.2rem">
+            <div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.3rem">Total a receber</div>
+            <div style="font-family:'Courier New',monospace;font-size:2rem;font-weight:900;color:var(--red)" id="cobranca-total">R$0</div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem"><span id="cobranca-qtd">0</span> cobrança(s) em aberto</div>
+        </div>
+
+        <div class="section-title" style="margin-bottom:.6rem">📋 Clientes devendo</div>
+        <div id="lista-cobranca"><div class="empty-state"><div class="icon">✅</div>Nenhuma cobrança pendente — tudo em dia!</div></div>
+    </div>
+
     <div class="tab-content" id="tab-gestao">
 
         <div class="gestao-grupo">
@@ -1832,7 +1848,7 @@
     </div>
 </div>
 
-<script src="js/barbeiro-particles.js?v=20260727c"></script>
+<script src="js/barbeiro-particles.js?v=20260727d"></script>
 <script>
     // ── Instalar o Pro'B como app (PWA) ──
     // No Android/Chrome/desktop o navegador dispara "beforeinstallprompt" e
@@ -1874,7 +1890,7 @@
     }
 </script>
 
-<script src="config.js?v=20260727c"></script>
+<script src="config.js?v=20260727d"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -2906,16 +2922,16 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20260727c"></script>
-<script defer src="js/dashboard/tour.js?v=20260727c"></script>
-<script defer src="js/dashboard/equipe.js?v=20260727c"></script>
-<script defer src="js/dashboard/promocoes.js?v=20260727c"></script>
-<script defer src="js/dashboard/clientes.js?v=20260727c"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20260727c"></script>
-<script defer src="js/dashboard/horarios.js?v=20260727c"></script>
-<script defer src="js/dashboard/financeiro.js?v=20260727c"></script>
-<script defer src="js/dashboard/auth.js?v=20260727c"></script>
-<script defer src="js/dashboard/visual.js?v=20260727c"></script>
+<script defer src="js/dashboard/estoque.js?v=20260727d"></script>
+<script defer src="js/dashboard/tour.js?v=20260727d"></script>
+<script defer src="js/dashboard/equipe.js?v=20260727d"></script>
+<script defer src="js/dashboard/promocoes.js?v=20260727d"></script>
+<script defer src="js/dashboard/clientes.js?v=20260727d"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20260727d"></script>
+<script defer src="js/dashboard/horarios.js?v=20260727d"></script>
+<script defer src="js/dashboard/financeiro.js?v=20260727d"></script>
+<script defer src="js/dashboard/auth.js?v=20260727d"></script>
+<script defer src="js/dashboard/visual.js?v=20260727d"></script>
 
 
 

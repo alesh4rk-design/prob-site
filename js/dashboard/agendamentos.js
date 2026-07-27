@@ -493,6 +493,47 @@ function renderPagtoPendente(wrapId, badgeId, listaId, pagtoPendente){
     }
 }
 
+// Aba Cobrança — soma tudo que está marcado como "ainda não pagou" e lista
+// cada cliente devedor, com um atalho pra cobrar no WhatsApp e pra marcar
+// como pago (reaproveitando o modal de ações do cliente já existente).
+function renderCobranca(pagtoPendente){
+    const total = pagtoPendente.reduce((s,a)=>s+Number(a.preco||0),0);
+    const totalEl = $('cobranca-total');
+    const qtdEl = $('cobranca-qtd');
+    const badgeEl = $('cobranca-badge-tab');
+    if(!totalEl) return;
+    totalEl.textContent = 'R$'+total.toFixed(2).replace('.',',');
+    qtdEl.textContent = pagtoPendente.length;
+    if(badgeEl){
+        if(pagtoPendente.length>0){ badgeEl.style.display='inline-block'; badgeEl.textContent = pagtoPendente.length; }
+        else badgeEl.style.display = 'none';
+    }
+
+    const cont = $('lista-cobranca');
+    if(!cont) return;
+    if(!pagtoPendente.length){
+        cont.innerHTML = '<div class="empty-state"><div class="icon">✅</div>Nenhuma cobrança pendente — tudo em dia!</div>';
+        return;
+    }
+
+    const ordenado = [...pagtoPendente].sort((a,b)=> (b.data+b.hora).localeCompare(a.data+a.hora));
+    cont.innerHTML = ordenado.map(a=>{
+        const wppNum = (a.clienteWhatsapp||'').replace(/\D/g,'');
+        const msg = encodeURIComponent(`Olá ${a.clienteNome}! Passando pra lembrar do pagamento pendente de R$${Number(a.preco||0).toFixed(2)} referente ao seu atendimento em ${a.data?fmtDataExtenso(a.data):''}. Qualquer coisa é só chamar!`);
+        const cobrarBtn = wppNum ? `<a href="https://wa.me/55${wppNum}?text=${msg}" target="_blank" class="btn-wpp" style="font-size:.72rem;padding:.4rem .7rem" onclick="event.stopPropagation()">📱 Cobrar</a>` : '';
+        return `<div style="background:rgba(255,75,43,.05);border:1px solid rgba(255,75,43,.25);border-radius:10px;padding:.75rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;cursor:pointer" title="Ver ações do cliente" onclick="abrirAcoesCliente('${escAttr(a.clienteNome||'')}','${escAttr(a.clienteWhatsapp||'')}','${a.id}','${escAttr(a.data||'')}','${escAttr(a.hora||'')}','${a.status||'pendente'}')">
+            <div style="min-width:0">
+                <div style="font-weight:700;font-size:.88rem">${escapeHtml(a.clienteNome||'—')}</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">${escapeHtml(a.corte||'')} · ${a.data?fmtDataExtenso(a.data):''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem">
+                <div style="font-family:'Courier New',monospace;font-weight:900;color:var(--red);font-size:1rem">R$${Number(a.preco||0).toFixed(2)}</div>
+                ${cobrarBtn}
+            </div>
+        </div>`;
+    }).join('');
+}
+
 function carregarAgendamentos(){
     if(unsubAgendamentos)unsubAgendamentos();
     carregarCachePromoCliente();
@@ -526,6 +567,7 @@ function carregarAgendamentos(){
 
         renderPagtoPendente('pagto-pendente-wrap','pagto-pendente-badge','lista-pagto-pendente-agendamentos',pagtoPendente);
         renderPagtoPendente('pagto-pendente-wrap-fila','pagto-pendente-badge-fila','lista-pagto-pendente-fila',pagtoPendente);
+        renderCobranca(pagtoPendente);
         if(typeof atualizarSininho==='function') atualizarSininho();
     },e=>console.error('Erro agendamentos:',e));
 }
