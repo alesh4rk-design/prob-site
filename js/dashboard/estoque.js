@@ -47,16 +47,31 @@ async function atualizarContagemZonaPerigo(){
     }
 }
 
+// Apaga documento por documento (em vez de um batch atômico) — assim,
+// se ALGUM documento tiver problema, os outros continuam sendo apagados
+// normalmente, e sobra um erro específico (com o caminho exato do
+// documento que falhou) em vez de um "tudo ou nada" genérico.
 async function apagarPorLotes(refColOuQuery){
     const snap = await getDocs(refColOuQuery);
     const docs = snap.docs;
-    for(let i=0; i<docs.length; i+=450){
-        const lote = docs.slice(i, i+450);
-        const batch = writeBatch(db);
-        lote.forEach(d => batch.delete(d.ref));
-        await batch.commit();
+    let apagados = 0;
+    const erros = [];
+    for(const d of docs){
+        try{
+            await deleteDoc(d.ref);
+            apagados++;
+        }catch(e){
+            console.error('Falha ao apagar', d.ref.path, e);
+            erros.push({ path: d.ref.path, code: e.code||e.message });
+        }
     }
-    return docs.length;
+    if(erros.length){
+        const err = new Error(`${erros.length} de ${docs.length} não apagaram — ex: ${erros[0].path} (${erros[0].code})`);
+        err.code = erros[0].code;
+        err.parcial = apagados;
+        throw err;
+    }
+    return apagados;
 }
 
 function initZonaPerigo(){
@@ -108,6 +123,15 @@ function initZonaPerigo(){
         const categorias = JSON.parse(document.getElementById('modal-zona-perigo').dataset.categorias || '[]');
         const btnConf = document.getElementById('btn-confirmar-zona-perigo');
         btnConf.disabled = true;
+
+        // Força renovar o token de login antes de tentar apagar — se a
+        // sessão tiver ficado aberta muito tempo, um token velho pode dar
+        // permission-denied mesmo com as regras certas e o UID batendo.
+        try{
+            btnConf.textContent = 'Renovando sessão...';
+            if(window.auth?.currentUser) await window.auth.currentUser.getIdToken(true);
+        }catch(e){ console.error('Erro ao renovar token:', e); }
+
         let totalApagado = 0;
         const categoriasComErro = [];
         for(const cat of categorias){
@@ -116,7 +140,8 @@ function initZonaPerigo(){
                 totalApagado += await apagarPorLotes(refCategoria(cat));
             }catch(e){
                 console.error('Erro ao apagar', cat, e);
-                categoriasComErro.push(cat+' ('+(e.code||e.message)+')');
+                totalApagado += e.parcial || 0;
+                categoriasComErro.push(cat+': '+e.message);
             }
         }
         btnConf.textContent = 'Apagar de vez';
@@ -133,15 +158,7 @@ function initZonaPerigo(){
             // toast de sucesso — antes os dois disparavam em sequência e o
             // de sucesso escondia o erro, dando a impressão de que "deu
             // certo" mesmo quando uma categoria falhou silenciosamente.
-            // Mostra também o UID logado vs o UID da barbearia — se as
-            // regras já foram publicadas certinho e o erro persiste, o mais
-            // provável é os dois serem diferentes (conta logada não é a
-            // dona desta barbearia no banco).
-            const uidLogado = window.auth?.currentUser?.uid || '?';
-            const uidBarbearia = barbeiroData.uid || '?';
-            console.error('Zona de Perigo — UID logado:', uidLogado, '| UID da barbearia (barbeiroData.uid):', uidBarbearia);
-            const batem = uidLogado === uidBarbearia;
-            toast(`⚠ Não deu para apagar: ${categoriasComErro.join(', ')}. UID logado: ${uidLogado} | UID da barbearia: ${uidBarbearia} — ${batem ? 'são iguais (não é isso)' : 'SÃO DIFERENTES, é isso!'}`, 'var(--red)', 15000);
+            toast(`⚠ ${totalApagado} apagado(s), mas deu erro em: ${categoriasComErro.join(' | ')}`, 'var(--red)', 20000);
         } else {
             toast(`✓ ${totalApagado} registro(s) apagado(s)`);
         }
