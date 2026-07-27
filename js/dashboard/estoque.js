@@ -133,7 +133,13 @@ function initZonaPerigo(){
             // toast de sucesso — antes os dois disparavam em sequência e o
             // de sucesso escondia o erro, dando a impressão de que "deu
             // certo" mesmo quando uma categoria falhou silenciosamente.
-            toast(`⚠ Não deu para apagar: ${categoriasComErro.join(', ')}. Confira se as regras do Firestore foram publicadas.`, 'var(--red)');
+            // Mostra também o UID logado vs o UID da barbearia — se as
+            // regras já foram publicadas certinho e o erro persiste, o mais
+            // provável é os dois serem diferentes (conta logada não é a
+            // dona desta barbearia no banco).
+            const uidLogado = window.auth?.currentUser?.uid || '?';
+            console.error('Zona de Perigo — UID logado:', uidLogado, '| UID da barbearia (barbeiroData.uid):', barbeiroData.uid);
+            toast(`⚠ Não deu para apagar: ${categoriasComErro.join(', ')}. UID logado: ${uidLogado.slice(0,8)}... — confira no console (F12) se bate com o UID da barbearia.`, 'var(--red)');
         } else {
             toast(`✓ ${totalApagado} registro(s) apagado(s)`);
         }

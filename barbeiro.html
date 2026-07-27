@@ -1890,6 +1890,7 @@ const db=getFirestore(app);
 // separados (barbeiro-estoque.js, etc.) são scripts comuns, então
 // disponibilizamos aqui o que eles precisam usar, como window.algumaCoisa.
 window.db=db;
+window.auth=auth;
 window.addDoc=addDoc; window.collection=collection; window.deleteDoc=deleteDoc;
 window.doc=doc; window.getDoc=getDoc; window.getDocs=getDocs; window.increment=increment;
 window.onSnapshot=onSnapshot; window.query=query; window.setDoc=setDoc;
