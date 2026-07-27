@@ -80,6 +80,12 @@ service cloud.firestore {
       match /gastosInsumos/{doc} {
         allow read, write: if isOwner(bId) || isAdmin();
       }
+      // Acordos fixos com cliente ("aba Acordos com Cliente") — não tinha
+      // NENHUMA regra pra essa subcoleção, então toda ação (criar, marcar
+      // uso, encerrar) dava permission-denied por padrão.
+      match /acordosCliente/{doc} {
+        allow read, write: if isOwner(bId) || isAdmin();
+      }
 
       // Comissão de cada barbeiro (%) — fica separada do array "equipe" no
       // doc público de barbeiros/{bId} de propósito: esse doc é lido sem
@@ -117,6 +123,24 @@ service cloud.firestore {
     // não existia regra nenhuma pra essa coleção antes.
     match /funcionarios/{uid} {
       allow read, create: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Perfil (nome/WhatsApp) do cliente com login próprio, keyed pelo
+    // próprio uid — cada cliente só lê/escreve o seu. Igual aos casos acima,
+    // não existia NENHUMA regra pra essa coleção: todo cadastro/login de
+    // cliente com conta própria dava permission-denied ao salvar/buscar
+    // nome e WhatsApp.
+    match /clientesApp/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Ofertas com preço personalizado (link tipo vender.html?oferta=ID) —
+    // leitura pública porque é consultada ANTES de existir qualquer conta
+    // (na página de vendas, e na tela de cadastro do barbeiro). Só o admin
+    // cria/edita/ativa — outra coleção que não tinha regra nenhuma.
+    match /ofertas/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // ── Status de acesso (trial / ativo / bloqueado / pendente) ──
