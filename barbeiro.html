@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/barbeiro.css?v=20260727k">
+    <link rel="stylesheet" href="css/barbeiro.css?v=20260727l">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -302,6 +302,17 @@
         <div class="topbar-user">
             <button id="btn-instalar-app" title="Instalar o Pro'B no celular/computador" style="display:none;background:rgba(0,212,255,.08);border:1.5px solid var(--blue);border-radius:8px;padding:.4rem .7rem;color:var(--blue);font-weight:700;font-size:.72rem;cursor:pointer;flex-shrink:0;white-space:nowrap">📲 Instalar App</button>
             <button id="btn-ajuda" title="Ajuda e tutoriais" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--blue);font-weight:900;font-size:.9rem;cursor:pointer;flex-shrink:0">?</button>
+            <div style="position:relative;flex-shrink:0">
+                <button id="btn-novidades" title="Novidades do sistema" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--yellow);font-size:1rem;cursor:pointer">⭐</button>
+                <span id="novidades-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:.62rem;font-weight:800;border-radius:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px">•</span>
+                <div id="novidades-painel" style="display:none;position:absolute;top:40px;right:0;width:290px;max-height:70vh;overflow-y:auto;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:.85rem;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.4)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+                        <div style="font-size:.85rem;font-weight:800">⭐ Novidades</div>
+                        <button id="btn-fechar-novidades" style="background:transparent;border:none;color:var(--muted);font-size:1rem;cursor:pointer;line-height:1">✕</button>
+                    </div>
+                    <div id="novidades-lista" style="display:flex;flex-direction:column;gap:.85rem"></div>
+                </div>
+            </div>
             <div style="position:relative;flex-shrink:0">
                 <button id="btn-sininho" title="Notificações" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--text);font-size:1rem;cursor:pointer">🔔</button>
                 <span id="sininho-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:.62rem;font-weight:800;border-radius:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px">0</span>
@@ -1859,7 +1870,7 @@
     </div>
 </div>
 
-<script src="js/barbeiro-particles.js?v=20260727k"></script>
+<script src="js/barbeiro-particles.js?v=20260727l"></script>
 <script>
     // ── Instalar o Pro'B como app (PWA) ──
     // No Android/Chrome/desktop o navegador dispara "beforeinstallprompt" e
@@ -1901,7 +1912,7 @@
     }
 </script>
 
-<script src="config.js?v=20260727k"></script>
+<script src="config.js?v=20260727l"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -2834,6 +2845,7 @@ async function initDash(){
     initPresencial();
     initFila();
     initEstoque();
+    if(typeof initNovidades==='function') initNovidades();
 
     const btnExp=document.getElementById('btn-exportar-excel');
     if(btnExp && !btnExp.dataset.bound){
@@ -2934,17 +2946,18 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20260727k"></script>
-<script defer src="js/dashboard/backup.js?v=20260727k"></script>
-<script defer src="js/dashboard/tour.js?v=20260727k"></script>
-<script defer src="js/dashboard/equipe.js?v=20260727k"></script>
-<script defer src="js/dashboard/promocoes.js?v=20260727k"></script>
-<script defer src="js/dashboard/clientes.js?v=20260727k"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20260727k"></script>
-<script defer src="js/dashboard/horarios.js?v=20260727k"></script>
-<script defer src="js/dashboard/financeiro.js?v=20260727k"></script>
-<script defer src="js/dashboard/auth.js?v=20260727k"></script>
-<script defer src="js/dashboard/visual.js?v=20260727k"></script>
+<script defer src="js/dashboard/estoque.js?v=20260727l"></script>
+<script defer src="js/dashboard/backup.js?v=20260727l"></script>
+<script defer src="js/dashboard/novidades.js?v=20260727l"></script>
+<script defer src="js/dashboard/tour.js?v=20260727l"></script>
+<script defer src="js/dashboard/equipe.js?v=20260727l"></script>
+<script defer src="js/dashboard/promocoes.js?v=20260727l"></script>
+<script defer src="js/dashboard/clientes.js?v=20260727l"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20260727l"></script>
+<script defer src="js/dashboard/horarios.js?v=20260727l"></script>
+<script defer src="js/dashboard/financeiro.js?v=20260727l"></script>
+<script defer src="js/dashboard/auth.js?v=20260727l"></script>
+<script defer src="js/dashboard/visual.js?v=20260727l"></script>
 
 
 
