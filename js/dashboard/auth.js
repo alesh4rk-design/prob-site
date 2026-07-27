@@ -68,6 +68,15 @@ async function initFuncionarioMode(bId, funcId){
     const funcMembro=(bData.equipe||[]).find(e=>e.id===funcId);
     if(!funcMembro)return false;
 
+    // Comissão não vem mais no doc público da barbearia (ver equipe.js) —
+    // cada barbeiro só consegue ler a própria, nessa subcoleção separada.
+    if(funcMembro.tipo!=='recepcionista'){
+        try{
+            const comSnap=await getDoc(doc(db,'barbeiros',bId,'comissoes',funcId));
+            funcMembro.pct = comSnap.exists() ? comSnap.data().pct : 50;
+        }catch(e){ console.error('comissao func:',e); funcMembro.pct=50; }
+    }
+
     if(funcMembro.tipo==='recepcionista'){
         await initRecepcionistaMode(bId,bData,funcId);
         return true;

@@ -130,6 +130,49 @@ window.toggleAcessoEquipe = async(equipeId, novoAtivo) => {
     }catch(e){ toast('Erro ao atualizar acesso','var(--red)'); }
 };
 
+// Comissão (%) de cada barbeiro fica numa subcoleção à parte, não no
+// documento público da barbearia — ver comentário nas regras do Firestore.
+// barbeiroData.equipe[i].pct continua existindo só EM MEMÓRIA (mesclado
+// aqui) pra não precisar mexer em todo o resto do código que já lê ".pct"
+// dali; nunca é isso que vai pro banco quando salvamos o array "equipe".
+let comissoesCache = {};
+
+function escutarComissoes(){
+    if(window.__recepcionista || window.__comissoesListenerAtivo) return;
+    window.__comissoesListenerAtivo = true;
+    migrarComissoesAntigas();
+    onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'comissoes'), snap=>{
+        comissoesCache = {};
+        snap.forEach(d=>{ comissoesCache[d.id] = d.data().pct; });
+        (barbeiroData.equipe||[]).forEach(e=>{
+            if(e.tipo!=='recepcionista') e.pct = comissoesCache[e.id] ?? (e.pct ?? 50);
+        });
+        renderEquipe();
+        if(typeof carregarGanhos==='function') carregarGanhos();
+    }, e=>console.error('comissoes:',e));
+}
+
+// Autocorreção pra barbearias cadastradas antes da comissão sair do doc
+// público: se algum membro da equipe ainda tem "pct" salvo ali, migra pra
+// cá e regrava o doc público sem esse campo. Roda uma vez só, por sessão.
+async function migrarComissoesAntigas(){
+    const equipe = barbeiroData.equipe||[];
+    const comPctAntigo = equipe.filter(e=>e.pct!=null && e.tipo!=='recepcionista');
+    if(!comPctAntigo.length) return;
+    try{
+        for(const e of comPctAntigo){
+            await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',e.id),{pct:e.pct});
+        }
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
+    }catch(err){ console.error('migrarComissoesAntigas:',err); }
+}
+
+// Tira o campo "pct" antes de gravar o array "equipe" no doc público —
+// a comissão nunca deve ir parar lá (ver escutarComissoes acima).
+function equipeSemComissao(){
+    return (barbeiroData.equipe||[]).map(({pct, ...resto})=>resto);
+}
+
 function renderEquipe(){
     const lista=barbeiroData.equipe||[];
     const container=$('lista-equipe');
@@ -175,7 +218,7 @@ function renderEquipe(){
             const i=Number(btn.dataset.save);
             const pct=Number(container.querySelector(`.pct-input[data-idx="${i}"]`).value);
             barbeiroData.equipe[i].pct=pct;
-            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:barbeiroData.equipe});
+            await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',barbeiroData.equipe[i].id),{pct});
             toast(`${barbeiroData.equipe[i].nome}: ${pct}% salvo!`);
             renderEquipe();
             carregarGanhos();
@@ -188,8 +231,11 @@ function renderEquipe(){
             const novoTipo = membro.tipo==='recepcionista' ? 'barbeiro' : 'recepcionista';
             if(!confirm(`Trocar ${membro.nome} para ${novoTipo==='recepcionista'?'Recepcionista':'Barbeiro'}?\n\nNa próxima vez que ela(e) entrar, o menu já vem atualizado sozinho.`)) return;
             barbeiroData.equipe[i].tipo = novoTipo;
-            if(novoTipo==='recepcionista') barbeiroData.equipe[i].pct = 0;
-            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:barbeiroData.equipe});
+            if(novoTipo==='recepcionista'){
+                barbeiroData.equipe[i].pct = 0;
+                await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',membro.id),{pct:0});
+            }
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
             toast(`${membro.nome} agora é ${novoTipo==='recepcionista'?'Recepcionista':'Barbeiro'}!`);
             renderEquipe();
             carregarGanhos();
@@ -200,10 +246,11 @@ function renderEquipe(){
             const idx=Number(btn.dataset.idx);
             const equipeId=barbeiroData.equipe[idx]?.id;
             barbeiroData.equipe.splice(idx,1);
-            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:barbeiroData.equipe});
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
             // Revoga o acesso de vez, mesmo que a pessoa já tivesse criado a própria conta
             if(equipeId){
                 try{ await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'equipeAuth',equipeId)); }catch(e){}
+                try{ await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',equipeId)); }catch(e){}
             }
             renderEquipe();carregarGanhos();toast('Removido e acesso revogado');
         });
@@ -225,8 +272,10 @@ $('btn-add-barbeiro').addEventListener('click',async()=>{
     const pct=tipo==='recepcionista'?0:(Number($('eq-pct').value)||50);
     if(!nome){toast('Informe o nome','var(--red)');return;}
     barbeiroData.equipe=barbeiroData.equipe||[];
-    barbeiroData.equipe.push({id:Date.now().toString(),nome,pct,tipo,criadoEm:new Date().toISOString()});
-    await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:barbeiroData.equipe});
+    const novoId=Date.now().toString();
+    barbeiroData.equipe.push({id:novoId,nome,pct,tipo,criadoEm:new Date().toISOString()});
+    await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
+    await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',novoId),{pct});
     $('eq-nome').value='';$('eq-pct').value='';
     renderEquipe();carregarGanhos();toast((tipo==='recepcionista'?'Recepcionista':'Barbeiro')+' adicionado!');
 });

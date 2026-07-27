@@ -81,6 +81,20 @@ service cloud.firestore {
         allow read, write: if isOwner(bId) || isAdmin();
       }
 
+      // Comissão de cada barbeiro (%) — fica separada do array "equipe" no
+      // doc público de barbeiros/{bId} de propósito: esse doc é lido sem
+      // login por qualquer visitante (tela do cliente), e comissão é dado
+      // interno do negócio. Cada barbeiro só lê a própria comissão (pra
+      // calcular os "Meus Ganhos" no painel restrito dele); só o dono edita.
+      match /comissoes/{equipeId} {
+        allow read: if isOwner(bId) || isAdmin()
+                    || (request.auth != null
+                        && exists(/databases/$(database)/documents/funcionarios/$(request.auth.uid))
+                        && get(/databases/$(database)/documents/funcionarios/$(request.auth.uid)).data.bId == bId
+                        && get(/databases/$(database)/documents/funcionarios/$(request.auth.uid)).data.equipeId == equipeId);
+        allow write: if isOwner(bId) || isAdmin();
+      }
+
       // Login da equipe (funcionário/recepcionista) — criado uma vez no
       // autocadastro pelo link de convite (a própria pessoa, autenticada
       // com o uid novo, grava seu próprio registro), lido a cada login
