@@ -109,17 +109,34 @@ function initZonaPerigo(){
         const btnConf = document.getElementById('btn-confirmar-zona-perigo');
         btnConf.disabled = true;
         let totalApagado = 0;
+        const categoriasComErro = [];
         for(const cat of categorias){
             btnConf.textContent = 'Apagando ' + ZP_LABELS[cat] + '...';
             try{
                 totalApagado += await apagarPorLotes(refCategoria(cat));
-            }catch(e){ console.error('Erro ao apagar', cat, e); toast('Erro ao apagar '+cat+': '+e.message, 'var(--red)'); }
+            }catch(e){
+                console.error('Erro ao apagar', cat, e);
+                categoriasComErro.push(cat+' ('+(e.code||e.message)+')');
+            }
         }
         btnConf.textContent = 'Apagar de vez';
         document.getElementById('modal-zona-perigo').style.display = 'none';
-        document.querySelectorAll('.zona-perigo-check').forEach(c=>c.checked=false);
+        // Só desmarca (e considera "resolvida") a categoria que realmente
+        // apagou sem erro — categoria com erro continua marcada, pra ficar
+        // claro que ainda precisa ser resolvida.
+        document.querySelectorAll('.zona-perigo-check').forEach(c=>{
+            if(!categoriasComErro.some(ce=>ce.startsWith(c.value))) c.checked=false;
+        });
         atualizarContagemZonaPerigo();
-        toast(`✓ ${totalApagado} registro(s) apagado(s)`);
+        if(categoriasComErro.length){
+            // Erro fica em destaque por mais tempo e NÃO é sobrescrito pelo
+            // toast de sucesso — antes os dois disparavam em sequência e o
+            // de sucesso escondia o erro, dando a impressão de que "deu
+            // certo" mesmo quando uma categoria falhou silenciosamente.
+            toast(`⚠ Não deu para apagar: ${categoriasComErro.join(', ')}. Confira se as regras do Firestore foram publicadas.`, 'var(--red)');
+        } else {
+            toast(`✓ ${totalApagado} registro(s) apagado(s)`);
+        }
     });
 }
 
