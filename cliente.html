@@ -853,7 +853,7 @@
 <div class="toast" id="toast"></div>
 
 
-<script src="config.js?v=20260727j"></script>
+<script src="config.js?v=20260727k"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -904,8 +904,10 @@ let dataEscolhida  = '';
 let horaEscolhida  = '';
 let currentStep    = 0;
 let currentScreenId = 's0';
-let promosIndividuais = []; // cache das promoções individuais/cupons ativos da barbearia
-let promoAplicada  = null;  // promoção que valeu pra esse cliente, se houver
+let promosCupomAtivas = [];  // cache dos cupons ativos da barbearia (abertos, sem cliente vinculado)
+let promosClienteAtivas = []; // cache das promoções vinculadas a um cliente (simples/pacote/desconto/fidelidade)
+let promoAplicada  = null;  // cupom que valeu pra esse cliente, se houver (só cupom ajusta o preço sozinho)
+let promoClienteAtual = null; // promoção pessoal do cliente identificado, se houver (só informativa)
 
 /* ── Util ── */
 const $   = id => document.getElementById(id);
@@ -1091,9 +1093,12 @@ function aplicarPersonalizacao(data) {
     }
 }
 
-// Busca promoções ativas da barbearia: gerais (mostra banner) e
-// individuais/cupons (guarda em cache pra conferir depois que o cliente
-// informar nome/WhatsApp/cupom).
+// Busca promoções ativas da barbearia: cupons (abertos, guardados em cache
+// pra conferir pelo código digitado) e promoções vinculadas a um cliente
+// (guardadas em cache pra conferir pelo WhatsApp, depois que ele se
+// identificar no Step 0). Nenhuma promoção aparece antes disso — exceto
+// cupom, todas exigem um cliente vinculado, então não tem mais banner
+// "geral" mostrado a qualquer visitante.
 async function carregarPromocoesCliente(){
     if(!barbeiroId) return;
     try{
@@ -1102,57 +1107,54 @@ async function carregarPromocoesCliente(){
         snap.forEach(d=>todas.push({id:d.id,...d.data()}));
 
         const hoje = new Date().toISOString().split('T')[0];
-        const gerais = todas.filter(p=>{
-            if(p.tipo==='individual' || !p.ativo) return false;
-            if(p.periodo==='personalizado') return hoje>=p.dataInicio && hoje<=p.dataFim;
-            return true; // permanente, semanal, mensal — sempre exibida como ativa
-        });
 
-        promosIndividuais = todas.filter(p=>
-            p.tipo==='individual' && p.ativo && (p.usosFeitos||0) < (p.limiteUsos||1) && (!p.validoAte || hoje<=p.validoAte)
+        promosCupomAtivas = todas.filter(p=>
+            p.tipo==='cupom' && p.ativo && (p.usosFeitos||0) < (p.limiteUsos||1) && (!p.validoAte || hoje<=p.validoAte)
         );
 
-        const banner = $('banner-promocoes');
-        if(banner){
-            if(!gerais.length){ banner.style.display='none'; }
-            else{
-                const icones={simples:'🏷️',pacote:'📦',desconto:'💰',fidelidade:'⭐'};
-                const linhas = gerais.map(p=>{
-                    let detalhe='';
-                    if(p.tipo==='simples')    detalhe=`${p.servicos} por R$${Number(p.valor).toFixed(2)}`;
-                    if(p.tipo==='pacote')     detalhe=`${p.qtdCortes} cortes por R$${Number(p.valor).toFixed(2)}`;
-                    if(p.tipo==='desconto')   detalhe=`${p.minCortes}+ cortes ${p.basePeriodo==='semana'?'na semana':'no mês'} = ${p.desconto}% off`;
-                    if(p.tipo==='fidelidade') detalhe=`A cada ${p.meta} cortes = ${p.brinde}`;
-                    return `<div style="display:flex;align-items:flex-start;gap:.5rem;padding:.5rem 0">
-                        <span>${icones[p.tipo]||'🎁'}</span>
-                        <div><strong>${escapeHtml(p.titulo)}</strong><div style="opacity:.8">${escapeHtml(detalhe)}</div></div>
-                    </div>`;
-                }).join('<div style="height:1px;background:rgba(0,212,255,.15)"></div>');
-                banner.innerHTML = `<div style="background:rgba(0,212,255,.05);border:1.5px solid rgba(0,212,255,.25);border-radius:12px;padding:.6rem .9rem;font-size:.8rem;color:#fff">${linhas}</div>`;
-                banner.style.display='block';
-            }
-        }
+        promosClienteAtivas = todas.filter(p=>{
+            if(p.tipo==='cupom' || !p.ativo || !p.clienteWpp) return false;
+            if(p.periodo==='personalizado') return hoje>=p.dataInicio && hoje<=p.dataFim;
+            return true; // permanente, semanal, mensal — sempre vale enquanto ativa
+        });
     }catch(e){ console.error('carregarPromocoesCliente:', e); }
+}
+
+// Monta o texto de exibição de uma promoção vinculada a cliente (não-cupom)
+function detalhePromoCliente(p){
+    if(p.tipo==='simples')    return `${p.servicos} por R$${Number(p.valor).toFixed(2)}`;
+    if(p.tipo==='pacote')     return `${p.qtdCortes} cortes por R$${Number(p.valor).toFixed(2)}`;
+    if(p.tipo==='desconto')   return `${p.minCortes}+ cortes ${p.basePeriodo==='semana'?'na semana':'no mês'} = ${p.desconto}% off`;
+    if(p.tipo==='fidelidade') return `A cada ${p.meta} cortes = ${p.brinde}`;
+    return '';
 }
 
 // Conferido depois que o cliente informa nome/WhatsApp/cupom no Step 0.
 // Prioridade: cupom digitado > cliente identificado por WhatsApp.
 function conferirPromoCliente(wppLimpo, cupomDigitado){
     promoAplicada = null;
+    promoClienteAtual = null;
     const cupom = (cupomDigitado||'').trim().toUpperCase();
     if(cupom){
-        promoAplicada = promosIndividuais.find(p=>p.codigo===cupom) || null;
+        promoAplicada = promosCupomAtivas.find(p=>p.codigo===cupom) || null;
     }
-    if(!promoAplicada && wppLimpo){
-        promoAplicada = promosIndividuais.find(p=>p.clienteWpp===wppLimpo) || null;
+    // Promoção pessoal do cliente (simples/pacote/desconto/fidelidade) —
+    // só informativa, não mexe no preço sozinha, mas mostra sempre que
+    // identificarem o cliente, mesmo se um cupom também tiver sido aplicado.
+    if(wppLimpo){
+        promoClienteAtual = promosClienteAtivas.find(p=>p.clienteWpp===wppLimpo) || null;
     }
 
     const banner = $('promo-cliente-banner');
     if(!banner) return;
+
     if(promoAplicada){
         const valorFmt = promoAplicada.descontoTipo==='percentual'
             ? `${promoAplicada.descontoValor}% de desconto`
             : `R$${Number(promoAplicada.descontoValor).toFixed(2)} de desconto`;
+        banner.style.background='rgba(0,255,136,.08)';
+        banner.style.borderColor='rgba(0,255,136,.3)';
+        banner.style.color='var(--green)';
         banner.textContent = `🎉 Cupom aplicado! Você ganhou ${valorFmt} no seu próximo agendamento.`;
         banner.style.display='block';
     } else if(cupom){
@@ -1163,6 +1165,21 @@ function conferirPromoCliente(wppLimpo, cupomDigitado){
         banner.style.display='block';
     } else {
         banner.style.display='none';
+    }
+
+    const bannerPessoal = $('banner-promocoes');
+    if(bannerPessoal){
+        if(promoClienteAtual){
+            bannerPessoal.innerHTML = `<div style="background:rgba(0,212,255,.05);border:1.5px solid rgba(0,212,255,.25);border-radius:12px;padding:.6rem .9rem;font-size:.8rem;color:#fff">
+                <div style="display:flex;align-items:flex-start;gap:.5rem">
+                    <span>🎁</span>
+                    <div><strong>${escapeHtml(promoClienteAtual.titulo)}</strong><div style="opacity:.8">${escapeHtml(detalhePromoCliente(promoClienteAtual))}</div></div>
+                </div>
+            </div>`;
+            bannerPessoal.style.display='block';
+        } else {
+            bannerPessoal.style.display='none';
+        }
     }
 }
 

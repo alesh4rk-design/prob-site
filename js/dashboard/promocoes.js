@@ -17,16 +17,13 @@
 // initEquipeExtras em equipe.js — ver docs/README.md).
 function initPromocoesExtras(){
 
-// Toggle campos por tipo
+// Toggle campos por tipo — o vínculo de cliente aparece pra todo mundo,
+// exceto cupom (que é aberto, sem dono).
 document.getElementById('promo-tipo').addEventListener('change', function(){
-    ['simples','pacote','desconto','fidelidade','individual'].forEach(t=>{
+    ['simples','pacote','desconto','fidelidade','cupom'].forEach(t=>{
         document.getElementById('promo-campos-'+t).style.display = this.value===t?'block':'none';
     });
-});
-
-// Toggle se também vai gerar um código de cupom
-document.getElementById('promo-i-tem-codigo').addEventListener('change', function(){
-    document.getElementById('promo-i-campos-codigo').style.display = this.checked?'block':'none';
+    document.getElementById('promo-campos-cliente-vinculado').style.display = this.value==='cupom'?'none':'block';
 });
 
 // Gera um código de cupom aleatório
@@ -34,7 +31,7 @@ document.getElementById('btn-gerar-codigo').addEventListener('click', ()=>{
     const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let codigo='';
     for(let i=0;i<6;i++) codigo+=chars[Math.floor(Math.random()*chars.length)];
-    document.getElementById('promo-i-codigo').value=codigo;
+    document.getElementById('promo-c-codigo').value=codigo;
 });
 
 // Toggle datas personalizadas
@@ -49,7 +46,7 @@ document.getElementById('btn-add-promo').addEventListener('click', async()=>{
     const titulo  = document.getElementById('promo-titulo').value.trim();
     const desc    = document.getElementById('promo-desc').value.trim();
 
-    if(!titulo && tipo!=='individual'){ toast('Digite o título da promoção','var(--red)'); return; }
+    if(!titulo && tipo!=='cupom'){ toast('Digite o título da promoção','var(--red)'); return; }
 
     const promo = {
         tipo, periodo, titulo, desc,
@@ -57,6 +54,30 @@ document.getElementById('btn-add-promo').addEventListener('click', async()=>{
         criadoEm: new Date().toISOString(),
         barbeiroId: barbeiroData.uid
     };
+
+    // Toda promoção, exceto cupom, fica vinculada a um cliente real da base
+    // — só ele(a) vê essa oferta.
+    let clienteEscolhido = null;
+    if(tipo!=='cupom'){
+        const clienteId = document.getElementById('promo-cliente-select').value;
+        if(!clienteId){ toast('Selecione um cliente da sua base','var(--red)'); return; }
+        clienteEscolhido = todosClientes.find(c=>c.id===clienteId);
+        if(!clienteEscolhido){ toast('Cliente não encontrado — atualize a lista e tente de novo','var(--red)'); return; }
+        promo.clienteId   = clienteEscolhido.id;
+        promo.clienteNome = clienteEscolhido.nome||'';
+        promo.clienteWpp  = clienteEscolhido.wpp||'';
+
+        // Checa se esse cliente já tem uma promoção do mesmo tipo ativa —
+        // evita empilhar mais de uma sem querer.
+        try{
+            const snapExistente = await getDocs(collection(db,'barbeiros',barbeiroData.uid,'promocoes'));
+            const jaTem = snapExistente.docs.some(d=>{
+                const p=d.data();
+                return p.tipo===tipo && p.ativo && p.clienteWpp===promo.clienteWpp;
+            });
+            if(jaTem && !confirm(`${promo.clienteNome||'Esse cliente'} já tem uma promoção desse tipo ativa. Quer criar outra mesmo assim?`)) return;
+        }catch(e){ console.error('checagem de promoção duplicada:', e); }
+    }
 
     // Campos específicos por tipo
     if(tipo==='simples'){
@@ -80,49 +101,25 @@ document.getElementById('btn-add-promo').addEventListener('click', async()=>{
         promo.brinde = document.getElementById('promo-f-brinde').value.trim();
         if(!promo.meta||!promo.brinde){ toast('Preencha meta e brinde','var(--red)'); return; }
     }
-    if(tipo==='individual'){
-        const clienteId = document.getElementById('promo-i-cliente-select').value;
-        if(!clienteId){ toast('Selecione um cliente da sua base','var(--red)'); return; }
-        const clienteEscolhido = todosClientes.find(c=>c.id===clienteId);
-        if(!clienteEscolhido){ toast('Cliente não encontrado — atualize a lista e tente de novo','var(--red)'); return; }
-        const clienteWpp = clienteEscolhido.wpp||'';
+    if(tipo==='cupom'){
+        promo.codigo = document.getElementById('promo-c-codigo').value.trim().toUpperCase();
+        if(!promo.codigo){ toast('Informe ou gere um código de cupom','var(--red)'); return; }
+        try{
+            const snapCodigo = await getDocs(collection(db,'barbeiros',barbeiroData.uid,'promocoes'));
+            const codigoRepetido = snapCodigo.docs.some(d=>d.data().codigo===promo.codigo);
+            if(codigoRepetido){ toast('Esse código já está em uso por outra promoção','var(--red)'); return; }
+        }catch(e){ console.error('checagem de código duplicado:', e); }
 
-        promo.descontoTipo  = document.getElementById('promo-i-desconto-tipo').value;
-        promo.descontoValor = parseFloat(document.getElementById('promo-i-desconto-valor').value)||0;
-        promo.limiteUsos = Math.max(1, parseInt(document.getElementById('promo-i-limite-usos').value) || 1);
+        promo.descontoTipo  = document.getElementById('promo-c-desconto-tipo').value;
+        promo.descontoValor = parseFloat(document.getElementById('promo-c-desconto-valor').value)||0;
+        promo.limiteUsos = Math.max(1, parseInt(document.getElementById('promo-c-limite-usos').value) || 1);
         promo.usosFeitos = 0;
-        const validoAte = document.getElementById('promo-i-valido-ate').value;
+        const validoAte = document.getElementById('promo-c-valido-ate').value;
         if(validoAte) promo.validoAte = validoAte;
 
         if(!promo.descontoValor){ toast('Preencha o valor do desconto','var(--red)'); return; }
         if(promo.descontoTipo==='percentual' && (promo.descontoValor<=0||promo.descontoValor>90)){ toast('Desconto percentual deve ser entre 1 e 90%','var(--red)'); return; }
-
-        promo.alvo = 'cliente';
-        promo.clienteNome = clienteEscolhido ? clienteEscolhido.nome : '';
-        promo.clienteWpp  = clienteWpp;
-        if(!titulo) promo.titulo = 'Desconto especial — '+(promo.clienteNome||'cliente');
-
-        // Checa se esse cliente já tem uma promoção individual ativa —
-        // evita empilhar mais de uma sem querer.
-        try{
-            const snapExistente = await getDocs(collection(db,'barbeiros',barbeiroData.uid,'promocoes'));
-            const jaTem = snapExistente.docs.some(d=>{
-                const p=d.data();
-                return p.tipo==='individual' && p.ativo && p.clienteWpp===clienteWpp;
-            });
-            if(jaTem && !confirm(`${promo.clienteNome||'Esse cliente'} já tem uma promoção individual ativa. Quer criar outra mesmo assim?`)) return;
-        }catch(e){ console.error('checagem de promoção duplicada:', e); }
-
-        // Cupom é um extra opcional, não substitui o vínculo com o cliente
-        if(document.getElementById('promo-i-tem-codigo').checked){
-            promo.codigo = document.getElementById('promo-i-codigo').value.trim().toUpperCase();
-            if(!promo.codigo){ toast('Informe ou gere um código de cupom','var(--red)'); return; }
-            try{
-                const snapCodigo = await getDocs(collection(db,'barbeiros',barbeiroData.uid,'promocoes'));
-                const codigoRepetido = snapCodigo.docs.some(d=>d.data().codigo===promo.codigo);
-                if(codigoRepetido){ toast('Esse código já está em uso por outra promoção','var(--red)'); return; }
-            }catch(e){ console.error('checagem de código duplicado:', e); }
-        }
+        if(!titulo) promo.titulo = 'Cupom '+promo.codigo;
     }
     if(periodo==='personalizado'){
         promo.dataInicio = document.getElementById('promo-data-ini').value;
@@ -135,6 +132,7 @@ document.getElementById('btn-add-promo').addEventListener('click', async()=>{
         // Limpa campos
         document.getElementById('promo-titulo').value='';
         document.getElementById('promo-desc').value='';
+        document.getElementById('promo-cliente-select').value='';
         document.getElementById('promo-s-servicos').value='';
         document.getElementById('promo-s-valor').value='';
         document.getElementById('promo-p-qtd').value='';
@@ -143,12 +141,9 @@ document.getElementById('btn-add-promo').addEventListener('click', async()=>{
         document.getElementById('promo-d-pct').value='';
         document.getElementById('promo-f-meta').value='';
         document.getElementById('promo-f-brinde').value='';
-        document.getElementById('promo-i-cliente-select').value='';
-        document.getElementById('promo-i-tem-codigo').checked=false;
-        document.getElementById('promo-i-campos-codigo').style.display='none';
-        document.getElementById('promo-i-codigo').value='';
-        document.getElementById('promo-i-desconto-valor').value='';
-        document.getElementById('promo-i-valido-ate').value='';
+        document.getElementById('promo-c-codigo').value='';
+        document.getElementById('promo-c-desconto-valor').value='';
+        document.getElementById('promo-c-valido-ate').value='';
         toast('✓ Promoção criada!');
         carregarPromocoes();
     }catch(e){ toast('Erro: '+e.message,'var(--red)'); }
@@ -173,12 +168,12 @@ function renderPromocoes(promos){
         cont.innerHTML='<div class="empty-state"><div class="icon">🎁</div>Nenhuma promoção criada ainda.</div>';
         return;
     }
-    const icones={simples:'🏷️',pacote:'📦',desconto:'💰',fidelidade:'⭐',individual:'🎯'};
+    const icones={simples:'🏷️',pacote:'📦',desconto:'💰',fidelidade:'⭐',cupom:'🎟️'};
     const hoje = new Date().toISOString().split('T')[0];
     cont.innerHTML = promos.map(p=>{
         // Verifica se está dentro do período
         let ativaNoPeriodo = p.ativo;
-        if(p.tipo==='individual'){
+        if(p.tipo==='cupom'){
             ativaNoPeriodo = p.ativo && (p.usosFeitos||0) < (p.limiteUsos||1) && (!p.validoAte || hoje<=p.validoAte);
         } else if(p.periodo==='semanal'){
             const semanaAtual = obterSemana(new Date());
@@ -190,30 +185,30 @@ function renderPromocoes(promos){
             ativaNoPeriodo = p.ativo && hoje>=p.dataInicio && hoje<=p.dataFim;
         }
 
+        const quemFmt = p.tipo!=='cupom' ? `👤 ${escapeHtml(p.clienteNome||'Cliente')} (${escapeHtml(p.clienteWpp||'')}) — ` : '';
+
         let detalhe='';
-        if(p.tipo==='simples')    detalhe=`${p.servicos} por <strong style="color:var(--green)">R$${Number(p.valor).toFixed(2)}</strong>`;
-        if(p.tipo==='pacote')     detalhe=`${p.qtdCortes} cortes por <strong style="color:var(--green)">R$${Number(p.valor).toFixed(2)}</strong> (R$${(p.valor/p.qtdCortes).toFixed(2)}/corte)`;
-        if(p.tipo==='desconto')   detalhe=`${p.minCortes}+ cortes ${p.basePeriodo==='semana'?'na semana':'no mês'} = <strong style="color:var(--green)">${p.desconto}% off</strong>`;
-        if(p.tipo==='fidelidade') detalhe=`A cada ${p.meta} cortes = <strong style="color:var(--yellow)">${p.brinde}</strong>`;
-        if(p.tipo==='individual'){
+        if(p.tipo==='simples')    detalhe=`${quemFmt}${p.servicos} por <strong style="color:var(--green)">R$${Number(p.valor).toFixed(2)}</strong>`;
+        if(p.tipo==='pacote')     detalhe=`${quemFmt}${p.qtdCortes} cortes por <strong style="color:var(--green)">R$${Number(p.valor).toFixed(2)}</strong> (R$${(p.valor/p.qtdCortes).toFixed(2)}/corte)`;
+        if(p.tipo==='desconto')   detalhe=`${quemFmt}${p.minCortes}+ cortes ${p.basePeriodo==='semana'?'na semana':'no mês'} = <strong style="color:var(--green)">${p.desconto}% off</strong>`;
+        if(p.tipo==='fidelidade') detalhe=`${quemFmt}A cada ${p.meta} cortes = <strong style="color:var(--yellow)">${p.brinde}</strong>`;
+        if(p.tipo==='cupom'){
             const valorFmt = p.descontoTipo==='percentual'?`${p.descontoValor}% off`:`R$${Number(p.descontoValor).toFixed(2)} off`;
-            const quemFmt = `👤 ${escapeHtml(p.clienteNome||'Cliente')} (${escapeHtml(p.clienteWpp||'')})`;
-            const cupomFmt = p.codigo ? ` · 🔑 Cupom <strong>${escapeHtml(p.codigo)}</strong>` : '';
             const usosFeitos = p.usosFeitos||0, limiteUsos = p.limiteUsos||1, usosRestam = limiteUsos-usosFeitos;
             const statusUso = usosRestam<=0
                 ? ' <span style="color:var(--muted)">· esgotado</span>'
                 : limiteUsos>1
                     ? ` <span style="color:var(--yellow)">· restam ${usosRestam} de ${limiteUsos} usos</span>`
                     : '';
-            detalhe=`${quemFmt}${cupomFmt} — <strong style="color:var(--green)">${valorFmt}</strong>${statusUso}`;
+            detalhe=`🔑 Cupom <strong>${escapeHtml(p.codigo)}</strong> — <strong style="color:var(--green)">${valorFmt}</strong>${statusUso}`;
         }
 
-        const periodoLabel = p.tipo==='individual'
+        const periodoLabel = p.tipo==='cupom'
             ? (p.validoAte?`Válido até ${p.validoAte}`:'Sem validade definida')
             : ({permanente:'Permanente',semanal:'Semanal',mensal:'Mensal',personalizado:`${p.dataInicio} até ${p.dataFim}`}[p.periodo]||p.periodo);
 
-        const wppBtn = (p.tipo==='individual' && p.clienteWpp) ? `<a href="https://wa.me/55${p.clienteWpp}?text=${encodeURIComponent(`Olá ${p.clienteNome||''}! Preparei um desconto especial para você: ${p.descontoTipo==='percentual'?p.descontoValor+'% off':'R$'+Number(p.descontoValor).toFixed(2)+' off'} no seu próximo corte na ${barbeiroData.nome||'barbearia'}. Corre lá! 🎁`)}" target="_blank" class="btn-wpp" style="text-align:center;text-decoration:none">Avisar WPP</a>` : '';
-        const codigoBtn = (p.tipo==='individual' && p.codigo) ? `<button class="btn-edit" onclick="navigator.clipboard.writeText('${p.codigo}').then(()=>toast('Código copiado!'))">Copiar código</button>` : '';
+        const wppBtn = (p.tipo!=='cupom' && p.clienteWpp) ? `<a href="https://wa.me/55${p.clienteWpp}?text=${encodeURIComponent(`Olá ${p.clienteNome||''}! Preparei uma oferta especial para você na ${barbeiroData.nome||'barbearia'}: ${p.titulo}. Corre lá! 🎁`)}" target="_blank" class="btn-wpp" style="text-align:center;text-decoration:none">Avisar WPP</a>` : '';
+        const codigoBtn = (p.tipo==='cupom' && p.codigo) ? `<button class="btn-edit" onclick="navigator.clipboard.writeText('${p.codigo}').then(()=>toast('Código copiado!'))">Copiar código</button>` : '';
 
         return `<div style="background:var(--card2);border:1px solid ${ativaNoPeriodo?'rgba(0,255,136,.2)':'var(--border)'};border-radius:10px;padding:1rem;margin-bottom:.6rem;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">
@@ -242,13 +237,15 @@ function obterSemana(date){
     return d.getFullYear()*100+Math.round(((d-week1)/86400000-3+(week1.getDay()+6)%7)/7)+1;
 }
 
-// Atalho: vem da aba Clientes já com o cliente selecionado
+// Atalho: vem da aba Clientes já com o cliente selecionado — abre como
+// Promoção Simples (o tipo mais direto pra um desconto pontual), com o
+// cliente já vinculado.
 window.criarPromoParaCliente = (nome, wpp) => {
     document.querySelector('.tab[data-tab="promocoes"]').click();
     const tipoSel = document.getElementById('promo-tipo');
-    tipoSel.value = 'individual';
+    tipoSel.value = 'simples';
     tipoSel.dispatchEvent(new Event('change'));
-    const clienteSel = document.getElementById('promo-i-cliente-select');
+    const clienteSel = document.getElementById('promo-cliente-select');
 
     // O select usa o ID do cliente como valor (não o WhatsApp) — busca o
     // cliente certo na base pra achar esse ID.
@@ -269,8 +266,8 @@ window.criarPromoParaCliente = (nome, wpp) => {
         todosClientes.push({id:idTemp, nome, wpp:wpp||''});
     }
     setTimeout(()=>{
-        document.getElementById('promo-i-desconto-valor').scrollIntoView({behavior:'smooth',block:'center'});
-        document.getElementById('promo-i-desconto-valor').focus();
+        document.getElementById('promo-s-servicos').scrollIntoView({behavior:'smooth',block:'center'});
+        document.getElementById('promo-s-servicos').focus();
     }, 150);
 };
 

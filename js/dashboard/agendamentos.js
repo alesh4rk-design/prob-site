@@ -416,8 +416,10 @@ async function confirmarPresencial(){
     btn.disabled=false;btn.textContent='Confirmar Agendamento';
 }
 
-// Cache de promoções individuais e fidelidade por WhatsApp do cliente,
-// usado para mostrar um selo na Agenda quando o cliente tem algo ativo.
+// Cache de promoções vinculadas a cliente (simples/pacote/desconto/
+// fidelidade — tudo, exceto cupom, que não tem dono) e de fidelidade por
+// WhatsApp do cliente, usado para mostrar um selo na Agenda quando o
+// cliente tem algo ativo.
 let cachePromoPorWpp = {};
 let cacheFidelidadePorWpp = {};
 async function carregarCachePromoCliente(){
@@ -427,10 +429,8 @@ async function carregarCachePromoCliente(){
         cachePromoPorWpp = {};
         promosSnap.forEach(d=>{
             const p={id:d.id,...d.data()};
-            if(p.tipo!=='individual' || !p.ativo || p.alvo!=='cliente' || !p.clienteWpp) return;
-            if(p.validoAte && hoje>p.validoAte) return;
-            const restam=(p.limiteUsos||1)-(p.usosFeitos||0);
-            if(restam<=0) return;
+            if(p.tipo==='cupom' || !p.ativo || !p.clienteWpp) return;
+            if(p.periodo==='personalizado' && (hoje<p.dataInicio || hoje>p.dataFim)) return;
             cachePromoPorWpp[p.clienteWpp]=p;
         });
 
@@ -461,9 +461,7 @@ function gerarBadgePromoCliente(wpp){
     let html='';
     const promo=cachePromoPorWpp[wpp];
     if(promo){
-        const restam=(promo.limiteUsos||1)-(promo.usosFeitos||0);
-        const valorFmt=promo.descontoTipo==='percentual'?`${promo.descontoValor}%`:`R$${Number(promo.descontoValor).toFixed(0)}`;
-        html+=`<span class="appt-barber-tag" style="background:rgba(0,255,136,.12);color:var(--green);border-color:rgba(0,255,136,.3)" title="Desconto de ${valorFmt}, restam ${restam} uso(s)">🎁 ${valorFmt} off · ${restam}x restante${restam>1?'s':''}</span>`;
+        html+=`<span class="appt-barber-tag" style="background:rgba(0,255,136,.12);color:var(--green);border-color:rgba(0,255,136,.3)" title="${escapeHtml(promo.titulo||'Oferta ativa')}">🎁 ${escapeHtml(promo.titulo||'Oferta ativa')}</span>`;
     }
     const fid=cacheFidelidadePorWpp[wpp];
     const metas=window.__metasFidelidade||[];

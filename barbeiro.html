@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/barbeiro.css?v=20260727j">
+    <link rel="stylesheet" href="css/barbeiro.css?v=20260727k">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -763,7 +763,7 @@
                             <option value="pacote">📦 Pacote de Cortes</option>
                             <option value="desconto">💰 Desconto por Qtd</option>
                             <option value="fidelidade">⭐ Fidelidade</option>
-                            <option value="individual">🎯 Individual (cliente ou cupom)</option>
+                            <option value="cupom">🎟️ Cupom</option>
                         </select>
                     </div>
                     <div class="input-group" style="margin-bottom:0">
@@ -778,6 +778,17 @@
                 </div>
                 <div class="input-group" style="margin-bottom:.6rem"><label>Título</label><input type="text" id="promo-titulo" placeholder="Ex: Combo Corte + Barba"></div>
                 <div class="input-group" style="margin-bottom:.6rem"><label>Descrição (opcional)</label><input type="text" id="promo-desc" placeholder="Ex: Só essa semana!"></div>
+
+                <div id="promo-campos-cliente-vinculado">
+                    <div class="input-group" style="margin-bottom:.6rem">
+                        <label>Cliente</label>
+                        <select id="promo-cliente-select" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
+                            <option value="">Selecione um cliente da sua base...</option>
+                        </select>
+                        <p style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Essa promoção fica vinculada a esse cliente — só ele(a) vê a oferta.</p>
+                    </div>
+                    <div id="promo-aviso-existente" style="display:none;font-size:.75rem;color:var(--yellow);background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:8px;padding:.55rem .75rem;margin-bottom:.6rem"></div>
+                </div>
 
                 <div id="promo-campos-simples">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
@@ -809,43 +820,29 @@
                         <div class="input-group" style="margin-bottom:0"><label>Brinde</label><input type="text" id="promo-f-brinde" placeholder="1 corte grátis"></div>
                     </div>
                 </div>
-                <div id="promo-campos-individual" style="display:none">
+                <div id="promo-campos-cupom" style="display:none">
                     <div class="input-group" style="margin-bottom:.6rem">
-                        <label>Cliente</label>
-                        <select id="promo-i-cliente-select" list="lista-clientes-datalist" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
-                            <option value="">Selecione um cliente da sua base...</option>
-                        </select>
-                        <p style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Toda promoção individual fica vinculada a um cliente real da sua lista — assim ela aplica sozinha quando ele agendar.</p>
-                    </div>
-                    <div id="promo-i-aviso-existente" style="display:none;font-size:.75rem;color:var(--yellow);background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:8px;padding:.55rem .75rem;margin-bottom:.6rem"></div>
-                    <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;font-size:.8rem;color:var(--muted);cursor:pointer">
-                        <input type="checkbox" id="promo-i-tem-codigo" style="width:16px;height:16px;accent-color:var(--blue)">
-                        Também gerar um código de cupom pra esse cliente (opcional)
-                    </label>
-                    <div id="promo-i-campos-codigo" style="display:none;margin-bottom:.6rem">
-                        <div class="input-group" style="margin-bottom:0">
-                            <label>Código do cupom</label>
-                            <div style="display:flex;gap:.5rem">
-                                <input type="text" id="promo-i-codigo" placeholder="Ex: VOLTA10" style="text-transform:uppercase;flex:1">
-                                <button type="button" id="btn-gerar-codigo" style="flex-shrink:0;padding:.6rem .85rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--blue);font-size:.78rem;cursor:pointer">🎲 Gerar</button>
-                            </div>
-                            <p style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Cada código só pode pertencer a uma promoção — se já existir, avisamos antes de salvar.</p>
+                        <label>Código do cupom</label>
+                        <div style="display:flex;gap:.5rem">
+                            <input type="text" id="promo-c-codigo" placeholder="Ex: VOLTA10" style="text-transform:uppercase;flex:1">
+                            <button type="button" id="btn-gerar-codigo" style="flex-shrink:0;padding:.6rem .85rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--blue);font-size:.78rem;cursor:pointer">🎲 Gerar</button>
                         </div>
+                        <p style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Qualquer cliente que digitar esse código ganha o desconto — não fica vinculado a ninguém específico. Cada código só pode pertencer a uma promoção.</p>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem">
                         <div class="input-group" style="margin-bottom:0"><label>Desconto</label>
-                            <select id="promo-i-desconto-tipo" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
+                            <select id="promo-c-desconto-tipo" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
                                 <option value="percentual">% Percentual</option>
                                 <option value="fixo">R$ Valor fixo</option>
                             </select>
                         </div>
-                        <div class="input-group" style="margin-bottom:0"><label>Valor</label><input type="number" id="promo-i-desconto-valor" placeholder="15" min="0" step="0.01"></div>
-                        <div class="input-group" style="margin-bottom:0"><label>Válido até</label><input type="date" id="promo-i-valido-ate"></div>
+                        <div class="input-group" style="margin-bottom:0"><label>Valor</label><input type="number" id="promo-c-desconto-valor" placeholder="15" min="0" step="0.01"></div>
+                        <div class="input-group" style="margin-bottom:0"><label>Válido até</label><input type="date" id="promo-c-valido-ate"></div>
                     </div>
                     <div class="input-group" style="margin-top:.6rem;margin-bottom:0;max-width:220px">
                         <label>Quantos usos vale</label>
-                        <input type="number" id="promo-i-limite-usos" placeholder="1" min="1" step="1" value="1">
-                        <p style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Ex: 1 = só no próximo corte. 3 = vale nos próximos 3 cortes.</p>
+                        <input type="number" id="promo-c-limite-usos" placeholder="1" min="1" step="1" value="1">
+                        <p style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Ex: 1 = um resgate no total. 20 = vale pras primeiras 20 vezes que alguém usar.</p>
                     </div>
                 </div>
                 <div id="promo-campos-datas" style="display:none;margin-top:.6rem">
@@ -1862,7 +1859,7 @@
     </div>
 </div>
 
-<script src="js/barbeiro-particles.js?v=20260727j"></script>
+<script src="js/barbeiro-particles.js?v=20260727k"></script>
 <script>
     // ── Instalar o Pro'B como app (PWA) ──
     // No Android/Chrome/desktop o navegador dispara "beforeinstallprompt" e
@@ -1904,7 +1901,7 @@
     }
 </script>
 
-<script src="config.js?v=20260727j"></script>
+<script src="config.js?v=20260727k"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -2937,17 +2934,17 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20260727j"></script>
-<script defer src="js/dashboard/backup.js?v=20260727j"></script>
-<script defer src="js/dashboard/tour.js?v=20260727j"></script>
-<script defer src="js/dashboard/equipe.js?v=20260727j"></script>
-<script defer src="js/dashboard/promocoes.js?v=20260727j"></script>
-<script defer src="js/dashboard/clientes.js?v=20260727j"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20260727j"></script>
-<script defer src="js/dashboard/horarios.js?v=20260727j"></script>
-<script defer src="js/dashboard/financeiro.js?v=20260727j"></script>
-<script defer src="js/dashboard/auth.js?v=20260727j"></script>
-<script defer src="js/dashboard/visual.js?v=20260727j"></script>
+<script defer src="js/dashboard/estoque.js?v=20260727k"></script>
+<script defer src="js/dashboard/backup.js?v=20260727k"></script>
+<script defer src="js/dashboard/tour.js?v=20260727k"></script>
+<script defer src="js/dashboard/equipe.js?v=20260727k"></script>
+<script defer src="js/dashboard/promocoes.js?v=20260727k"></script>
+<script defer src="js/dashboard/clientes.js?v=20260727k"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20260727k"></script>
+<script defer src="js/dashboard/horarios.js?v=20260727k"></script>
+<script defer src="js/dashboard/financeiro.js?v=20260727k"></script>
+<script defer src="js/dashboard/auth.js?v=20260727k"></script>
+<script defer src="js/dashboard/visual.js?v=20260727k"></script>
 
 
 

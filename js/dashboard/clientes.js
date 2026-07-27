@@ -101,12 +101,12 @@ function renderClientes(lista){
     const dl = document.getElementById('lista-clientes-datalist');
     if(dl) dl.innerHTML = todosClientes.map(c=>`<option value="${escAttr(c.nome||'')}">`).join('');
 
-    // Select de cliente da Promoção Individual — toda promoção individual
-    // precisa estar vinculada a um cliente de verdade da base. Usamos o ID
-    // do cliente como valor (não o WhatsApp), porque clientes cadastrados
-    // sem WhatsApp teriam valor "" — igual à opção em branco, impossível
-    // de selecionar.
-    const selPromo = document.getElementById('promo-i-cliente-select');
+    // Select de cliente da Promoção (toda promoção, exceto cupom, precisa
+    // estar vinculada a um cliente de verdade da base). Usamos o ID do
+    // cliente como valor (não o WhatsApp), porque clientes cadastrados sem
+    // WhatsApp teriam valor "" — igual à opção em branco, impossível de
+    // selecionar.
+    const selPromo = document.getElementById('promo-cliente-select');
     if(selPromo){
         const selecionado = selPromo.value;
         selPromo.innerHTML = '<option value="">Selecione um cliente da sua base...</option>' +
