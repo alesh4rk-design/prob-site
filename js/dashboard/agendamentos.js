@@ -654,10 +654,13 @@ function fmtDataExtenso(dataStr){
     return `${d}/${m} (${dias[dataObj.getDay()]})`;
 }
 
+// Link de agendamento do cliente (mesmo usado na aba Clientes/QR Code) —
+// incluído nas mensagens que convidam a marcar um novo horário, pra já
+// deixar o caminho pronto em vez de só falar "agende".
 const MENSAGENS_PRONTAS = {
     confirmacao: (c) => `Olá, ${c.nome}! Passando para confirmar seu horário marcado para ${fmtDataExtenso(c.data)} às ${c.hora} na ${barbeiroData.nome||'barbearia'}. Contamos com sua presença!`,
-    promocao: (c) => `Olá, ${c.nome}! Temos uma condição especial disponível para você. Que tal aproveitar e agendar seu próximo horário?`,
-    ausente: (c) => `Olá, ${c.nome}! Notamos que já faz um tempo desde sua última visita na ${barbeiroData.nome||'barbearia'}. Que tal agendar um novo horário? Ficaremos felizes em atendê-lo(a) novamente!`,
+    promocao: (c) => `Olá, ${c.nome}! Temos uma condição especial disponível para você. Que tal aproveitar e agendar seu próximo horário?\n\n${linkClienteAtual}`,
+    ausente: (c) => `Olá, ${c.nome}! Notamos que já faz um tempo desde sua última visita na ${barbeiroData.nome||'barbearia'}. Que tal agendar um novo horário? Ficaremos felizes em atendê-lo(a) novamente!\n\n${linkClienteAtual}`,
     agradecimento: (c) => `Olá, ${c.nome}! Obrigado pela visita. Esperamos que tenha gostado do resultado — até a próxima!`,
     atraso: (c) => `Olá, ${c.nome}! Pedimos desculpas, mas haverá um pequeno atraso no seu atendimento hoje. Agradecemos a compreensão!`,
 };
