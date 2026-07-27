@@ -37,12 +37,16 @@ service cloud.firestore {
       match /promocoes/{doc} {
         allow read: if true;
         allow create, delete: if isOwner(bId) || isAdmin();
-        // Dono edita qualquer campo. Cliente (sem login) só pode marcar um
-        // cupom de uso único como usado — nada além disso.
+        // Dono edita qualquer campo. Cliente (sem login) só pode incrementar
+        // "usosFeitos" em exatamente 1 por vez, ao resgatar um cupom — nada
+        // além disso. (Regra antiga validava um campo "usado" que não existe
+        // mais no app desde que os cupons viraram usosFeitos/limiteUsos —
+        // isso fazia o resgate real sempre ser rejeitado, e o contador nunca
+        // incrementava, então um cupom "de uso único" podia ser reaplicado
+        // sem limite.)
         allow update: if isOwner(bId) || isAdmin()
-                      || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usado'])
-                          && request.resource.data.usado == true
-                          && resource.data.usado != true);
+                      || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usosFeitos'])
+                          && request.resource.data.usosFeitos == (resource.data.usosFeitos || 0) + 1);
       }
       match /fidelidade/{doc} {
         allow read: if true;
@@ -76,6 +80,29 @@ service cloud.firestore {
       match /gastosInsumos/{doc} {
         allow read, write: if isOwner(bId) || isAdmin();
       }
+
+      // Login da equipe (funcionário/recepcionista) — criado uma vez no
+      // autocadastro pelo link de convite (a própria pessoa, autenticada
+      // com o uid novo, grava seu próprio registro), lido a cada login
+      // (pela própria pessoa) e ativado/desativado/removido pelo dono.
+      // ATENÇÃO: não havia regra nenhuma pra essa subcoleção — se o que
+      // está publicado no console for igual a este arquivo, o login da
+      // equipe está com acesso negado por padrão. Confirme testando.
+      match /equipeAuth/{equipeId} {
+        allow read: if isOwner(bId) || isAdmin()
+                    || (request.auth != null && request.auth.uid == resource.data.authUid);
+        allow create: if isOwner(bId) || isAdmin()
+                    || (request.auth != null && request.auth.uid == request.resource.data.authUid);
+        allow update, delete: if isOwner(bId) || isAdmin();
+      }
+    }
+
+    // Mapeamento uid -> {bId, equipeId} de um membro da equipe. Escrito uma
+    // vez no autocadastro (a própria pessoa, já autenticada com o uid novo),
+    // lido a cada login por ela mesma. Mesma observação do equipeAuth acima:
+    // não existia regra nenhuma pra essa coleção antes.
+    match /funcionarios/{uid} {
+      allow read, create: if request.auth != null && request.auth.uid == uid;
     }
 
     // ── Status de acesso (trial / ativo / bloqueado / pendente) ──
