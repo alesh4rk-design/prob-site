@@ -555,6 +555,11 @@ function carregarAgendamentos(){
             a.formaPagamento === 'pendente'
         );
         ultimosAgendamentos = {deHoje, proximos, pagtoPendente};
+        // Cache completo (não filtrado) usado pelo modal de ações do cliente
+        // (desconto, forma de pagamento) — precisa ter TODOS os agendamentos,
+        // não só os da lista que foi renderizada por último, senão um
+        // cliente que não está em "aguardando pagamento" não é encontrado.
+        ultimaListaAppts = todos;
 
         $('stat-hoje').textContent=deHoje.filter(a=>a.status!=='cancelado').length;
         $('stat-semana').textContent=todos.filter(a=>a.data>=hoje&&a.status!=='cancelado').length;
@@ -573,7 +578,9 @@ function carregarAgendamentos(){
 }
 
 function renderAppts(container,lista,emptyMsg){
-    ultimaListaAppts=lista;
+    // Não mexe em ultimaListaAppts aqui — essa função é usada pra renderizar
+    // várias listas filtradas diferentes (hoje, próximos, aguardando
+    // pagamento), e o cache completo é mantido à parte em carregarAgendamentos().
     if(!lista.length){container.innerHTML=`<div class="empty-state"><div class="icon">📅</div>${emptyMsg}</div>`;return;}
     container.innerHTML=lista.map(a=>{
         const barberTag=a.barbeiro?`<span class="appt-barber-tag">✂️ ${a.barbeiro}</span>`:'';
