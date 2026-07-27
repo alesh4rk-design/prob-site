@@ -331,6 +331,19 @@
         .btn-primary:hover { filter:brightness(1.15);box-shadow:0 0 30px rgba(var(--card-accent-rgb),.5); }
         .btn-primary:disabled { opacity:.5;cursor:not-allowed; }
 
+        /* Botão "entrar na fila" quando aparece como opção secundária, ao
+           lado do agendamento por hora marcada (modo "ambos"). Quando o
+           barbeiro trabalha só com fila, esse botão vira .btn-primary em
+           vez disso — é a única opção, tem que parecer a principal. */
+        .btn-fila-secundario {
+            width:100%;margin-top:.6rem;padding:.85rem;
+            background:rgba(var(--card-accent-rgb),.08);
+            border:1.5px dashed rgba(var(--card-accent-rgb),.5);
+            border-radius:8px;color:var(--card-accent);
+            font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s;
+        }
+        .btn-fila-secundario:hover { background:rgba(var(--card-accent-rgb),.14); }
+
         .btn-back {
             background:transparent;border:none;
             color:var(--muted);font-size:.85rem;cursor:pointer;
@@ -732,7 +745,7 @@
             </div>
 
             <button class="btn-primary" id="btn-s1" style="margin-top:1.2rem" disabled>Escolher Horário →</button>
-            <button id="btn-entrar-fila" style="width:100%;margin-top:.6rem;padding:.85rem;background:rgba(0,255,136,.08);border:1.5px dashed rgba(0,255,136,.4);border-radius:8px;color:var(--green);font-weight:700;font-size:.85rem;cursor:pointer;display:none">
+            <button class="btn-fila-secundario" id="btn-entrar-fila" style="display:none">
                 🪑 Prefiro entrar na fila (sem hora marcada)
             </button>
             <button class="btn-back" id="back-s1">← Voltar</button>
@@ -840,7 +853,7 @@
 <div class="toast" id="toast"></div>
 
 
-<script src="config.js?v=20260727h"></script>
+<script src="config.js?v=20260727i"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -962,7 +975,14 @@ function aplicarPersonalizacao(data) {
     const btnFila = $('btn-entrar-fila');
     const btnVerFila = $('btn-ver-fila-publica');
     if(btnS1) btnS1.style.display = (modo==='agendamento'||modo==='ambos') ? 'block' : 'none';
-    if(btnFila) btnFila.style.display = (modo==='fila'||modo==='ambos') ? 'block' : 'none';
+    if(btnFila){
+        btnFila.style.display = (modo==='fila'||modo==='ambos') ? 'block' : 'none';
+        // Só fila: essa é a ÚNICA opção, então precisa ter a cara de botão
+        // principal — não de alternativa discreta ao lado do agendamento.
+        btnFila.classList.toggle('btn-primary', modo==='fila');
+        btnFila.classList.toggle('btn-fila-secundario', modo!=='fila');
+        btnFila.textContent = modo==='fila' ? '🪑 Entrar na Fila →' : '🪑 Prefiro entrar na fila (sem hora marcada)';
+    }
     if(btnVerFila) btnVerFila.style.display = (modo==='fila'||modo==='ambos') ? 'block' : 'none';
 
     function montarNomeHTML(nome){
