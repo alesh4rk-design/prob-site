@@ -138,8 +138,10 @@ function initZonaPerigo(){
             // provável é os dois serem diferentes (conta logada não é a
             // dona desta barbearia no banco).
             const uidLogado = window.auth?.currentUser?.uid || '?';
-            console.error('Zona de Perigo — UID logado:', uidLogado, '| UID da barbearia (barbeiroData.uid):', barbeiroData.uid);
-            toast(`⚠ Não deu para apagar: ${categoriasComErro.join(', ')}. UID logado: ${uidLogado.slice(0,8)}... — confira no console (F12) se bate com o UID da barbearia.`, 'var(--red)');
+            const uidBarbearia = barbeiroData.uid || '?';
+            console.error('Zona de Perigo — UID logado:', uidLogado, '| UID da barbearia (barbeiroData.uid):', uidBarbearia);
+            const batem = uidLogado === uidBarbearia;
+            toast(`⚠ Não deu para apagar: ${categoriasComErro.join(', ')}. UID logado: ${uidLogado} | UID da barbearia: ${uidBarbearia} — ${batem ? 'são iguais (não é isso)' : 'SÃO DIFERENTES, é isso!'}`, 'var(--red)', 15000);
         } else {
             toast(`✓ ${totalApagado} registro(s) apagado(s)`);
         }
