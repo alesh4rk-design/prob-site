@@ -227,16 +227,20 @@ async function carregarAvisos1h(){
         const wrap = document.getElementById('avisos-1h-wrap');
         if(!cont||!wrap) return;
 
+        window.__avisos1hCache = avisos;
+
         if(!avisos.length){
             wrap.style.display='none';
             document.getElementById('avisos-1h-badge').textContent = '0';
             if(typeof atualizarSininho==='function') atualizarSininho();
+            if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
             return;
         }
 
         wrap.style.display='block';
         document.getElementById('avisos-1h-badge').textContent = avisos.length;
         if(typeof atualizarSininho==='function') atualizarSininho();
+        if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
         cont.innerHTML = avisos.map(ag=>{
             const wppNum = ag.clienteWhatsapp.replace(/\D/g,'');
             const msg = encodeURIComponent(`Olá ${ag.clienteNome}! Passando para lembrar do seu horário às ${ag.hora} hoje na ${barbeiroData.nome||'barbearia'}. Te esperamos! ✂️`);

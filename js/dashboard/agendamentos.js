@@ -572,6 +572,7 @@ function carregarAgendamentos(){
         renderPagtoPendente('pagto-pendente-wrap-fila','pagto-pendente-badge-fila','lista-pagto-pendente-fila',pagtoPendente);
         renderCobranca(pagtoPendente);
         if(typeof atualizarSininho==='function') atualizarSininho();
+        if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
     },e=>console.error('Erro agendamentos:',e));
 }
 

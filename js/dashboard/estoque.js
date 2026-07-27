@@ -184,6 +184,7 @@ function initEstoque(){
         snap.forEach(d=>produtosCache.push({id:d.id,...d.data()}));
         renderProdutos();
         atualizarKpiEstoqueBaixo();
+        if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
     }, e=>console.error('produtos:',e));
 
     carregarVendasHoje();
