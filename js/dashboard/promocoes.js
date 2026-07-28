@@ -17,6 +17,14 @@
 // initEquipeExtras em equipe.js — ver docs/README.md).
 function initPromocoesExtras(){
 
+// O formulário fica escondido por padrão — só abre quando o dono clica em
+// "+ Adicionar Promoção", pra não deixar o menu inteiro sempre aberto.
+document.getElementById('btn-mostrar-form-promo').addEventListener('click', ()=>{
+    document.getElementById('promo-form-wrap').style.display = 'block';
+    document.getElementById('promo-intro-card').style.display = 'none';
+    document.getElementById('promo-form-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+});
+
 // Toggle campos por tipo — o vínculo de cliente aparece pra todo mundo,
 // exceto cupom (que é aberto, sem dono).
 document.getElementById('promo-tipo').addEventListener('change', function(){
@@ -145,6 +153,8 @@ document.getElementById('btn-add-promo').addEventListener('click', async()=>{
         document.getElementById('promo-c-desconto-valor').value='';
         document.getElementById('promo-c-valido-ate').value='';
         toast('✓ Promoção criada!');
+        document.getElementById('promo-form-wrap').style.display = 'none';
+        document.getElementById('promo-intro-card').style.display = 'block';
         carregarPromocoes();
     }catch(e){ toast('Erro: '+e.message,'var(--red)'); }
 });
