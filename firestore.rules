@@ -109,8 +109,15 @@ service cloud.firestore {
       // está publicado no console for igual a este arquivo, o login da
       // equipe está com acesso negado por padrão. Confirme testando.
       match /equipeAuth/{equipeId} {
-        allow read: if isOwner(bId) || isAdmin()
-                    || (request.auth != null && request.auth.uid == resource.data.authUid);
+        // "get" (leitura de UM doc) precisa ser público: a tela de convite
+        // roda ANTES de a pessoa ter login (é a primeira vez dela no
+        // sistema), e ela precisa conferir se aquele convite específico já
+        // foi aceito antes de criar a conta — sem isso, todo primeiro
+        // acesso batia nessa leitura sem permissão e caía direto na tela de
+        // "link inválido", mesmo com o convite certinho. "list" (listar
+        // todos) continua restrito, só o dono/admin enumeram a coleção.
+        allow get: if true;
+        allow list: if isOwner(bId) || isAdmin();
         allow create: if isOwner(bId) || isAdmin()
                     || (request.auth != null && request.auth.uid == request.resource.data.authUid);
         allow update, delete: if isOwner(bId) || isAdmin();
