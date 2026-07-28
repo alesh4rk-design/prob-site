@@ -453,6 +453,15 @@
                 <button id="btn-fechar-acoes-cliente" style="background:transparent;border:1.5px solid var(--border);color:var(--text);border-radius:8px;padding:.4rem .7rem;cursor:pointer">✕</button>
             </div>
 
+            <div id="ac-corte-atual-wrap" style="display:none;margin-bottom:.85rem;padding:.6rem .8rem;background:rgba(0,212,255,.06);border:1.5px solid rgba(0,212,255,.2);border-radius:8px">
+                <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.15rem">Serviço deste agendamento</div>
+                <div id="ac-corte-atual" style="font-size:.88rem;font-weight:700;color:var(--blue)">—</div>
+            </div>
+            <div id="ac-historico-cortes-wrap" style="display:none;margin-bottom:1.3rem">
+                <div class="section-title" style="font-size:.75rem;margin-bottom:.5rem">✂️ Histórico de cortes desse cliente</div>
+                <div id="ac-historico-cortes" style="display:flex;flex-direction:column;gap:.3rem"></div>
+            </div>
+
             <div class="section-title" style="font-size:.75rem;margin-bottom:.6rem">⚡ Ações rápidas</div>
             <div id="ac-status-badge" style="display:none;text-align:center;padding:.6rem;border-radius:8px;font-weight:700;font-size:.85rem;margin-bottom:1.3rem"></div>
             <div style="display:flex;gap:.5rem;margin-bottom:.5rem" id="ac-acoes-rapidas">
@@ -2958,7 +2967,7 @@ async function initDash(){
 <script defer src="js/dashboard/equipe.js?v=20260727o"></script>
 <script defer src="js/dashboard/promocoes.js?v=20260727o"></script>
 <script defer src="js/dashboard/clientes.js?v=20260727o"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20260727p"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20260727q"></script>
 <script defer src="js/dashboard/horarios.js?v=20260727o"></script>
 <script defer src="js/dashboard/financeiro.js?v=20260727o"></script>
 <script defer src="js/dashboard/auth.js?v=20260727o"></script>

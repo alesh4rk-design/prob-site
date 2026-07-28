@@ -683,6 +683,19 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
     $('ac-copiar-wpp').style.display = wpp ? 'inline' : 'none';
     $('ac-btn-excluir-cliente').style.display = clienteId ? 'block' : 'none';
 
+    // Serviço desse agendamento específico — o card na lista já mostra o
+    // barbeiro/horário, mas não qual corte foi marcado.
+    const corteWrap = $('ac-corte-atual-wrap');
+    const agendamentoAtual = agendamentoId ? ultimaListaAppts.find(a=>a.id===agendamentoId) : null;
+    if(agendamentoAtual?.corte){
+        corteWrap.style.display = 'block';
+        $('ac-corte-atual').textContent = agendamentoAtual.corte;
+    } else {
+        corteWrap.style.display = 'none';
+    }
+
+    carregarHistoricoCortes(wpp);
+
     const temAgendamento = !!agendamentoId;
     const temFila = !!filaId;
     const temVinculo = temAgendamento || temFila;
@@ -744,6 +757,53 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
 
     $('modal-acoes-cliente').style.display = 'flex';
 };
+
+// Busca todos os agendamentos concluídos desse cliente (por WhatsApp,
+// já que nem todo agendamento antigo tem clienteId salvo) e conta quantas
+// vezes cada corte apareceu — dá pra ver de cara qual o corte de sempre
+// dessa pessoa, sem precisar abrir cada agendamento passado um por um.
+async function carregarHistoricoCortes(wpp){
+    const wrap = $('ac-historico-cortes-wrap');
+    const cont = $('ac-historico-cortes');
+    if(!wpp){ wrap.style.display='none'; return; }
+    wrap.style.display = 'block';
+    cont.innerHTML = '<p style="font-size:.78rem;color:var(--muted);margin:0">Carregando...</p>';
+    try{
+        const q = query(
+            collection(db,'agendamentos'),
+            where('barbeiroId','==',barbeiroData.uid),
+            where('clienteWhatsapp','==',wpp),
+            where('status','==','concluido')
+        );
+        const snap = await getDocs(q);
+        const contagem = {};
+        let total = 0;
+        snap.forEach(d=>{
+            const corte = d.data().corte;
+            if(!corte) return;
+            // Combos ("Corte + Barba") contam pra cada serviço individual
+            corte.split(' + ').forEach(nome=>{
+                nome = nome.trim();
+                if(!nome) return;
+                contagem[nome] = (contagem[nome]||0)+1;
+                total++;
+            });
+        });
+        if(!total){
+            cont.innerHTML = '<p style="font-size:.78rem;color:var(--muted);margin:0">Nenhum atendimento concluído registrado ainda.</p>';
+            return;
+        }
+        const ordenado = Object.entries(contagem).sort((a,b)=>b[1]-a[1]);
+        cont.innerHTML = ordenado.map(([nome,qtd])=>
+            `<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem .7rem;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:.82rem">
+                <span>${escapeHtml(nome)}</span>
+                <span style="color:var(--green);font-weight:700">${qtd}x</span>
+            </div>`
+        ).join('');
+    }catch(e){
+        cont.innerHTML = '<p style="font-size:.78rem;color:var(--red);margin:0">Erro ao carregar histórico.</p>';
+    }
+}
 
 function formatarWppExibicao(wpp){
     const limpo = (wpp||'').replace(/\D/g,'');
