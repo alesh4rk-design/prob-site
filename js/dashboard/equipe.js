@@ -120,6 +120,7 @@ async function renderLinksEquipe(){
                     <button class="btn-add" style="flex:1;font-size:.75rem;padding:.4rem" onclick="navigator.clipboard.writeText('${conviteLink}').then(()=>toast('✓ Convite de ${escAttr(b.nome)} copiado!'))">📋 Copiar</button>
                     <a href="https://wa.me/?text=${msgWpp}" target="_blank" class="btn-wpp" style="flex:1;text-align:center;font-size:.75rem;padding:.4rem;text-decoration:none">📱 WhatsApp</a>
                 </div>
+                <button class="btn-del" style="width:100%;font-size:.72rem;padding:.35rem;margin-top:.5rem" onclick="removerConvitePendente('${b.id}','${escAttr(b.nome)}')">🗑️ Remover convite</button>
             </div>`;
         }
 
@@ -138,6 +139,22 @@ window.toggleAcessoEquipe = async(equipeId, novoAtivo) => {
         toast(novoAtivo?'Acesso reativado!':'Acesso desativado.');
         renderLinksEquipe();
     }catch(e){ toast('Erro ao atualizar acesso','var(--red)'); }
+};
+
+// Remove um convite ainda pendente (ninguém aceitou ainda) — tira a pessoa
+// da equipe direto, sem precisar esperar ela criar a conta pra só depois
+// conseguir remover pela lista principal.
+window.removerConvitePendente = async(equipeId, nome) => {
+    if(!confirm(`Remover o convite de "${nome}"? Ela(e) não vai mais conseguir usar esse link.`)) return;
+    try{
+        const idx = (barbeiroData.equipe||[]).findIndex(e=>e.id===equipeId);
+        if(idx===-1) return;
+        barbeiroData.equipe.splice(idx,1);
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
+        try{ await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',equipeId)); }catch(e){}
+        toast(`Convite de ${nome} removido.`);
+        renderEquipe();renderLinksEquipe();carregarGanhos();
+    }catch(e){ toast('Erro ao remover convite','var(--red)'); }
 };
 
 // Comissão (%) de cada barbeiro fica numa subcoleção à parte, não no
