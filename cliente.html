@@ -729,6 +729,10 @@
         <div class="form-box">
             <div class="form-title">✂️ Escolha o corte</div>
 
+            <div style="text-align:right;margin:-.6rem 0 .8rem">
+                <button type="button" id="btn-editar-meu-wpp" style="background:transparent;border:none;color:var(--blue);font-size:.72rem;cursor:pointer;padding:0;text-decoration:underline">✏️ Mudou de número? Atualizar meu WhatsApp</button>
+            </div>
+
             <div class="input-group" style="margin-bottom:1rem">
                 <label>🎁 Tem um cupom de desconto?</label>
                 <div style="display:flex;gap:.5rem">
@@ -1676,6 +1680,26 @@ $('btn-aplicar-cupom').addEventListener('click', () => {
     const cupom = $('cli-cupom').value.trim();
     if(!cupom){ return; }
     conferirPromoCliente(clienteWpp, cupom);
+});
+
+// Cliente trocou de número de verdade e o cadastro fica desatualizado —
+// antes não tinha nenhuma forma de corrigir isso sozinho(a), só pedindo
+// pro barbeiro mexer direto no banco.
+$('btn-editar-meu-wpp').addEventListener('click', async () => {
+    if (!clienteUid) { toast('Entre com email e senha (não como convidado) pra poder editar seu WhatsApp.'); return; }
+    const atual = mascaraWpp(clienteWpp || '');
+    const novo = prompt('Novo número de WhatsApp (com DDD):', atual);
+    if (novo == null) return;
+    const limpo = novo.replace(/\D/g, '');
+    if (limpo.length !== 11) { toast('Informe o WhatsApp completo, com DDD (11 dígitos).'); return; }
+    try {
+        await updateDoc(doc(db, 'clientesApp', clienteUid), { wpp: limpo });
+        clienteWpp = limpo;
+        try { localStorage.setItem('probCliente', JSON.stringify({ nome: clienteNome, wpp: clienteWpp })); } catch(e) {}
+        toast('✓ WhatsApp atualizado!');
+    } catch(e) {
+        toast('Erro ao atualizar: ' + e.message);
+    }
 });
 
 /* ── STEP 1: Cortes (multi-seleção por sessão) ── */
