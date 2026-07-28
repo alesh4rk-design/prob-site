@@ -24,13 +24,26 @@ function renderChecklistCortes(containerId, totalId){
         cont.innerHTML = '<p style="font-size:.78rem;color:var(--muted);margin:0">Nenhum serviço cadastrado ainda — cadastre na aba Cortes.</p>';
         return;
     }
-    cont.innerHTML = cortes.map((c,i)=>
-        `<label style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;font-size:.85rem;cursor:pointer">
-            <input type="checkbox" class="checklist-corte" data-idx="${i}" data-preco="${c.preco}" style="width:16px;height:16px;accent-color:var(--green)">
-            <span style="flex:1">${escapeHtml(c.nome)}</span>
-            <span style="color:var(--muted)">R$${Number(c.preco).toFixed(0)}</span>
-        </label>`
-    ).join('');
+    // Agrupa por categoria (campo "sessao", cadastrado na aba Cortes) — sem
+    // isso ficava tudo numa lista só, misturando por exemplo corte infantil
+    // com adulto e espalhando barba no meio dos cortes de cabelo.
+    const grupos = {};
+    const ordemGrupos = [];
+    cortes.forEach((c,i)=>{
+        const cat = c.sessao || 'Outros';
+        if(!grupos[cat]){ grupos[cat]=[]; ordemGrupos.push(cat); }
+        grupos[cat].push({ ...c, _idx:i });
+    });
+    cont.innerHTML = ordemGrupos.map((cat,gi)=>`
+        <div style="font-size:.72rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin:${gi===0?'0':'.7rem'} 0 .3rem">${escapeHtml(cat)}</div>
+        ${grupos[cat].map(c=>
+            `<label style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;font-size:.85rem;cursor:pointer">
+                <input type="checkbox" class="checklist-corte" data-idx="${c._idx}" data-preco="${c.preco}" style="width:16px;height:16px;accent-color:var(--green)">
+                <span style="flex:1">${escapeHtml(c.nome)}</span>
+                <span style="color:var(--muted)">R$${Number(c.preco).toFixed(0)}</span>
+            </label>`
+        ).join('')}
+    `).join('');
     cont.querySelectorAll('.checklist-corte').forEach(chk=>{
         chk.addEventListener('change', ()=>atualizarTotalChecklist(containerId, totalId));
     });
