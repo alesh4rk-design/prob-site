@@ -83,6 +83,15 @@ async function initFuncionarioMode(bId, funcId){
     }
 
     // Show only employee view
+    window.__funcionarioMode=true;
+    // O menu de "Ações do Cliente" (abrirAcoesCliente) é o mesmo do dono —
+    // só que os cliques dos botões dele (concluir, pagamento, WhatsApp...)
+    // normalmente são ligados por initDash(), que NUNCA roda no modo
+    // funcionário. Sem isso, o modal abria mas nenhum botão dele funcionava.
+    if(typeof initAcoesClienteExtras==='function' && !window.__acoesClienteExtrasBound){
+        window.__acoesClienteExtrasBound=true;
+        initAcoesClienteExtras();
+    }
     const btnAjudaF=document.getElementById('btn-ajuda'); if(btnAjudaF) btnAjudaF.style.display='none';
     barbeiroData={uid:bId,...bData};
     carregarCachePromoCliente();
@@ -199,6 +208,10 @@ async function initFuncionarioMode(bId, funcId){
 
     const meus=[];fs.forEach(d=>{const a=d.data();if(a.barbeiro===funcMembro.nome)meus.push({id:d.id,...a});});
     meus.sort((a,b)=>a.data===b.data?a.hora.localeCompare(b.hora):a.data.localeCompare(b.data));
+    // Compartilha com agendamentos.js — abrirAcoesCliente() usa essa mesma
+    // variável global (both são scripts clássicos no mesmo escopo) pra achar
+    // o corte agendado e a forma de pagamento já registrada.
+    ultimaListaAppts=meus;
 
     const deHoje=meus.filter(a=>a.data===hoje);
     const proximos=meus.filter(a=>a.data>hoje);
@@ -215,7 +228,7 @@ async function initFuncionarioMode(bId, funcId){
                 :`<button class="btn-concluir" data-id="${a.id}">✓</button>
                   <button class="btn-cancelar" data-id="${a.id}">✗</button>`;
             return `
-            <div class="appt-card ${concluido?'appt-done':cancelado?'appt-canceled':''}">
+            <div class="appt-card ${concluido?'appt-done':cancelado?'appt-canceled':''}" style="cursor:pointer" title="Ver ações do cliente" data-abrir-cliente-func="${a.id}">
                 <div class="appt-time">${a.hora}</div>
                 <div class="appt-info">
                     <span class="appt-name">${escapeHtml(a.clienteNome)}</span>
@@ -228,6 +241,14 @@ async function initFuncionarioMode(bId, funcId){
                 ${btnAcoes}
             </div>`;
         }).join('');
+
+        cont.querySelectorAll('[data-abrir-cliente-func]').forEach(card=>{
+            card.addEventListener('click',(e)=>{
+                if(e.target.closest('button')) return;
+                const a=lista.find(x=>x.id===card.dataset.abrirClienteFunc);
+                if(a) abrirAcoesCliente(a.clienteNome, a.clienteWhatsapp, a.id, a.data, a.hora, a.status);
+            });
+        });
 
         // Bind botões concluir/cancelar
         cont.querySelectorAll('.btn-concluir').forEach(btn=>{
@@ -389,6 +410,9 @@ function initFilaFuncionario(bId,funcNome,bData){
 function renderFilaFuncionario(lista,bId){
     const cont=document.getElementById('func-lista-fila');
     if(!cont)return;
+    // Compartilha com agendamentos.js — atenderFila()/removerFila() (chamadas
+    // pelo menu de Ações do Cliente) procuram o item nessa mesma variável.
+    ultimaListaFila=lista;
     if(!lista.length){cont.innerHTML='<div class="empty-state"><div class="icon">🪑</div>Ninguém na sua fila no momento.</div>';return;}
 
     cont.innerHTML=lista.map((item,i)=>{
@@ -396,7 +420,7 @@ function renderFilaFuncionario(lista,bId){
         const tempoStr=tempo<1?'agora':tempo<60?`${tempo}min`:`${Math.floor(tempo/60)}h${tempo%60}min`;
         const corteTag=item.corte?` · ${escapeHtml(item.corte)}`:'';
         const promoTagFunc=gerarBadgePromoCliente(item.clienteWhatsapp);
-        return `<div class="fila-card">
+        return `<div class="fila-card" style="cursor:pointer" title="Ver ações do cliente" data-abrir-cliente-func-fila="${item.id}">
             <div class="fila-pos">${i+1}º</div>
             <div class="fila-info">
                 <div class="fila-nome">${escapeHtml(item.clienteNome)}</div>
@@ -408,6 +432,14 @@ function renderFilaFuncionario(lista,bId){
             </div>
         </div>`;
     }).join('');
+
+    cont.querySelectorAll('[data-abrir-cliente-func-fila]').forEach(card=>{
+        card.addEventListener('click',(e)=>{
+            if(e.target.closest('button')) return;
+            const item=lista.find(x=>x.id===card.dataset.abrirClienteFuncFila);
+            if(item) abrirAcoesCliente(item.clienteNome, item.clienteWhatsapp, null, '', '', null, item.id);
+        });
+    });
 
     cont.querySelectorAll('.func-fila-atender').forEach(btn=>{
         btn.addEventListener('click',async()=>{

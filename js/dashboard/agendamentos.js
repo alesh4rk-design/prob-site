@@ -639,6 +639,10 @@ async function concluirAgendamento(id){
     const item=ultimaListaAppts.find(a=>a.id===id);
     await updateDoc(doc(db,'agendamentos',id),{status:'concluido'});
     if(item) registrarClienteConcluido(barbeiroData.uid, item.clienteNome, item.clienteWhatsapp, item.corte);
+    // No modo funcionário não existe a tela/DOM que carregarAgendamentos()
+    // atualiza (é tudo owner-only) — só recarrega a página, igual os
+    // próprios botões de concluir/cancelar do painel do funcionário já fazem.
+    if(window.__funcionarioMode){ toast('Corte concluído! ✓'); setTimeout(()=>location.reload(),600); return; }
     carregarAgendamentos();
     toast('Corte concluído! ✓');
 }
@@ -646,6 +650,7 @@ async function concluirAgendamento(id){
 async function cancelarAgendamento(id){
     if(!confirm('Marcar como cancelado?')) return false;
     await updateDoc(doc(db,'agendamentos',id),{status:'cancelado'});
+    if(window.__funcionarioMode){ toast('Agendamento cancelado','var(--red)'); setTimeout(()=>location.reload(),600); return true; }
     carregarAgendamentos();
     toast('Agendamento cancelado','var(--red)');
     return true;
@@ -682,6 +687,12 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
     $('ac-wpp-cliente').textContent = wpp ? formatarWppExibicao(wpp) : 'WhatsApp não informado';
     $('ac-copiar-wpp').style.display = wpp ? 'inline' : 'none';
     $('ac-btn-excluir-cliente').style.display = clienteId ? 'block' : 'none';
+    // Vender produto/criar promoção são decisões estratégicas do dono —
+    // funcionário só vê pagamento, concluir/cancelar, WhatsApp e histórico.
+    if(window.__funcionarioMode){
+        $('ac-btn-vender').style.display = 'none';
+        $('ac-btn-promocao').style.display = 'none';
+    }
 
     // Serviço desse agendamento específico — o card na lista já mostra o
     // barbeiro/horário, mas não qual corte foi marcado.
@@ -886,7 +897,7 @@ function initAcoesClienteExtras(){
                     await updateDoc(doc(db,'fila',acClienteAtual.filaId), {formaPagamento:btn.dataset.pag});
                 }
                 toast('✓ Forma de pagamento registrada: '+btn.textContent.replace(/[^\wÀ-ÿ]/g,' ').trim());
-                carregarAgendamentos();
+                if(!window.__funcionarioMode) carregarAgendamentos();
             }catch(e){ toast('Erro ao salvar: '+e.message,'var(--red)'); }
         });
     });
@@ -929,7 +940,7 @@ function initAcoesClienteExtras(){
                 });
             }
             toast(`✓ Desconto de ${descontoTexto} aplicado — novo valor: R$${novoPreco.toFixed(2)}`);
-            carregarAgendamentos();
+            if(!window.__funcionarioMode) carregarAgendamentos();
         }catch(e){ toast('Erro ao aplicar desconto: '+e.message,'var(--red)'); }
     });
 
