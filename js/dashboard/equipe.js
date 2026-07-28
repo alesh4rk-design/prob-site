@@ -7,6 +7,16 @@
 // funções do Firestore, todos disponibilizados pelo módulo principal.
 // ══════════════════════════════════════════════════════════
 
+// Diz se um membro da equipe corta cabelo de verdade (aparece pro cliente
+// escolher e pras telas de Agendamento Presencial/Fila) — barbeiro sempre
+// atende; recepcionista só se marcou explicitamente que também atende.
+// Registros antigos (antes desse campo existir) não tinham "atende"
+// salvo, então cai no padrão por tipo pra não sumir barbeiro nenhum.
+function atendeClientes(membro){
+    if(membro.atende!=null) return !!membro.atende;
+    return membro.tipo!=='recepcionista';
+}
+
 // CORTES
 function renderCortes(){
     const lista=barbeiroData.cortes||[];
@@ -184,8 +194,9 @@ function renderEquipe(){
         const badge = ehRecep
             ? `<span style="font-size:.65rem;background:rgba(0,212,255,.12);color:var(--blue);border:1px solid rgba(0,212,255,.3);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">🗒️ Recepcionista</span>`
             : `<span style="font-size:.65rem;background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.25);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">✂️ Barbeiro</span>`;
+        const recepAtende = ehRecep && atendeClientes(b);
         const infoLinha = ehRecep
-            ? `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">Organiza agendamentos, fila e clientes</div>`
+            ? `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">Organiza agendamentos, fila e clientes${recepAtende?' · <span style="color:var(--green)">✂️ também corta cabelo</span>':''}</div>`
             : (modoLeitura
                 ? ''
                 : `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">Comissão: <span style="color:var(--blue);font-weight:700">${b.pct||50}%</span> por corte</div>`);
@@ -198,6 +209,7 @@ function renderEquipe(){
                     style="width:58px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;color:var(--text);font-size:.85rem;text-align:center;">
                 <span style="font-size:.75rem;color:var(--muted)">%</span>
                 <button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-save="${i}">Salvar</button>`}
+                ${ehRecep?`<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-toggle-atende="${i}">${recepAtende?'✂️ Também corta: Sim':'✂️ Também corta: Não'}</button>`:''}
                 <button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-trocar-tipo="${i}" title="Trocar entre Barbeiro e Recepcionista">🔄 ${ehRecep?'Virar Barbeiro':'Virar Recepcionista'}</button>
                 <button class="btn-del" data-idx="${i}">Remover</button>
             </div>`;
@@ -222,6 +234,16 @@ function renderEquipe(){
             toast(`${barbeiroData.equipe[i].nome}: ${pct}% salvo!`);
             renderEquipe();
             carregarGanhos();
+        });
+    });
+    container.querySelectorAll('[data-toggle-atende]').forEach(btn=>{
+        btn.addEventListener('click',async()=>{
+            const i=Number(btn.dataset.toggleAtende);
+            const membro=barbeiroData.equipe[i];
+            barbeiroData.equipe[i].atende = !atendeClientes(membro);
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
+            toast(`${membro.nome}: ${barbeiroData.equipe[i].atende?'agora corta cabelo também':'não corta mais cabelo'}`);
+            renderEquipe();
         });
     });
     container.querySelectorAll('[data-trocar-tipo]').forEach(btn=>{
@@ -263,20 +285,26 @@ function renderEquipe(){
 // barbeiro.html.
 function initEquipeExtras(){
 $('eq-tipo').addEventListener('change',function(){
-    $('eq-pct-wrap').style.display=this.value==='recepcionista'?'none':'block';
+    const ehRecep = this.value==='recepcionista';
+    $('eq-pct-wrap').style.display = ehRecep?'none':'block';
+    // Barbeiro sempre corta cabelo — a opção só faz sentido pra
+    // recepcionista, que às vezes também atende em alguns casos.
+    $('eq-atende-wrap').style.display = ehRecep?'flex':'none';
+    if(!ehRecep) $('eq-atende').checked=false;
 });
 
 $('btn-add-barbeiro').addEventListener('click',async()=>{
     const nome=$('eq-nome').value.trim();
     const tipo=$('eq-tipo').value;
     const pct=tipo==='recepcionista'?0:(Number($('eq-pct').value)||50);
+    const atende = tipo==='barbeiro' ? true : $('eq-atende').checked;
     if(!nome){toast('Informe o nome','var(--red)');return;}
     barbeiroData.equipe=barbeiroData.equipe||[];
     const novoId=Date.now().toString();
-    barbeiroData.equipe.push({id:novoId,nome,pct,tipo,criadoEm:new Date().toISOString()});
+    barbeiroData.equipe.push({id:novoId,nome,pct,tipo,atende,criadoEm:new Date().toISOString()});
     await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
     await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',novoId),{pct});
-    $('eq-nome').value='';$('eq-pct').value='';
+    $('eq-nome').value='';$('eq-pct').value='';$('eq-atende').checked=false;
     renderEquipe();carregarGanhos();toast((tipo==='recepcionista'?'Recepcionista':'Barbeiro')+' adicionado!');
 });
 }

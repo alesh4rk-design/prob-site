@@ -71,7 +71,7 @@ function getSelecaoCortes(containerId){
 }
 
 function initFila(){
-    const equipe=barbeiroData.equipe||[];
+    const equipe=(barbeiroData.equipe||[]).filter(atendeClientes);
     const wrap=document.getElementById('fila-equipe-wrap');
     const sel=document.getElementById('fila-select-barbeiro');
 
@@ -280,8 +280,8 @@ function initPresencial(){
     btnAbrir.addEventListener('click',()=>{
         renderChecklistCortes('pres-corte-lista','pres-corte-total');
 
-        // Popula equipe se houver
-        const equipe=barbeiroData.equipe||[];
+        // Popula equipe se houver (só quem corta cabelo de verdade)
+        const equipe=(barbeiroData.equipe||[]).filter(atendeClientes);
         const eqWrap=document.getElementById('pres-equipe-wrap');
         const eqSel=document.getElementById('pres-barbeiro');
         if(equipe.length>0){

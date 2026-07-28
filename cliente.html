@@ -1734,8 +1734,9 @@ async function carregarCortes() {
         });
     });
 
-    // Equipe
-    const equipe = barbeiroInfo.equipe || [];
+    // Equipe — só quem corta cabelo de verdade aparece pra cliente escolher
+    // (recepcionista só entra aqui se marcou "também atende" no cadastro)
+    const equipe = (barbeiroInfo.equipe || []).filter(b => b.atende!=null ? !!b.atende : b.tipo!=='recepcionista');
     const eqSection = $('equipe-section');
     const eqGrid = $('equipe-grid');
     if (equipe.length > 0) {
