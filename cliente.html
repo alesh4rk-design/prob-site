@@ -875,6 +875,25 @@
     </div>
 </div>
 
+<!-- Botão flutuante: Meus Agendamentos (próximos + histórico) -->
+<div id="meus-agend-wrap" style="display:none;position:fixed;bottom:5.7rem;right:1rem;z-index:700;">
+    <button type="button" id="btn-meus-agend" style="width:56px;height:56px;border-radius:50%;background:var(--card);border:1.5px solid rgba(0,255,136,.4);box-shadow:0 0 16px rgba(0,255,136,.2);color:var(--green);font-size:1.4rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">📋</button>
+</div>
+
+<!-- Modal: Meus Agendamentos -->
+<div id="modal-meus-agend" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:1.2rem">
+    <div style="background:var(--card2);border:1.5px solid var(--border);border-radius:14px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;padding:1.3rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <div style="font-size:1.05rem;font-weight:800">📋 Meus Agendamentos</div>
+            <button type="button" id="btn-fechar-meus-agend" style="background:transparent;border:1.5px solid var(--border);color:var(--text);border-radius:8px;padding:.4rem .7rem;cursor:pointer">✕</button>
+        </div>
+        <div style="font-size:.78rem;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem">Próximos</div>
+        <div id="lista-meus-agend-proximos"><div class="loading">Carregando</div></div>
+        <div style="font-size:.78rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:1.3rem 0 .6rem">Últimos cortes</div>
+        <div id="lista-meus-agend-historico"><div class="loading">Carregando</div></div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 
@@ -1028,6 +1047,84 @@ function initFaleComigo(){
             navigator.clipboard.writeText($('fale-comigo-pix-key').textContent).then(()=>toast('PIX copiado!'));
         });
     }
+}
+
+// Cliente pode ver e cancelar os próprios agendamentos futuros, e ver os
+// últimos cortes já feitos — antes não existia nenhuma tela pra isso, só
+// dava pra cancelar pedindo pro barbeiro mexer direto no sistema.
+const CANCELAMENTO_MIN_HORAS = 2; // não deixa cancelar em cima da hora
+
+function atualizarBotaoMeusAgendamentos(){
+    const wrap = $('meus-agend-wrap');
+    if(!wrap) return;
+    wrap.style.display = clienteWpp ? 'block' : 'none';
+}
+
+async function abrirMeusAgendamentos(){
+    $('modal-meus-agend').style.display = 'flex';
+    const contProx = $('lista-meus-agend-proximos');
+    const contHist = $('lista-meus-agend-historico');
+    contProx.innerHTML = '<div class="loading">Carregando</div>';
+    contHist.innerHTML = '<div class="loading">Carregando</div>';
+
+    try{
+        const q = query(collection(db,'agendamentos'), where('barbeiroId','==',barbeiroId), where('clienteWhatsapp','==',clienteWpp));
+        const snap = await getDocs(q);
+        const todos = [];
+        snap.forEach(d=>todos.push({id:d.id, ...d.data()}));
+
+        const agora = new Date();
+        const proximos = todos
+            .filter(a=>a.status==='pendente' && a.data && a.hora && new Date(`${a.data}T${a.hora}`) >= agora)
+            .sort((a,b)=> new Date(`${a.data}T${a.hora}`) - new Date(`${b.data}T${b.hora}`));
+        const historico = todos
+            .filter(a=>a.status==='concluido')
+            .sort((a,b)=> new Date(`${b.data}T${b.hora||'00:00'}`) - new Date(`${a.data}T${a.hora||'00:00'}`))
+            .slice(0,5);
+
+        contProx.innerHTML = proximos.length ? proximos.map(a=>{
+            const dataHora = new Date(`${a.data}T${a.hora}`);
+            const podeCancelar = (dataHora - agora) / 3600000 >= CANCELAMENTO_MIN_HORAS;
+            return `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem .9rem;margin-bottom:.6rem">
+                <div style="font-weight:700;font-size:.9rem">${escapeHtml(a.corte||'')}</div>
+                <div style="font-size:.78rem;color:var(--muted);margin-top:.15rem">${fmt(a.data)} às ${a.hora} · R$${Number(a.preco||0).toFixed(2)}</div>
+                ${podeCancelar
+                    ? `<button data-cancelar-agend="${a.id}" style="margin-top:.55rem;width:100%;padding:.5rem;background:transparent;border:1.5px solid var(--red);border-radius:8px;color:var(--red);font-size:.78rem;cursor:pointer">Cancelar agendamento</button>`
+                    : `<div style="margin-top:.55rem;font-size:.7rem;color:var(--yellow)">⏰ Faltam menos de ${CANCELAMENTO_MIN_HORAS}h — fale com o barbeiro pra cancelar</div>`}
+            </div>`;
+        }).join('') : '<div class="empty-state">Nenhum agendamento futuro.</div>';
+
+        contProx.querySelectorAll('[data-cancelar-agend]').forEach(btn=>{
+            btn.addEventListener('click', async()=>{
+                if(!confirm('Tem certeza que quer cancelar esse agendamento?')) return;
+                btn.disabled = true; btn.textContent = 'Cancelando...';
+                try{
+                    await updateDoc(doc(db,'agendamentos',btn.dataset.cancelarAgend), {status:'cancelado'});
+                    toast('Agendamento cancelado.');
+                    abrirMeusAgendamentos();
+                }catch(e){
+                    toast('Erro ao cancelar: '+e.message);
+                    btn.disabled = false; btn.textContent = 'Cancelar agendamento';
+                }
+            });
+        });
+
+        contHist.innerHTML = historico.length ? historico.map(a=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.82rem">
+                <span>${escapeHtml(a.corte||'')}</span>
+                <span style="color:var(--muted);font-size:.72rem">${fmt(a.data)}</span>
+            </div>`).join('') : '<div class="empty-state">Nenhum corte concluído ainda.</div>';
+    }catch(e){
+        contProx.innerHTML = '<div class="empty-state">Erro ao carregar.</div>';
+        contHist.innerHTML = '';
+        console.error('abrirMeusAgendamentos:', e);
+    }
+}
+
+if(!window.__meusAgendBound){
+    window.__meusAgendBound = true;
+    $('btn-meus-agend').addEventListener('click', abrirMeusAgendamentos);
+    $('btn-fechar-meus-agend').addEventListener('click', ()=>{ $('modal-meus-agend').style.display='none'; });
 }
 
 function aplicarPersonalizacao(data) {
@@ -1704,6 +1801,7 @@ $('btn-editar-meu-wpp').addEventListener('click', async () => {
 
 /* ── STEP 1: Cortes (multi-seleção por sessão) ── */
 async function carregarCortes() {
+    atualizarBotaoMeusAgendamentos();
     const grid = $('services-grid');
     const cortes = barbeiroInfo.cortes || [];
     if (!cortes.length) {
