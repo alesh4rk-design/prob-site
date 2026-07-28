@@ -116,7 +116,7 @@ async function initFuncionarioMode(bId, funcId){
         </div>
         <div class="tab-content${primeiraAbaFunc==='func-fila'?' active':''}" id="tab-func-fila" style="padding:1.5rem;max-width:900px;margin:0 auto">
             <div class="card" style="margin-bottom:1.2rem">
-                <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Adicione clientes que chegaram sem agendamento. Você só vê e gerencia a sua própria fila.</p>
+                <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Adicione clientes que chegaram sem agendamento. A fila é compartilhada com o resto da equipe — quem estiver livre atende, a não ser que o cliente tenha pedido alguém específico.</p>
                 <div style="display:flex;gap:.6rem;flex-wrap:wrap">
                     <input type="text" id="func-fila-nome" placeholder="Nome do cliente" style="flex:2;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
                     <input type="tel" id="func-fila-wpp" placeholder="WhatsApp (opcional)" style="flex:1;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
@@ -344,11 +344,14 @@ function initFilaFuncionario(bId,funcNome,bData){
 
             btnAdd.disabled=true;
             try{
+                // Fila compartilhada: quem chegou sem pedir alguém específico
+                // fica sem "barbeiro" travado, disponível pra quem estiver
+                // livre atender primeiro — não só quem cadastrou.
                 await addDoc(collection(db,'fila'),{
                     barbeiroId:bId,
                     clienteNome:nome,
                     clienteWhatsapp:wpp,
-                    barbeiro:funcNome,
+                    barbeiro:'',
                     corte:corte?corte.nome:'',
                     preco:corte?corte.preco:0,
                     status:'aguardando',
@@ -367,13 +370,16 @@ function initFilaFuncionario(bId,funcNome,bData){
         document.getElementById('func-fila-nome').addEventListener('keypress',e=>{if(e.key==='Enter')btnAdd.click();});
     }
 
-    // Escuta a fila em tempo real, filtrando só os deste funcionário
+    // Escuta a fila em tempo real — fila compartilhada: aparece quem não
+    // pediu ninguém específico (aberto pra quem estiver livre) mais quem
+    // pediu esse funcionário em particular. Não mostra quem pediu outro
+    // colega específico.
     const q=query(collection(db,'fila'),where('barbeiroId','==',bId),where('status','==','aguardando'));
     onSnapshot(q,snap=>{
         let lista=[];
         snap.forEach(d=>{
             const item=d.data();
-            if(item.barbeiro===funcNome)lista.push({id:d.id,...item});
+            if(!item.barbeiro || item.barbeiro===funcNome)lista.push({id:d.id,...item});
         });
         lista.sort((a,b)=>new Date(a.criadoEm)-new Date(b.criadoEm));
         renderFilaFuncionario(lista,bId);
@@ -413,7 +419,7 @@ function renderFilaFuncionario(lista,bId){
                 clienteWhatsapp:'',
                 corte:item.corte||'Corte (fila)',
                 preco:item.preco||0,
-                barbeiro:item.barbeiro||'',
+                barbeiro:funcNome,
                 data:fmtHoje(),
                 hora:new Date().toTimeString().slice(0,5),
                 status:'concluido',
