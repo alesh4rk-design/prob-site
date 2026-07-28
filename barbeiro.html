@@ -1812,7 +1812,18 @@
                 <div class="input-group"><label>Nome da barbearia</label><input type="text" id="perf-nome" placeholder="Ex: Barbearia do João"></div>
                 <div class="input-group"><label>WhatsApp (com DDD)</label><input type="tel" id="perf-wpp" placeholder="21999990000"></div>
                 <div class="input-group"><label>Endereço (para o Maps)</label><input type="text" id="perf-endereco" placeholder="Rua das Flores, 123 - Rio de Janeiro"></div>
+                <div class="input-group">
+                    <label>Tipo da chave PIX</label>
+                    <select id="perf-pix-tipo" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;width:100%">
+                        <option value="cpf">CPF</option>
+                        <option value="cnpj">CNPJ</option>
+                        <option value="email">E-mail</option>
+                        <option value="telefone">Telefone</option>
+                        <option value="aleatoria">Chave aleatória</option>
+                    </select>
+                </div>
                 <div class="input-group"><label>Chave PIX (para receber dos clientes)</label><input type="text" id="perf-pix" placeholder="CPF, e-mail, telefone ou chave aleatória"></div>
+                <p style="font-size:.68rem;color:var(--muted);margin-top:-.6rem;margin-bottom:.85rem">Pode digitar com ou sem pontuação (ex: com ou sem traço no CPF) — o sistema ajusta sozinho o formato certo pro QR Code do PIX funcionar.</p>
                 <button class="btn-save" id="btn-salvar-perfil">Salvar Informações</button>
             </div>
         </div>
@@ -2989,8 +3000,8 @@ async function initDash(){
 <script defer src="js/dashboard/promocoes.js?v=20260727q"></script>
 <script defer src="js/dashboard/clientes.js?v=20260727o"></script>
 <script defer src="js/dashboard/agendamentos.js?v=20260727s"></script>
-<script defer src="js/dashboard/horarios.js?v=20260727o"></script>
-<script defer src="js/dashboard/financeiro.js?v=20260727o"></script>
+<script defer src="js/dashboard/horarios.js?v=20260727p"></script>
+<script defer src="js/dashboard/financeiro.js?v=20260727p"></script>
 <script defer src="js/dashboard/auth.js?v=20260727r"></script>
 <script defer src="js/dashboard/visual.js?v=20260727o"></script>
 

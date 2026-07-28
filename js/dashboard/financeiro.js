@@ -15,12 +15,26 @@
 // que ainda não foi extraído). Ver docs/README.md.
 // ══════════════════════════════════════════════════════════
 
+// Chave PIX cadastrada antes desse campo de tipo existir não tem tipo
+// salvo — tenta adivinhar pelo formato, pra não arriscar tratar um e-mail
+// ou chave aleatória como se fosse CPF (o que quebraria o QR Code).
+function inferirTipoPixLegado(pix){
+    if(!pix) return 'cpf';
+    if(pix.includes('@')) return 'email';
+    if(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(pix.trim())) return 'aleatoria';
+    const digitos = pix.replace(/\D/g,'');
+    if(digitos.length===14) return 'cnpj';
+    if(digitos.length===11 && /[()\-\s]/.test(pix)) return 'telefone';
+    return 'cpf';
+}
+
 // PERFIL
 function initPerfil(){
     $('perf-nome').value=barbeiroData.nome||'';
     $('perf-wpp').value=barbeiroData.whatsapp||'';
     $('perf-endereco').value=barbeiroData.endereco||'';
     $('perf-pix').value=barbeiroData.pix||'';
+    $('perf-pix-tipo').value=barbeiroData.pixTipo||inferirTipoPixLegado(barbeiroData.pix);
     initLinkCliente();
 
     // Modo de atendimento
@@ -114,9 +128,13 @@ $('btn-salvar-perfil').addEventListener('click',async()=>{
     const whatsapp=$('perf-wpp').value.replace(/\D/g,'');
     const endereco=$('perf-endereco').value.trim();
     const pix=$('perf-pix').value.trim();
+    const pixTipo=$('perf-pix-tipo').value;
     if(!nome){toast('Informe o nome da barbearia','var(--red)');return;}
-    await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{nome,whatsapp,endereco,pix});
-    barbeiroData={...barbeiroData,nome,whatsapp,endereco,pix};
+    if(pix && pixTipo==='cpf' && pix.replace(/\D/g,'').length!==11){toast('CPF precisa ter 11 dígitos','var(--red)');return;}
+    if(pix && pixTipo==='cnpj' && pix.replace(/\D/g,'').length!==14){toast('CNPJ precisa ter 14 dígitos','var(--red)');return;}
+    if(pix && pixTipo==='telefone' && pix.replace(/\D/g,'').replace(/^55/,'').length!==11){toast('Telefone precisa ter DDD + 9 dígitos','var(--red)');return;}
+    await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{nome,whatsapp,endereco,pix,pixTipo});
+    barbeiroData={...barbeiroData,nome,whatsapp,endereco,pix,pixTipo};
     toast('Perfil salvo!');
 });
 }

@@ -292,8 +292,26 @@ function crc16Pix(payload){
     }
     return crc.toString(16).toUpperCase().padStart(4,'0');
 }
-function montarPayloadPix({ chave, nome, cidade }){
-    const merchantAccount = tlvPix('26', tlvPix('00','br.gov.bcb.pix') + tlvPix('01',chave));
+// O banco recusa a chave se ela não estiver EXATAMENTE no formato exigido
+// pela BCB (sem pontuação, telefone com +55 na frente) — sem isso, quem
+// cadastra a chave com máscara (ex: "(21) 99999-9999" ou "123.456.789-00")
+// gera um QR Code que dá erro no app do banco ao escanear, mesmo a chave
+// em si estando certa.
+function normalizarChavePix(chave, tipo){
+    const limpo = (chave||'').trim();
+    if(tipo==='cpf' || tipo==='cnpj') return limpo.replace(/\D/g,'');
+    if(tipo==='telefone'){
+        let digitos = limpo.replace(/\D/g,'');
+        digitos = digitos.replace(/^0+/,''); // remove 0 de discagem, se tiver
+        if(digitos.length===11) digitos = '55'+digitos; // DDD+número, sem país
+        return '+'+digitos;
+    }
+    return limpo; // email e chave aleatória: usa como digitado
+}
+
+function montarPayloadPix({ chave, tipo, nome, cidade }){
+    const chaveNormalizada = normalizarChavePix(chave, tipo);
+    const merchantAccount = tlvPix('26', tlvPix('00','br.gov.bcb.pix') + tlvPix('01',chaveNormalizada));
     const adicional = tlvPix('62', tlvPix('05','***'));
     let payload =
         tlvPix('00','01') +
@@ -311,7 +329,8 @@ function montarPayloadPix({ chave, nome, cidade }){
 function gerarQrPix(){
     const chave=(barbeiroData.pix||'').trim();
     if(!chave){ toast('Cadastre sua chave PIX em Configurações primeiro.','var(--red)'); return; }
-    const payload = montarPayloadPix({ chave, nome: barbeiroData.nome, cidade: barbeiroData.endereco });
+    const tipo = barbeiroData.pixTipo || (typeof inferirTipoPixLegado==='function' ? inferirTipoPixLegado(chave) : 'cpf');
+    const payload = montarPayloadPix({ chave, tipo, nome: barbeiroData.nome, cidade: barbeiroData.endereco });
     const container=$('qr-pix-container');
     container.innerHTML='';
     const img=document.createElement('img');
