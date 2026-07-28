@@ -761,16 +761,22 @@ async function carregarFaturamento(){
     const valsM=meses6.map(m=>conc.filter(a=>a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0));
     const maxM=Math.max(...valsM,1);
     const nomesM=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    if(!$('chart-mensal'))return;
-    $('chart-mensal').innerHTML=meses6.map((m,i)=>{
-        const pct=Math.round((valsM[i]/maxM)*100);
-        const isMesAtual=m===mesAtual;
-        return `<div class="bar-col">
-            <div class="bar-fill-wrap"><div class="bar-fill ${isMesAtual?'hi':''}" style="height:${Math.max(pct,2)}%"></div></div>
-            <div class="bar-val">${valsM[i]>0?'R$'+valsM[i].toFixed(0):''}</div>
-            <div class="bar-lbl">${nomesM[Number(m.split('-')[1])-1]}</div>
-        </div>`;
-    }).join('');
+    // "chart-mensal" não existe mais no HTML atual (sobrou desse elemento só
+    // a referência aqui) — antes isso dava return e travava TUDO que vinha
+    // depois nessa função, incluindo o ranking de "Cortes Mais Vendidos" e
+    // a chamada de carregarResumoGestao(). Agora só pula esse gráfico
+    // específico se o elemento não existir, sem interromper o resto.
+    if($('chart-mensal')){
+        $('chart-mensal').innerHTML=meses6.map((m,i)=>{
+            const pct=Math.round((valsM[i]/maxM)*100);
+            const isMesAtual=m===mesAtual;
+            return `<div class="bar-col">
+                <div class="bar-fill-wrap"><div class="bar-fill ${isMesAtual?'hi':''}" style="height:${Math.max(pct,2)}%"></div></div>
+                <div class="bar-val">${valsM[i]>0?'R$'+valsM[i].toFixed(0):''}</div>
+                <div class="bar-lbl">${nomesM[Number(m.split('-')[1])-1]}</div>
+            </div>`;
+        }).join('');
+    }
 
     // Ranking cortes
     const contagem={};
