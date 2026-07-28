@@ -247,6 +247,18 @@ function initInsumos(){
     }, e=>console.error('insumos:',e));
 
     $('btn-add-insumo').addEventListener('click', adicionarInsumo);
+
+    // Mesmo padrão de Estoque/Promoções: formulário some até clicar em
+    // "+ Adicionar Insumo".
+    $('btn-mostrar-form-insumo').addEventListener('click', ()=>{
+        $('insumo-form-wrap').style.display='block';
+        $('insumo-card-intro').style.display='none';
+        $('insumo-form-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+    $('btn-cancelar-form-insumo').addEventListener('click', ()=>{
+        $('insumo-form-wrap').style.display='none';
+        $('insumo-card-intro').style.display='block';
+    });
 }
 
 // Registra um gasto com insumo — alimenta o cartão "Gastos com Insumos"
@@ -291,6 +303,8 @@ async function adicionarInsumo(){
             toast('✓ Insumo cadastrado!'+(custo?' Gasto registrado.':''));
         }
         $('insumo-nome').value=''; $('insumo-qtd').value=''; $('insumo-qtd-min').value=''; $('insumo-custo').value='';
+        $('insumo-form-wrap').style.display='none';
+        $('insumo-card-intro').style.display='block';
     }catch(e){ toast('Erro ao cadastrar: '+e.message,'var(--red)'); }
     btn.disabled = false;
 }
