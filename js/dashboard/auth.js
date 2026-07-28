@@ -86,12 +86,20 @@ async function initFuncionarioMode(bId, funcId){
     const btnAjudaF=document.getElementById('btn-ajuda'); if(btnAjudaF) btnAjudaF.style.display='none';
     barbeiroData={uid:bId,...bData};
     carregarCachePromoCliente();
+    // Mesma regra do painel do dono: só fila esconde "Meus Agendamentos",
+    // só agendamento esconde "Fila" — sem isso o funcionário sempre via as
+    // duas abas, mesmo quando o dono configurou atendimento só por fila.
+    const modoFunc = bData.modoAtendimento||'agendamento';
+    const mostrarAgendaFunc = modoFunc==='agendamento' || modoFunc==='ambos';
+    const mostrarFilaFunc = modoFunc==='fila' || modoFunc==='ambos';
+    const primeiraAbaFunc = mostrarAgendaFunc ? 'func-agenda' : 'func-fila';
+    const primeiroTituloFunc = mostrarAgendaFunc ? '📋 Meus Agendamentos' : '🪑 Fila';
     document.getElementById('drawer-tab-items').innerHTML=`
-        <div class="tab active" data-tab="func-agenda">📋 Meus Agendamentos</div>
-        <div class="tab" data-tab="func-fila">🪑 Fila</div>
+        ${mostrarAgendaFunc?`<div class="tab${primeiraAbaFunc==='func-agenda'?' active':''}" data-tab="func-agenda">📋 Meus Agendamentos</div>`:''}
+        ${mostrarFilaFunc?`<div class="tab${primeiraAbaFunc==='func-fila'?' active':''}" data-tab="func-fila">🪑 Fila</div>`:''}
         <div class="tab" data-tab="func-ganhos">💰 Meus Ganhos</div>
         <div class="tab" data-tab="func-horarios">🕐 Meus Horários</div>`;
-    document.getElementById('menu-titulo-atual').innerHTML='📋 Meus Agendamentos';
+    document.getElementById('menu-titulo-atual').innerHTML=primeiroTituloFunc;
 
     // Hide all tabs, show func tabs
     document.querySelectorAll('.tab-content').forEach(t=>{t.style.display='none';});
@@ -100,13 +108,13 @@ async function initFuncionarioMode(bId, funcId){
 
     // Inject func tabs
     const funcHTML=`
-        <div class="tab-content active" id="tab-func-agenda" style="padding:1.5rem;max-width:900px;margin:0 auto">
+        <div class="tab-content${primeiraAbaFunc==='func-agenda'?' active':''}" id="tab-func-agenda" style="padding:1.5rem;max-width:900px;margin:0 auto">
             <div class="section-title">Meus Agendamentos de Hoje</div>
             <div id="func-lista-hoje"></div>
             <div class="section-title" style="margin-top:1.5rem">Próximos</div>
             <div id="func-lista-prox"></div>
         </div>
-        <div class="tab-content" id="tab-func-fila" style="padding:1.5rem;max-width:900px;margin:0 auto">
+        <div class="tab-content${primeiraAbaFunc==='func-fila'?' active':''}" id="tab-func-fila" style="padding:1.5rem;max-width:900px;margin:0 auto">
             <div class="card" style="margin-bottom:1.2rem">
                 <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Adicione clientes que chegaram sem agendamento. Você só vê e gerencia a sua própria fila.</p>
                 <div style="display:flex;gap:.6rem;flex-wrap:wrap">
