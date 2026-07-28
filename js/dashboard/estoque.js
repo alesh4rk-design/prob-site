@@ -203,6 +203,18 @@ function initEstoque(){
 
     $('btn-add-produto').addEventListener('click', adicionarProduto);
 
+    // Formulário de cadastro fica escondido até clicar em "+ Adicionar
+    // Produto" — evita o menu inteiro sempre aberto ocupando a tela.
+    $('btn-mostrar-form-produto').addEventListener('click', ()=>{
+        $('prod-form-wrap').style.display='block';
+        $('prod-card-intro').style.display='none';
+        $('prod-form-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+    $('btn-cancelar-form-produto').addEventListener('click', ()=>{
+        $('prod-form-wrap').style.display='none';
+        $('prod-card-intro').style.display='block';
+    });
+
     $('btn-scan-camera').addEventListener('click', ()=>abrirScannerCamera(codigo=>{ $('venda-codigo').value=codigo; buscarProdutoPorCodigo(codigo); }));
     $('btn-scan-camera-cadastro').addEventListener('click', ()=>abrirScannerCamera(codigo=>{ $('prod-codigo').value=codigo; verificarCodigoCadastro(); }));
     $('prod-codigo').addEventListener('input', verificarCodigoCadastro);
@@ -600,6 +612,8 @@ async function adicionarProduto(){
         }
         $('prod-nome').value=''; $('prod-codigo').value=''; $('prod-custo').value=''; $('prod-preco').value=''; $('prod-estoque').value=''; $('prod-estoque-min').value='';
         $('prod-margem-aviso').style.display='none';
+        $('prod-form-wrap').style.display='none';
+        $('prod-card-intro').style.display='block';
     }catch(e){ toast('Erro ao cadastrar: '+e.message,'var(--red)'); }
     btn.disabled=false;
 }
@@ -626,6 +640,7 @@ function renderProdutos(){
             </div>
             <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
                 <button class="btn-edit" data-add-estoque="${p.id}">+ Estoque</button>
+                <button class="btn-edit" data-baixa-estoque="${p.id}" style="border-color:var(--yellow);color:var(--yellow)">− Baixa manual</button>
                 <button class="btn-del" data-del-produto="${p.id}">Remover</button>
             </div>
         </div>`;
@@ -638,6 +653,22 @@ function renderProdutos(){
             if(!qtd || isNaN(n) || n<=0) return;
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',btn.dataset.addEstoque),{estoque:increment(n)});
             toast(`✓ +${n} unidades adicionadas`);
+        });
+    });
+
+    // Baixa manual — pra tirar do estoque sem ser por venda (perda, quebra,
+    // uso interno, doação etc.), coisa que "+ Estoque" (só soma) não cobria.
+    cont.querySelectorAll('[data-baixa-estoque]').forEach(btn=>{
+        btn.addEventListener('click', async()=>{
+            const produto = produtosCache.find(p=>p.id===btn.dataset.baixaEstoque);
+            if(!produto) return;
+            const qtd = prompt(`Baixa manual de "${produto.nome}" (estoque atual: ${produto.estoque}) — quantas unidades sair?`,'1');
+            const n = parseInt(qtd);
+            if(!qtd || isNaN(n) || n<=0) return;
+            if(n>produto.estoque){ toast('Não tem tanto em estoque assim','var(--red)'); return; }
+            const motivo = prompt('Motivo da baixa (opcional, ex: perda, quebra, uso interno):','') || '';
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',produto.id),{estoque:increment(-n)});
+            toast(`✓ Baixa de ${n} unidade(s) de "${produto.nome}" registrada${motivo?': '+motivo:''}`);
         });
     });
     cont.querySelectorAll('[data-del-produto]').forEach(btn=>{
