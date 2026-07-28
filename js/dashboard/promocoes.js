@@ -24,6 +24,11 @@ document.getElementById('btn-mostrar-form-promo').addEventListener('click', ()=>
     document.getElementById('promo-intro-card').style.display = 'none';
     document.getElementById('promo-form-wrap').scrollIntoView({behavior:'smooth', block:'start'});
 });
+document.getElementById('btn-cancelar-form-promo').addEventListener('click', ()=>{
+    document.getElementById('promo-form-wrap').style.display = 'none';
+    document.getElementById('promo-intro-card').style.display = 'block';
+    document.getElementById('promo-intro-card').scrollIntoView({behavior:'smooth', block:'start'});
+});
 
 // Toggle campos por tipo — o vínculo de cliente aparece pra todo mundo,
 // exceto cupom (que é aberto, sem dono).
