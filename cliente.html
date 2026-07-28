@@ -1295,6 +1295,12 @@ function carregarBarbeiro() {
         }
         aplicarPersonalizacao(snap.data());
         carregarPromocoesCliente();
+        // Re-renderiza os cortes sempre que os dados do barbeiro chegam/mudam
+        // — sem isso, se o cliente entrasse (login/cadastro) antes desse
+        // listener terminar de carregar (conexão lenta), a tela de cortes
+        // ficava vazia pra sempre: carregarCortes() só era chamada uma vez,
+        // no momento do clique, e nunca de novo quando os dados reais chegavam.
+        if (currentStep >= 1) carregarCortes();
         // Atualiza nome na tela de login
 
     }, e => console.error('Erro barbeiro listener:', e));
