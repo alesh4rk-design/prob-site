@@ -19,6 +19,16 @@ const NOVIDADES_MAX_VISIVEIS = 6;
 
 const NOVIDADES = [
     {
+        id: '2026-07-29-09',
+        data: '29/07/2026',
+        titulo: 'Logo da barbearia e comprovante de comissão',
+        itens: [
+            'Configurações → Logo da Barbearia: suba a imagem da sua marca (redimensionada e comprimida sozinha) — aparece no menu do sistema e no cabeçalho dos comprovantes em PDF.',
+            'Ao marcar a comissão de alguém como paga, o sistema gera um comprovante em PDF (com forma de pagamento) e já abre pra enviar direto no WhatsApp da pessoa.',
+            'O combinado de pagamento de comissão agora é individual: cada barbeiro pode ter a própria frequência (semanal, quinzenal ou mensal) e dia.'
+        ]
+    },
+    {
         id: '2026-07-29-08',
         data: '29/07/2026',
         titulo: 'Pagamento de Comissão da Equipe',
