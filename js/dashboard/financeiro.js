@@ -76,7 +76,10 @@ function atualizarPreviewLogo(){
     if(!prev) return;
     const semLogo=$('logo-sem-logo');
     const btnRemover=$('btn-remover-logo');
+    const status=$('logo-status');
     if(barbeiroData.logoBase64){
+        prev.onerror=()=>{ if(status){ status.textContent='⚠️ A logo salva não carregou — tente subir de novo.'; status.style.color='var(--red)'; } };
+        prev.onload=()=>{ if(status){ status.textContent=`✓ Logo cadastrada (${Math.round(barbeiroData.logoBase64.length/1024)}KB)`; status.style.color='var(--green)'; } };
         prev.src=barbeiroData.logoBase64;
         prev.style.display='block';
         if(semLogo) semLogo.style.display='none';
@@ -85,6 +88,7 @@ function atualizarPreviewLogo(){
         prev.style.display='none';
         if(semLogo) semLogo.style.display='flex';
         if(btnRemover) btnRemover.style.display='none';
+        if(status){ status.textContent='Nenhuma logo cadastrada ainda.'; status.style.color='var(--muted)'; }
     }
 }
 
@@ -104,15 +108,21 @@ function initLogo(){
             const file=input.files[0];
             input.value='';
             if(!file) return;
+            const status=$('logo-status');
+            if(status){ status.textContent='⏳ Processando imagem...'; status.style.color='var(--blue)'; }
             try{
-                toast('Processando logo...');
                 const dataUrl=await processarLogoArquivo(file);
+                if(status){ status.textContent='⏳ Salvando...'; status.style.color='var(--blue)'; }
                 await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{logoBase64:dataUrl});
                 barbeiroData.logoBase64=dataUrl;
                 atualizarPreviewLogo();
                 atualizarLogoTopbar();
                 toast('✓ Logo salva!');
-            }catch(e){ toast(e.message,'var(--red)'); }
+            }catch(e){
+                console.error('Erro ao salvar logo:', e);
+                toast(e.message,'var(--red)');
+                if(status){ status.textContent='❌ '+e.message; status.style.color='var(--red)'; }
+            }
         });
     }
     const btnRemover=$('btn-remover-logo');
