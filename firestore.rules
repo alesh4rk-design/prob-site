@@ -74,6 +74,9 @@ service cloud.firestore {
       match /produtos/{doc} {
         allow read, write: if isOwner(bId) || isAdmin();
       }
+      match /movimentosEstoque/{doc} {
+        allow read, write: if isOwner(bId) || isAdmin();
+      }
       match /insumos/{doc} {
         allow read, write: if isOwner(bId) || isAdmin();
       }

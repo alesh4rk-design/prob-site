@@ -17,6 +17,22 @@ let unsubProdutos = null;
 let vendaProdutoSelecionado = null;
 let vendaQtdAtual = 1;
 
+// Histórico de entrada e saída de produtos — cada mudança de estoque
+// (cadastro, +Estoque, baixa manual, venda) grava um registro aqui, com a
+// data. É o que alimenta a aba "Histórico" logo abaixo da lista de produtos.
+let movimentosEstoqueCache = [];
+let unsubMovimentosEstoque = null;
+
+async function registrarMovimentoEstoque(produtoId, produtoNome, tipo, quantidade, motivo){
+    try{
+        await addDoc(collection(db,'barbeiros',barbeiroData.uid,'movimentosEstoque'), {
+            produtoId, produtoNome, tipo, quantidade, motivo: motivo||'',
+            data: fmtHoje(),
+            criadoEm: new Date().toISOString()
+        });
+    }catch(e){ console.error('registrarMovimentoEstoque:', e); }
+}
+
 // ══════════════════════════════════════════════════════════
 // ZONA DE PERIGO — apagar dados de teste, escolhendo exatamente
 // o quê. Sempre com contagem real antes e confirmação por texto.
@@ -186,6 +202,14 @@ function initEstoque(){
         atualizarKpiEstoqueBaixo();
         if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
     }, e=>console.error('produtos:',e));
+
+    if(unsubMovimentosEstoque) unsubMovimentosEstoque();
+    unsubMovimentosEstoque = onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'movimentosEstoque'), snap=>{
+        movimentosEstoqueCache = [];
+        snap.forEach(d=>movimentosEstoqueCache.push({id:d.id,...d.data()}));
+        movimentosEstoqueCache.sort((a,b)=>(b.criadoEm||'').localeCompare(a.criadoEm||''));
+        renderMovimentosEstoque();
+    }, e=>console.error('movimentosEstoque:',e));
 
     carregarVendasHoje();
 
@@ -445,6 +469,7 @@ async function confirmarVendaCliente(){
             ? {nome:nomeDigitado, wpp:wppJaVinculado}
             : await resolverClienteDaVenda(nomeDigitado);
         await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vcProdutoSelecionado.id),{estoque:increment(-vcQtdAtual)});
+        await registrarMovimentoEstoque(vcProdutoSelecionado.id, vcProdutoSelecionado.nome, 'saida', vcQtdAtual, cliente.nome?`Venda — ${cliente.nome}`:'Venda');
         await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
             produtoId: vcProdutoSelecionado.id,
             produtoNome: vcProdutoSelecionado.nome,
@@ -552,6 +577,7 @@ async function confirmarVenda(){
         const nomeDigitado = $('venda-cliente-nome') ? $('venda-cliente-nome').value.trim() : '';
         const cliente = await resolverClienteDaVenda(nomeDigitado);
         await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vendaProdutoSelecionado.id),{estoque:increment(-vendaQtdAtual)});
+        await registrarMovimentoEstoque(vendaProdutoSelecionado.id, vendaProdutoSelecionado.nome, 'saida', vendaQtdAtual, cliente.nome?`Venda — ${cliente.nome}`:'Venda');
         await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
             produtoId: vendaProdutoSelecionado.id,
             produtoNome: vendaProdutoSelecionado.nome,
@@ -616,12 +642,14 @@ async function adicionarProduto(){
     try{
         if(existente){
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',existente.id), {estoque:increment(qtd)});
+            await registrarMovimentoEstoque(existente.id, existente.nome, 'entrada', qtd, 'Reposição de estoque');
             toast(`✓ +${qtd} unidade(s) adicionada(s) a "${existente.nome}" (já cadastrado)`);
         } else {
-            await addDoc(collection(db,'barbeiros',barbeiroData.uid,'produtos'), {
+            const novoRef = await addDoc(collection(db,'barbeiros',barbeiroData.uid,'produtos'), {
                 nome, codigoBarras: codigoBarras||null, custo, preco, estoque: qtd, estoqueMinimo,
                 criadoEm: new Date().toISOString()
             });
+            await registrarMovimentoEstoque(novoRef.id, nome, 'entrada', qtd, 'Cadastro inicial');
             toast('✓ Produto cadastrado!');
         }
         $('prod-nome').value=''; $('prod-codigo').value=''; $('prod-custo').value=''; $('prod-preco').value=''; $('prod-estoque').value=''; $('prod-estoque-min').value='';
@@ -662,10 +690,12 @@ function renderProdutos(){
 
     cont.querySelectorAll('[data-add-estoque]').forEach(btn=>{
         btn.addEventListener('click', async()=>{
+            const produto = produtosCache.find(p=>p.id===btn.dataset.addEstoque);
             const qtd = prompt('Quantas unidades chegaram?','10');
             const n = parseInt(qtd);
             if(!qtd || isNaN(n) || n<=0) return;
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',btn.dataset.addEstoque),{estoque:increment(n)});
+            await registrarMovimentoEstoque(btn.dataset.addEstoque, produto?.nome||'', 'entrada', n, 'Reposição de estoque');
             toast(`✓ +${n} unidades adicionadas`);
         });
     });
@@ -682,6 +712,7 @@ function renderProdutos(){
             if(n>produto.estoque){ toast('Não tem tanto em estoque assim','var(--red)'); return; }
             const motivo = prompt('Motivo da baixa (opcional, ex: perda, quebra, uso interno):','') || '';
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',produto.id),{estoque:increment(-n)});
+            await registrarMovimentoEstoque(produto.id, produto.nome, 'saida', n, motivo||'Baixa manual');
             toast(`✓ Baixa de ${n} unidade(s) de "${produto.nome}" registrada${motivo?': '+motivo:''}`);
         });
     });
@@ -692,6 +723,35 @@ function renderProdutos(){
             toast('Produto removido');
         });
     });
+}
+
+function fmtDataMovimento(dataIso){
+    if(!dataIso) return '';
+    const [y,m,d] = dataIso.split('-');
+    return `${d}/${m}/${y}`;
+}
+
+// Histórico de entrada e saída — mostra os últimos 40 movimentos (cadastro,
+// reposição, venda, baixa manual), mais recente primeiro.
+function renderMovimentosEstoque(){
+    const cont = $('lista-movimentos-estoque');
+    if(!cont) return;
+    if(!movimentosEstoqueCache.length){
+        cont.innerHTML = '<div class="empty-state"><div class="icon">📜</div>Nenhuma movimentação registrada ainda.</div>';
+        return;
+    }
+    cont.innerHTML = movimentosEstoqueCache.slice(0,40).map(m=>{
+        const ehEntrada = m.tipo==='entrada';
+        const cor = ehEntrada ? 'var(--green)' : 'var(--red)';
+        const sinal = ehEntrada ? '+' : '−';
+        return `<div class="service-item" style="flex-wrap:wrap">
+            <div style="flex:1;min-width:140px">
+                <div class="service-name" style="padding-right:0">${escapeHtml(m.produtoNome||'—')}</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">${fmtDataMovimento(m.data)}${m.motivo?' · '+escapeHtml(m.motivo):''}</div>
+            </div>
+            <div style="font-family:'Courier New',monospace;font-weight:900;color:${cor};font-size:.95rem">${sinal}${m.quantidade}</div>
+        </div>`;
+    }).join('');
 }
 
 // Leitor de código de barras pela câmera do celular (bônus para quem não
