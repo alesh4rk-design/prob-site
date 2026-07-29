@@ -306,17 +306,6 @@
         <div class="topbar-user">
             <button id="btn-instalar-app" title="Instalar o Pro'B no celular/computador" style="display:none;background:rgba(0,212,255,.08);border:1.5px solid var(--blue);border-radius:8px;padding:.4rem .7rem;color:var(--blue);font-weight:700;font-size:.72rem;cursor:pointer;flex-shrink:0;white-space:nowrap">📲 Instalar App</button>
             <button id="btn-ajuda" title="Ajuda e tutoriais" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--blue);font-weight:900;font-size:.9rem;cursor:pointer;flex-shrink:0">?</button>
-            <div style="position:relative;flex-shrink:0">
-                <button id="btn-novidades" title="Novidades do sistema" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--yellow);font-size:1rem;cursor:pointer">⭐</button>
-                <span id="novidades-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:.62rem;font-weight:800;border-radius:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px">•</span>
-                <div id="novidades-painel" style="display:none;position:fixed;top:56px;right:.75rem;width:290px;max-width:calc(100vw - 1.5rem);max-height:70vh;overflow-y:auto;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:.85rem;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.4)">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
-                        <div style="font-size:.85rem;font-weight:800">⭐ Novidades</div>
-                        <button id="btn-fechar-novidades" style="background:transparent;border:none;color:var(--muted);font-size:1rem;cursor:pointer;line-height:1">✕</button>
-                    </div>
-                    <div id="novidades-lista" style="display:flex;flex-direction:column;gap:.85rem"></div>
-                </div>
-            </div>
             <div class="user-avatar" id="avatar-initials" title="">?</div>
             <button class="btn-logout" id="btn-logout">Sair</button>
         </div>
@@ -1949,6 +1938,18 @@
 
     <div style="text-align:center;padding:1.5rem 1rem 2rem;font-size:.62rem;color:rgba(255,255,255,.15);letter-spacing:1.5px;text-transform:uppercase">Desenvolvido por Alexandre Lima</div>
 </section>
+
+<!-- ══ Novidades — botão flutuante, empilhado ACIMA do sino da Central de Avisos ══ -->
+<button id="btn-novidades" title="Novidades do sistema" style="position:fixed;bottom:5.4rem;right:1.2rem;z-index:199;width:52px;height:52px;border-radius:50%;background:var(--card2);border:1.5px solid var(--border);color:var(--yellow);font-size:1.3rem;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center">
+    ⭐<span id="novidades-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:.62rem;font-weight:800;border-radius:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px">•</span>
+</button>
+<div id="novidades-painel" style="display:none;position:fixed;bottom:9.4rem;right:1.2rem;z-index:199;width:290px;max-width:calc(100vw - 2.4rem);max-height:60vh;overflow-y:auto;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:1rem;box-shadow:0 12px 36px rgba(0,0,0,.45)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+        <div style="font-size:.85rem;font-weight:800">⭐ Novidades</div>
+        <button id="btn-fechar-novidades" style="background:transparent;border:none;color:var(--muted);font-size:1rem;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div id="novidades-lista" style="display:flex;flex-direction:column;gap:.85rem"></div>
+</div>
 
 <!-- ══ Central de Avisos — botão flutuante, avisos persistentes que só somem ao clicar em Dispensar ══ -->
 <button id="btn-central-avisos" style="display:none;position:fixed;bottom:1.2rem;right:1.2rem;z-index:199;width:52px;height:52px;border-radius:50%;background:var(--card2);border:1.5px solid var(--border);color:var(--yellow);font-size:1.3rem;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4);align-items:center;justify-content:center">
