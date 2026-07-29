@@ -673,6 +673,119 @@ function fmtDataExtenso(dataStr){
     return `${d}/${m} (${dias[dataObj.getDay()]})`;
 }
 
+// ── Comprovante de pagamento em PDF (não é nota fiscal, envio opcional) ──
+// Mesmo padrão visual usado no Pro'Bronze, adaptado pras cores do Pro'B.
+let comprovanteAtual = null; // { blob, clienteWhatsapp, nomeArquivo }
+
+const ROTULO_FORMA_PAGAMENTO = { dinheiro:'Dinheiro', pix:'Pix', debito:'Débito', credito:'Crédito' };
+
+function montarComprovantePdfBlob({ nomeBarbearia, clienteNome, barbeiro, descricao, valor, formaPagamento }){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a5' }); // 148 x 210mm
+    const W = 148;
+    const agora = new Date().toLocaleString('pt-BR');
+
+    // Cores da marca (mesmas do tema visual do Pro'B)
+    const bg = [10,14,20];            // --bg
+    const azul = [0,212,255];         // --blue
+    const azulClaro = [130,230,255];
+    const verde = [0,255,136];        // --green
+    const textoClaro = [232,244,248]; // --text
+    const cinza = [122,159,181];      // --muted
+
+    // ── Cabeçalho ──
+    doc.setFillColor(...bg);
+    doc.rect(0, 0, W, 40, 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...azul);
+    doc.text("PRO'B", W/2, 18, { align:'center' });
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...azulClaro);
+    doc.text(nomeBarbearia, W/2, 25, { align:'center', maxWidth: W-40 });
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.6);
+    doc.line(30, 30, W-30, 30);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...azul);
+    doc.text('COMPROVANTE DE PAGAMENTO', W/2, 36, { align:'center' });
+
+    // ── Aviso: não é documento fiscal ──
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8.5);
+    const avisoTexto = 'ATENÇÃO: ESTE DOCUMENTO NÃO É CUPOM FISCAL NEM NOTA FISCAL';
+    const avisoLinhas = doc.splitTextToSize(avisoTexto, W-40);
+    const avisoAltura = 8 + avisoLinhas.length*4.2;
+    doc.setFillColor(40,16,14);
+    doc.roundedRect(14, 46, W-28, avisoAltura, 2, 2, 'F');
+    doc.setTextColor(255,110,90);
+    doc.text(avisoLinhas, W/2, 46+5.5, { align:'center', lineHeightFactor:1.3 });
+
+    // ── Corpo — campos em blocos ──
+    const caixa = (x,y,w,h,rotulo,valorTexto,opts={}) => {
+        doc.setFillColor(18,22,28); // --card2
+        doc.setDrawColor(42,63,95); // --border
+        doc.roundedRect(x, y, w, h, 2, 2, 'FD');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...cinza);
+        doc.text(rotulo.toUpperCase(), x+4, y+6);
+        doc.setFont('helvetica', opts.negrito ? 'bold' : 'normal');
+        doc.setFontSize(opts.fontSize || 11);
+        doc.setTextColor(...textoClaro);
+        doc.text(String(valorTexto), x+4, y+(opts.fontSize?15:13), { maxWidth: w-8 });
+    };
+
+    let y = 46 + avisoAltura + 7;
+    caixa(14, y, (W-28-4)/2, 20, 'Data', agora);
+    caixa(14+(W-28-4)/2+4, y, (W-28-4)/2, 20, 'Forma de pagamento', ROTULO_FORMA_PAGAMENTO[formaPagamento]||formaPagamento);
+    y += 26;
+    caixa(14, y, W-28, 18, 'Cliente', clienteNome || 'Não informado');
+    y += 24;
+    if(barbeiro){
+        caixa(14, y, W-28, 18, 'Barbeiro', barbeiro);
+        y += 24;
+    }
+    caixa(14, y, W-28, 20, 'Serviço', descricao);
+    y += 26;
+
+    // Valor total em destaque
+    doc.setFillColor(...bg);
+    doc.setDrawColor(...verde);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(14, y, W-28, 22, 2, 2, 'FD');
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...cinza);
+    doc.text('VALOR TOTAL', 20, y+8);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(18);
+    doc.setTextColor(...verde);
+    doc.text(`R$ ${Number(valor).toFixed(2)}`, W-20, y+16, { align:'right' });
+    y += 30;
+
+    // ── Rodapé ──
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.3);
+    doc.line(14, y, W-14, y);
+    y += 6;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(140,150,160);
+    doc.text("Recibo interno de controle, sem validade fiscal. Gerado pelo sistema Pro'B.", W/2, y, { align:'center', maxWidth: W-24 });
+
+    return doc.output('blob');
+}
+
+function abrirModalComprovante({ nomeBarbearia, clienteNome, clienteWhatsapp, barbeiro, descricao, valor, formaPagamento }){
+    if(typeof window.jspdf === 'undefined'){ return; } // biblioteca ainda carregando — sem comprovante dessa vez, sem travar o resto
+    const blob = montarComprovantePdfBlob({ nomeBarbearia, clienteNome, barbeiro, descricao, valor, formaPagamento });
+    comprovanteAtual = { blob, clienteWhatsapp, nomeArquivo: `comprovante-${Date.now()}.pdf` };
+    $('modal-comprovante').style.display = 'flex';
+}
+
 // Link de agendamento do cliente (mesmo usado na aba Clientes/QR Code) —
 // incluído nas mensagens que convidam a marcar um novo horário, pra já
 // deixar o caminho pronto em vez de só falar "agende".
@@ -914,8 +1027,69 @@ function initAcoesClienteExtras(){
                 }
                 toast('✓ Forma de pagamento registrada: '+btn.textContent.replace(/[^\wÀ-ÿ]/g,' ').trim());
                 if(!window.__funcionarioMode) carregarAgendamentos();
+
+                // "Ainda não pagou" não é um pagamento de verdade — só gera
+                // comprovante quando é uma forma que já entrou no caixa.
+                if(btn.dataset.pag !== 'pendente'){
+                    const item = acClienteAtual.filaId
+                        ? ultimaListaFila.find(f=>f.id===acClienteAtual.filaId)
+                        : ultimaListaAppts.find(a=>a.id===acClienteAtual.agendamentoId);
+                    if(item){
+                        $('modal-acoes-cliente').style.display = 'none';
+                        abrirModalComprovante({
+                            nomeBarbearia: barbeiroData.nome || "Barbearia",
+                            clienteNome: acClienteAtual.nome,
+                            clienteWhatsapp: acClienteAtual.wpp,
+                            barbeiro: item.barbeiro || '',
+                            descricao: item.corte || 'Serviço',
+                            valor: item.preco || 0,
+                            formaPagamento: btn.dataset.pag
+                        });
+                    }
+                }
             }catch(e){ toast('Erro ao salvar: '+e.message,'var(--red)'); }
         });
+    });
+
+    $('btn-fechar-comprovante').addEventListener('click', () => {
+        $('modal-comprovante').style.display = 'none';
+        comprovanteAtual = null;
+    });
+
+    $('btn-baixar-comprovante').addEventListener('click', () => {
+        if(!comprovanteAtual) return;
+        const url = URL.createObjectURL(comprovanteAtual.blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = comprovanteAtual.nomeArquivo; a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    $('btn-enviar-comprovante-wpp').addEventListener('click', async () => {
+        if(!comprovanteAtual) return;
+        const file = new File([comprovanteAtual.blob], comprovanteAtual.nomeArquivo, { type: 'application/pdf' });
+
+        if(navigator.canShare && navigator.canShare({ files: [file] })){
+            try{
+                await navigator.share({ files: [file], title: 'Comprovante', text: 'Segue o comprovante do seu pagamento (não é nota fiscal).' });
+            }catch(e){
+                return; // cliente cancelou o compartilhamento — deixa o modal aberto
+            }
+            $('modal-comprovante').style.display = 'none';
+            comprovanteAtual = null;
+            return;
+        }
+
+        // Navegador sem suporte a compartilhar arquivo (comum no desktop):
+        // baixa o PDF e abre o WhatsApp pra anexar manualmente
+        const url = URL.createObjectURL(file);
+        const a = document.createElement('a');
+        a.href = url; a.download = comprovanteAtual.nomeArquivo; a.click();
+        URL.revokeObjectURL(url);
+        const wppNum = (comprovanteAtual.clienteWhatsapp||'').replace(/\D/g,'');
+        const msg = encodeURIComponent('Olá! Segue o comprovante do seu pagamento (não é nota fiscal). O PDF acabou de ser baixado — é só anexar aqui na conversa.');
+        window.open(wppNum ? `https://wa.me/55${wppNum}?text=${msg}` : `https://wa.me/?text=${msg}`, '_blank');
+        $('modal-comprovante').style.display = 'none';
+        comprovanteAtual = null;
     });
 
     $('ac-btn-desconto').addEventListener('click', async()=>{
