@@ -209,7 +209,10 @@ function initNovidades(){
         btn.style.display = 'none';
     }
 
-    if(jaEscondidaNestaSessao()) btn.style.display = 'none';
+    // Só mostra o botão flutuante depois do login/dashboard carregado (essa
+    // função só roda daqui) — e não mostra se já foi visto/fechado nesta
+    // mesma sessão.
+    btn.style.display = jaEscondidaNestaSessao() ? 'none' : 'flex';
 
     if(NOVIDADES.length && NOVIDADES[0].id > ultimaVista()){
         badge.style.display = 'block';
