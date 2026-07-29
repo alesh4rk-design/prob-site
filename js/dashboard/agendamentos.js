@@ -781,6 +781,11 @@ async function carregarHistoricoCortes(wpp){
     const cont = $('ac-historico-cortes');
     if(!wpp){ wrap.style.display='none'; return; }
     wrap.style.display = 'block';
+    // Lista some por padrão — só abre quando o dono clica no botão. Fica
+    // guardado já pronto assim que carrega, pra não ter que esperar de
+    // novo no clique.
+    cont.style.display = 'none';
+    $('ac-historico-cortes-seta').textContent = '▾';
     cont.innerHTML = '<p style="font-size:.78rem;color:var(--muted);margin:0">Carregando...</p>';
     try{
         const q = query(
@@ -833,6 +838,13 @@ function initAcoesClienteExtras(){
 
     $('ac-copiar-wpp').addEventListener('click', ()=>{
         navigator.clipboard.writeText(acClienteAtual.wpp).then(()=>toast('Número copiado!'));
+    });
+
+    $('btn-toggle-historico-cortes').addEventListener('click', ()=>{
+        const cont = $('ac-historico-cortes');
+        const aberto = cont.style.display === 'flex';
+        cont.style.display = aberto ? 'none' : 'flex';
+        $('ac-historico-cortes-seta').textContent = aberto ? '▾' : '▴';
     });
 
     $('ac-btn-vender').addEventListener('click', ()=>{
@@ -962,6 +974,56 @@ function initAcoesClienteExtras(){
             $('modal-acoes-cliente').style.display = 'none';
         });
     });
+
+    // Aba Cobrança — criar cobrança avulsa (não veio de agendamento marcado
+    // como "ainda não pagou"). Vira um agendamento com formaPagamento
+    // "pendente", reaproveitando toda a lógica que já existe pra listar,
+    // cobrar no WhatsApp e marcar como pago.
+    if($('btn-mostrar-form-cobranca')){
+        $('btn-mostrar-form-cobranca').addEventListener('click', ()=>{
+            $('cobranca-form-wrap').style.display = 'block';
+            $('cobranca-card-intro').style.display = 'none';
+            $('cobranca-form-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+        });
+        $('btn-cancelar-form-cobranca').addEventListener('click', ()=>{
+            $('cobranca-form-wrap').style.display = 'none';
+            $('cobranca-card-intro').style.display = 'block';
+        });
+        $('btn-add-cobranca').addEventListener('click', async()=>{
+            const nome = $('cobranca-cliente-nome').value.trim();
+            const wpp = $('cobranca-cliente-wpp').value.replace(/\D/g,'');
+            const descricao = $('cobranca-descricao').value.trim();
+            const valor = Number($('cobranca-valor').value);
+            if(!nome){ toast('Informe o nome do cliente','var(--red)'); return; }
+            if(!descricao){ toast('Informe uma descrição pra cobrança','var(--red)'); return; }
+            if(!valor || valor<=0){ toast('Informe um valor válido','var(--red)'); return; }
+
+            const btn = $('btn-add-cobranca');
+            btn.disabled = true;
+            try{
+                await addDoc(collection(db,'agendamentos'), {
+                    barbeiroId: barbeiroData.uid,
+                    clienteNome: nome,
+                    clienteWhatsapp: wpp,
+                    corte: descricao,
+                    preco: valor,
+                    barbeiro: '',
+                    data: fmtHoje(),
+                    hora: new Date().toTimeString().slice(0,5),
+                    status: 'concluido',
+                    formaPagamento: 'pendente',
+                    origem: 'cobranca-manual',
+                    criadoEm: new Date().toISOString()
+                });
+                toast('✓ Cobrança criada!');
+                $('cobranca-cliente-nome').value=''; $('cobranca-cliente-wpp').value='';
+                $('cobranca-descricao').value=''; $('cobranca-valor').value='';
+                $('cobranca-form-wrap').style.display = 'none';
+                $('cobranca-card-intro').style.display = 'block';
+            }catch(e){ toast('Erro ao criar cobrança: '+e.message,'var(--red)'); }
+            btn.disabled = false;
+        });
+    }
 }
 
 // O sininho do topo foi removido — a Central de Avisos flutuante (ver

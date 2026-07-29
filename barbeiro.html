@@ -458,8 +458,11 @@
                 <div id="ac-corte-atual" style="font-size:.88rem;font-weight:700;color:var(--blue)">—</div>
             </div>
             <div id="ac-historico-cortes-wrap" style="display:none;margin-bottom:1.3rem">
-                <div class="section-title" style="font-size:.75rem;margin-bottom:.5rem">✂️ Histórico de cortes desse cliente</div>
-                <div id="ac-historico-cortes" style="display:flex;flex-direction:column;gap:.3rem"></div>
+                <button type="button" id="btn-toggle-historico-cortes" style="width:100%;text-align:left;padding:.6rem .8rem;background:var(--card);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+                    <span>✂️ Histórico de cortes desse cliente</span>
+                    <span id="ac-historico-cortes-seta">▾</span>
+                </button>
+                <div id="ac-historico-cortes" style="display:none;flex-direction:column;gap:.3rem;margin-top:.5rem"></div>
             </div>
 
             <div class="section-title" style="font-size:.75rem;margin-bottom:.6rem">⚡ Ações rápidas</div>
@@ -1525,6 +1528,22 @@
             <div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.3rem">Total a receber</div>
             <div style="font-family:'Courier New',monospace;font-size:2rem;font-weight:900;color:var(--red)" id="cobranca-total">R$0</div>
             <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem"><span id="cobranca-qtd">0</span> cobrança(s) em aberto</div>
+        </div>
+
+        <div class="card" style="margin-bottom:1.2rem" id="cobranca-card-intro">
+            <button class="btn-add" style="width:100%" id="btn-mostrar-form-cobranca">+ Criar Cobrança</button>
+        </div>
+        <div class="card" style="margin-bottom:1.2rem;display:none" id="cobranca-form-wrap">
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Pra cobrar algo que não veio de um agendamento marcado como "ainda não pagou" — ex: produto danificado, sinal combinado por fora, etc.</p>
+            <div class="input-group" style="margin-bottom:.6rem">
+                <label>Cliente</label>
+                <input type="text" id="cobranca-cliente-nome" placeholder="Nome do cliente" list="lista-clientes-datalist">
+            </div>
+            <div class="input-group" style="margin-bottom:.6rem"><label>WhatsApp (opcional)</label><input type="tel" id="cobranca-cliente-wpp" placeholder="21999990000"></div>
+            <div class="input-group" style="margin-bottom:.6rem"><label>Descrição</label><input type="text" id="cobranca-descricao" placeholder="Ex: Produto danificado"></div>
+            <div class="input-group"><label>Valor (R$)</label><input type="number" id="cobranca-valor" placeholder="50.00" min="0" step="0.01"></div>
+            <button class="btn-add" style="width:100%;margin-top:.85rem" id="btn-add-cobranca">+ Criar Cobrança</button>
+            <button style="width:100%;margin-top:.5rem;font-size:.8rem;padding:.6rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer" id="btn-cancelar-form-cobranca">Cancelar</button>
         </div>
 
         <div class="section-title" style="margin-bottom:.6rem">📋 Clientes devendo</div>
@@ -3007,7 +3026,7 @@ async function initDash(){
 <script defer src="js/dashboard/equipe.js?v=20260727q"></script>
 <script defer src="js/dashboard/promocoes.js?v=20260727q"></script>
 <script defer src="js/dashboard/clientes.js?v=20260727o"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20260727t"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20260727u"></script>
 <script defer src="js/dashboard/horarios.js?v=20260727p"></script>
 <script defer src="js/dashboard/financeiro.js?v=20260727q"></script>
 <script defer src="js/dashboard/auth.js?v=20260727r"></script>
