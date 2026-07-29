@@ -195,6 +195,15 @@ function initLinkCliente(){
         btnCopy.addEventListener('click',()=>{navigator.clipboard.writeText(link).then(()=>toast('Link copiado!'));});
     }
 
+    // Manda o link pronto no WhatsApp — abre o seletor de contato (sem
+    // número fixo), pra mandar pra qualquer cliente novo direto da conversa.
+    const btnEnviarWpp=$('btn-enviar-link-cliente-whatsapp');
+    if(btnEnviarWpp){
+        const nomeBarbearia = barbeiroData.nome || "Pro'B";
+        const msg = encodeURIComponent(`Olá! Agora você pode agendar seu horário na ${nomeBarbearia} direto pelo celular, sem precisar ligar — é só abrir esse link e escolher o dia e horário: ${link}`);
+        btnEnviarWpp.href = `https://wa.me/?text=${msg}`;
+    }
+
     const btnGerarQr=$('btn-gerar-qr-cliente');
     if(btnGerarQr && !btnGerarQr.dataset.bound){
         btnGerarQr.dataset.bound='1';
