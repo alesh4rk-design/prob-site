@@ -1024,7 +1024,19 @@ $('btn-add-corte').addEventListener('click',async()=>{
 // comprovante de cliente (agendamentos.js), adaptado pra confirmar pro
 // barbeiro/recepcionista que a comissão dele foi paga e o valor certo.
 // ══════════════════════════════════════════════════════════
-function montarComprovanteComissaoPdfBlob({ nomeBarbearia, barbeiro, periodoLabel, valor, formaPagamento }){
+// Marca "Pro'B" colorida (Pro em azul, ' em verde, B em branco), terminando
+// em rightX — igual à do comprovante de cliente (agendamentos.js), duplicada
+// aqui porque cada arquivo monta o próprio PDF de forma independente.
+function desenharMarcaProBComissao(doc, rightX, y, fontSize){
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(fontSize);
+    const segs = [{t:'Pro', c:[0,212,255]}, {t:"'", c:[0,255,136]}, {t:'B', c:[255,255,255]}];
+    const widths = segs.map(s=>doc.getTextWidth(s.t));
+    let cx = rightX - widths.reduce((a,b)=>a+b,0);
+    segs.forEach((s,i)=>{ doc.setTextColor(...s.c); doc.text(s.t, cx, y); cx += widths[i]; });
+}
+
+function montarComprovanteComissaoPdfBlob({ nomeBarbearia, barbeiro, periodoLabel, valor, formaPagamento, logoBase64 }){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'mm', format:'a5' });
     const W = 148;
@@ -1039,21 +1051,31 @@ function montarComprovanteComissaoPdfBlob({ nomeBarbearia, barbeiro, periodoLabe
 
     doc.setFillColor(...bg);
     doc.rect(0, 0, W, 40, 'F');
+
+    desenharMarcaProBComissao(doc, W-12, 11, 11);
+
+    let logoW = 0;
+    if(logoBase64){
+        try{
+            const propsImg = doc.getImageProperties(logoBase64);
+            const maxLado = 16;
+            logoW = maxLado; let logoH = maxLado*propsImg.height/propsImg.width;
+            if(logoH>maxLado){ logoH=maxLado; logoW=maxLado*propsImg.width/propsImg.height; }
+            doc.addImage(logoBase64, propsImg.fileType||'JPEG', 10, 6, logoW, logoH);
+        }catch(e){ logoW = 0; }
+    }
+
     doc.setFont('helvetica','bold');
-    doc.setFontSize(22);
-    doc.setTextColor(...azul);
-    doc.text("PRO'B", W/2, 18, { align:'center' });
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(9);
-    doc.setTextColor(...azulClaro);
-    doc.text(nomeBarbearia, W/2, 25, { align:'center', maxWidth: W-40 });
+    doc.setFontSize(14);
+    doc.setTextColor(...textoClaro);
+    doc.text(nomeBarbearia, logoW ? (W+logoW)/2 : W/2, 18, { align:'center', maxWidth: W-45 });
     doc.setDrawColor(...azul);
     doc.setLineWidth(0.6);
-    doc.line(30, 30, W-30, 30);
+    doc.line(30, 24, W-30, 24);
     doc.setFont('helvetica','normal');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setTextColor(...azul);
-    doc.text('COMPROVANTE DE PAGAMENTO DE COMISSÃO', W/2, 36, { align:'center', maxWidth: W-30 });
+    doc.text('COMPROVANTE DE PAGAMENTO DE COMISSÃO', W/2, 34, { align:'center', maxWidth: W-30 });
 
     doc.setFont('helvetica','bold');
     doc.setFontSize(8.5);
@@ -1123,7 +1145,8 @@ function abrirComprovanteComissao(membro, valor, periodoLabel, formaPagamento){
         barbeiro: membro.nome,
         periodoLabel,
         valor,
-        formaPagamento
+        formaPagamento,
+        logoBase64: barbeiroData.logoBase64||null
     });
     comprovanteAtual = { blob, clienteWhatsapp: membro.wpp||'', nomeArquivo: `comissao-${(membro.nome||'barbeiro').replace(/\s+/g,'_')}-${Date.now()}.pdf` };
     modal.style.display = 'flex';

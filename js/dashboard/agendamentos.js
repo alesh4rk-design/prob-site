@@ -704,7 +704,19 @@ let comprovanteAtual = null; // { blob, clienteWhatsapp, nomeArquivo }
 
 const ROTULO_FORMA_PAGAMENTO = { dinheiro:'Dinheiro', pix:'Pix', debito:'Débito', credito:'Crédito', nao_informado:'Não informado' };
 
-function montarComprovantePdfBlob({ nomeBarbearia, clienteNome, barbeiro, descricao, valor, formaPagamento }){
+// Marca "Pro'B" colorida (Pro em azul, ' em verde, B em branco), desenhada
+// terminando em rightX — usada nos comprovantes, reposicionada num canto
+// pra abrir espaço pra logo da barbearia no lugar de destaque do cabeçalho.
+function desenharMarcaProB(doc, rightX, y, fontSize){
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(fontSize);
+    const segs = [{t:'Pro', c:[0,212,255]}, {t:"'", c:[0,255,136]}, {t:'B', c:[255,255,255]}];
+    const widths = segs.map(s=>doc.getTextWidth(s.t));
+    let cx = rightX - widths.reduce((a,b)=>a+b,0);
+    segs.forEach((s,i)=>{ doc.setTextColor(...s.c); doc.text(s.t, cx, y); cx += widths[i]; });
+}
+
+function montarComprovantePdfBlob({ nomeBarbearia, clienteNome, barbeiro, descricao, valor, formaPagamento, logoBase64 }){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'mm', format:'a5' }); // 148 x 210mm
     const W = 148;
@@ -721,21 +733,33 @@ function montarComprovantePdfBlob({ nomeBarbearia, clienteNome, barbeiro, descri
     // ── Cabeçalho ──
     doc.setFillColor(...bg);
     doc.rect(0, 0, W, 40, 'F');
+
+    // Marca Pro'B — pequena, canto superior direito (a logo do dono, quando
+    // cadastrada, ocupa o lugar de destaque no lugar dela).
+    desenharMarcaProB(doc, W-12, 11, 11);
+
+    let logoW = 0;
+    if(logoBase64){
+        try{
+            const propsImg = doc.getImageProperties(logoBase64);
+            const maxLado = 16;
+            logoW = maxLado; let logoH = maxLado*propsImg.height/propsImg.width;
+            if(logoH>maxLado){ logoH=maxLado; logoW=maxLado*propsImg.width/propsImg.height; }
+            doc.addImage(logoBase64, propsImg.fileType||'JPEG', 10, 6, logoW, logoH);
+        }catch(e){ logoW = 0; } // logo corrompida/ilegível — segue sem travar o comprovante
+    }
+
     doc.setFont('helvetica','bold');
-    doc.setFontSize(22);
-    doc.setTextColor(...azul);
-    doc.text("PRO'B", W/2, 18, { align:'center' });
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(9);
-    doc.setTextColor(...azulClaro);
-    doc.text(nomeBarbearia, W/2, 25, { align:'center', maxWidth: W-40 });
+    doc.setFontSize(15);
+    doc.setTextColor(...textoClaro);
+    doc.text(nomeBarbearia, logoW ? (W+logoW)/2 : W/2, 19, { align:'center', maxWidth: W-45 });
     doc.setDrawColor(...azul);
     doc.setLineWidth(0.6);
-    doc.line(30, 30, W-30, 30);
+    doc.line(30, 26, W-30, 26);
     doc.setFont('helvetica','normal');
     doc.setFontSize(10);
     doc.setTextColor(...azul);
-    doc.text('COMPROVANTE DE PAGAMENTO', W/2, 36, { align:'center' });
+    doc.text('COMPROVANTE DE PAGAMENTO', W/2, 34, { align:'center' });
 
     // ── Aviso: não é documento fiscal ──
     doc.setFont('helvetica','bold');
@@ -806,7 +830,7 @@ function montarComprovantePdfBlob({ nomeBarbearia, clienteNome, barbeiro, descri
 
 function abrirModalComprovante({ nomeBarbearia, clienteNome, clienteWhatsapp, barbeiro, descricao, valor, formaPagamento }){
     if(typeof window.jspdf === 'undefined'){ return; } // biblioteca ainda carregando — sem comprovante dessa vez, sem travar o resto
-    const blob = montarComprovantePdfBlob({ nomeBarbearia, clienteNome, barbeiro, descricao, valor, formaPagamento });
+    const blob = montarComprovantePdfBlob({ nomeBarbearia, clienteNome, barbeiro, descricao, valor, formaPagamento, logoBase64: barbeiroData.logoBase64||null });
     comprovanteAtual = { blob, clienteWhatsapp, nomeArquivo: `comprovante-${Date.now()}.pdf` };
     $('modal-comprovante').style.display = 'flex';
 }

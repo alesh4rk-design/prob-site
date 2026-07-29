@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/barbeiro.css?v=20260727o">
+    <link rel="stylesheet" href="css/barbeiro.css?v=20260729a">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -299,6 +299,7 @@
                 <span style="width:18px;height:2px;background:var(--blue);border-radius:2px"></span>
             </button>
             <div class="topbar-logo-wrap">
+                <span class="topbar-logo-img-slot"></span>
                 <div class="topbar-logo">PRO'<span style="color:#fff">B</span></div>
             </div>
         </div>
@@ -327,7 +328,10 @@
 
     <div class="tabs" id="drawer-menu" style="position:fixed;top:0;left:0;bottom:0;width:260px;max-width:80vw;flex-direction:column;background:var(--card2);border-right:1px solid var(--border);border-bottom:none;padding:0;overflow-x:hidden;overflow-y:auto;z-index:300;transform:translateX(-100%);transition:transform .25s;">
         <div style="padding:1.1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-            <div class="topbar-logo" style="font-size:1.1rem">PRO'<span style="color:#fff">B</span></div>
+            <div style="display:flex;align-items:center">
+                <span class="topbar-logo-img-slot"></span>
+                <div class="topbar-logo" style="font-size:1.1rem">PRO'<span style="color:#fff">B</span></div>
+            </div>
             <button id="btn-fechar-drawer" aria-label="Fechar menu" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;padding:.2rem .4rem">✕</button>
         </div>
         <div id="drawer-tab-items" style="display:flex;flex-direction:column">
@@ -1856,6 +1860,22 @@
             <button class="btn-save" id="btn-salvar-painel-modo" style="margin-top:1rem">Salvar Configuração do Painel</button>
         </div>
 
+        <div class="section-title">🖼️ Logo da Barbearia</div>
+        <div class="card" style="margin-bottom:1.2rem">
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Aparece no menu do sistema e no cabeçalho dos comprovantes em PDF. Imagem é redimensionada e comprimida automaticamente — não precisa se preocupar com o tamanho do arquivo original.</p>
+            <div style="display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;margin-bottom:.85rem">
+                <img id="logo-preview" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:10px;border:1.5px solid var(--border)">
+                <div id="logo-sem-logo" style="width:64px;height:64px;border-radius:10px;border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--muted)">🖼️</div>
+                <div style="display:flex;flex-direction:column;gap:.5rem">
+                    <label class="btn-edit" style="padding:.5rem 1rem;font-size:.8rem;cursor:pointer;display:inline-block;width:fit-content">
+                        📤 Escolher imagem
+                        <input type="file" id="input-logo" accept="image/*" style="display:none">
+                    </label>
+                    <button class="btn-del" id="btn-remover-logo" style="display:none;padding:.4rem .8rem;font-size:.75rem">Remover logo</button>
+                </div>
+            </div>
+        </div>
+
         <div class="section-title">Informações da Barbearia</div>
         <div class="card">
             <div class="info-form">
@@ -3050,12 +3070,12 @@ async function initDash(){
 <script defer src="js/dashboard/novidades.js?v=20260729b"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20260729b"></script>
 <script defer src="js/dashboard/tour.js?v=20260727o"></script>
-<script defer src="js/dashboard/equipe.js?v=20260729e"></script>
+<script defer src="js/dashboard/equipe.js?v=20260729f"></script>
 <script defer src="js/dashboard/promocoes.js?v=20260727q"></script>
 <script defer src="js/dashboard/clientes.js?v=20260727o"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20260729b"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20260729c"></script>
 <script defer src="js/dashboard/horarios.js?v=20260727q"></script>
-<script defer src="js/dashboard/financeiro.js?v=20260727q"></script>
+<script defer src="js/dashboard/financeiro.js?v=20260729a"></script>
 <script defer src="js/dashboard/auth.js?v=20260727r"></script>
 <script defer src="js/dashboard/visual.js?v=20260727o"></script>
 

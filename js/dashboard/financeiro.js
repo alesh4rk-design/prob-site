@@ -28,6 +28,107 @@ function inferirTipoPixLegado(pix){
     return 'cpf';
 }
 
+// LOGO DA BARBEARIA — imagem escolhida pelo dono, comprimida no navegador
+// (redimensiona pra no máximo 240px no maior lado e converte pra JPEG,
+// reduzindo qualidade até caber num limite de tamanho) antes de salvar como
+// base64 no doc da barbearia. Aparece no menu do sistema e no cabeçalho dos
+// comprovantes em PDF.
+const LOGO_LIMITE_BYTES = 200000; // ~200KB depois de comprimida
+
+function processarLogoArquivo(file){
+    return new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=e=>{
+            const img=new Image();
+            img.onload=()=>{
+                const MAX=240;
+                let w=img.width, h=img.height;
+                if(w>h){ if(w>MAX){ h=Math.round(h*MAX/w); w=MAX; } }
+                else{ if(h>MAX){ w=Math.round(w*MAX/h); h=MAX; } }
+                const canvas=document.createElement('canvas');
+                canvas.width=w; canvas.height=h;
+                const ctx=canvas.getContext('2d');
+                ctx.fillStyle='#fff'; // fundo branco — logo com transparência não fica preta em JPEG
+                ctx.fillRect(0,0,w,h);
+                ctx.drawImage(img,0,0,w,h);
+                let qualidade=0.82;
+                let dataUrl=canvas.toDataURL('image/jpeg',qualidade);
+                while(dataUrl.length>LOGO_LIMITE_BYTES && qualidade>0.35){
+                    qualidade-=0.1;
+                    dataUrl=canvas.toDataURL('image/jpeg',qualidade);
+                }
+                if(dataUrl.length>LOGO_LIMITE_BYTES*1.3){
+                    reject(new Error('Imagem muito grande/complexa mesmo comprimida. Tente uma logo mais simples.'));
+                    return;
+                }
+                resolve(dataUrl);
+            };
+            img.onerror=()=>reject(new Error('Não foi possível ler essa imagem'));
+            img.src=e.target.result;
+        };
+        reader.onerror=()=>reject(new Error('Erro ao ler o arquivo'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function atualizarPreviewLogo(){
+    const prev=$('logo-preview');
+    if(!prev) return;
+    const semLogo=$('logo-sem-logo');
+    const btnRemover=$('btn-remover-logo');
+    if(barbeiroData.logoBase64){
+        prev.src=barbeiroData.logoBase64;
+        prev.style.display='block';
+        if(semLogo) semLogo.style.display='none';
+        if(btnRemover) btnRemover.style.display='inline-block';
+    } else {
+        prev.style.display='none';
+        if(semLogo) semLogo.style.display='flex';
+        if(btnRemover) btnRemover.style.display='none';
+    }
+}
+
+function atualizarLogoTopbar(){
+    document.querySelectorAll('.topbar-logo-img-slot').forEach(slot=>{
+        slot.innerHTML = barbeiroData.logoBase64 ? `<img src="${barbeiroData.logoBase64}" alt="Logo">` : '';
+    });
+}
+
+function initLogo(){
+    atualizarPreviewLogo();
+    atualizarLogoTopbar();
+    const input=$('input-logo');
+    if(input && !input.dataset.bound){
+        input.dataset.bound='1';
+        input.addEventListener('change', async()=>{
+            const file=input.files[0];
+            input.value='';
+            if(!file) return;
+            try{
+                toast('Processando logo...');
+                const dataUrl=await processarLogoArquivo(file);
+                await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{logoBase64:dataUrl});
+                barbeiroData.logoBase64=dataUrl;
+                atualizarPreviewLogo();
+                atualizarLogoTopbar();
+                toast('✓ Logo salva!');
+            }catch(e){ toast(e.message,'var(--red)'); }
+        });
+    }
+    const btnRemover=$('btn-remover-logo');
+    if(btnRemover && !btnRemover.dataset.bound){
+        btnRemover.dataset.bound='1';
+        btnRemover.addEventListener('click', async()=>{
+            if(!confirm('Remover a logo cadastrada?')) return;
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{logoBase64:null});
+            barbeiroData.logoBase64=null;
+            atualizarPreviewLogo();
+            atualizarLogoTopbar();
+            toast('Logo removida');
+        });
+    }
+}
+
 // PERFIL
 function initPerfil(){
     $('perf-nome').value=barbeiroData.nome||'';
@@ -36,6 +137,7 @@ function initPerfil(){
     $('perf-pix').value=barbeiroData.pix||'';
     $('perf-pix-tipo').value=barbeiroData.pixTipo||inferirTipoPixLegado(barbeiroData.pix);
     initLinkCliente();
+    initLogo();
 
     // Modo de atendimento
     const modoAtual=barbeiroData.modoAtendimento||'agendamento';
