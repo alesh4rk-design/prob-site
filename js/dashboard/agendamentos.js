@@ -219,6 +219,7 @@ async function atenderFila(filaId){
     registrarClienteConcluido(barbeiroData.uid, item.clienteNome, item.clienteWhatsapp, item.corte||'Corte (fila)');
     toast('✓ Atendimento concluído!');
     $('modal-acoes-cliente').style.display = 'none';
+    window.__perguntarConclusaoAposComprovante = null; // já foi concluído agora — não pergunta de novo
     abrirModalComprovante({
         nomeBarbearia: barbeiroData.nome || 'Barbearia',
         clienteNome: item.clienteNome,
@@ -661,6 +662,7 @@ async function concluirAgendamento(id){
         // reload fica pendente até o dono fechar/baixar/enviar o PDF (ver
         // os 3 handlers de modal-comprovante logo abaixo).
         if(window.__funcionarioMode) window.__reloadAposComprovante = true;
+        window.__perguntarConclusaoAposComprovante = null; // já foi concluído agora — não pergunta de novo
         abrirModalComprovante({
             nomeBarbearia: barbeiroData.nome || 'Barbearia',
             clienteNome: item.clienteNome,
@@ -1094,6 +1096,15 @@ function initAcoesClienteExtras(){
                         : ultimaListaAppts.find(a=>a.id===acClienteAtual.agendamentoId);
                     if(item){
                         $('modal-acoes-cliente').style.display = 'none';
+                        // Depois de fechar o comprovante, pergunta se o
+                        // atendimento já foi concluído — só faz sentido aqui
+                        // (registrar forma de pagamento não é a mesma coisa
+                        // que concluir; o corte pode ter sido pago antes de
+                        // acontecer). Ver fecharModalComprovante().
+                        window.__perguntarConclusaoAposComprovante = {
+                            agendamentoId: acClienteAtual.agendamentoId || null,
+                            filaId: acClienteAtual.filaId || null
+                        };
                         abrirModalComprovante({
                             nomeBarbearia: barbeiroData.nome || "Barbearia",
                             clienteNome: acClienteAtual.nome,
@@ -1112,9 +1123,20 @@ function initAcoesClienteExtras(){
     // No modo funcionário, o reload da lista (que só funciona recarregando
     // a página inteira) fica pendente até fechar/baixar/enviar o comprovante
     // — ver window.__reloadAposComprovante em concluirAgendamento().
-    function fecharModalComprovante(){
+    async function fecharModalComprovante(){
         $('modal-comprovante').style.display = 'none';
         comprovanteAtual = null;
+
+        const pendente = window.__perguntarConclusaoAposComprovante;
+        window.__perguntarConclusaoAposComprovante = null;
+        if(pendente && (pendente.agendamentoId || pendente.filaId)){
+            if(confirm('O atendimento já foi concluído?')){
+                if(pendente.filaId) await atenderFila(pendente.filaId);
+                else await concluirAgendamento(pendente.agendamentoId);
+                return; // concluirAgendamento/atenderFila cuidam do reload, se precisar
+            }
+        }
+
         if(window.__reloadAposComprovante){
             window.__reloadAposComprovante = false;
             location.reload();
