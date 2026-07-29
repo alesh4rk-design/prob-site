@@ -572,9 +572,15 @@ function carregarAgendamentos(){
         // pagou" — não importa se já foi concluído ou não (pagamento e
         // conclusão são coisas independentes agora), nem o mês (uma dívida
         // antiga continua sendo dívida). Cancelado não conta.
+        // Também entra quem já foi CONCLUÍDO mas nunca teve nenhuma forma de
+        // pagamento registrada (nem "pendente" explicitamente) — sem isso,
+        // um corte concluído sem forma de pagamento ficava invisível tanto
+        // aqui quanto no sino da Central de Avisos. Um agendamento futuro
+        // sem forma de pagamento ainda é normal (não aconteceu), por isso só
+        // conta pra quem já foi concluído.
         const pagtoPendente = todos.filter(a=>
             a.status !== 'cancelado' &&
-            a.formaPagamento === 'pendente'
+            (a.formaPagamento === 'pendente' || (a.status === 'concluido' && !a.formaPagamento))
         );
         // Cancelados pelo próprio cliente (tela "Meus Agendamentos") — o
         // dono precisa saber, já que não foi ele quem cancelou.
