@@ -1052,7 +1052,7 @@ function initFaleComigo(){
 // Cliente pode ver e cancelar os próprios agendamentos futuros, e ver os
 // últimos cortes já feitos — antes não existia nenhuma tela pra isso, só
 // dava pra cancelar pedindo pro barbeiro mexer direto no sistema.
-const CANCELAMENTO_MIN_HORAS = 2; // não deixa cancelar em cima da hora
+const CANCELAMENTO_MIN_MINUTOS = 30; // não deixa cancelar em cima da hora
 
 function atualizarBotaoMeusAgendamentos(){
     const wrap = $('meus-agend-wrap');
@@ -1084,13 +1084,13 @@ async function abrirMeusAgendamentos(){
 
         contProx.innerHTML = proximos.length ? proximos.map(a=>{
             const dataHora = new Date(`${a.data}T${a.hora}`);
-            const podeCancelar = (dataHora - agora) / 3600000 >= CANCELAMENTO_MIN_HORAS;
+            const podeCancelar = (dataHora - agora) / 60000 >= CANCELAMENTO_MIN_MINUTOS;
             return `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem .9rem;margin-bottom:.6rem">
                 <div style="font-weight:700;font-size:.9rem">${escapeHtml(a.corte||'')}</div>
                 <div style="font-size:.78rem;color:var(--muted);margin-top:.15rem">${fmt(a.data)} às ${a.hora} · R$${Number(a.preco||0).toFixed(2)}</div>
                 ${podeCancelar
                     ? `<button data-cancelar-agend="${a.id}" style="margin-top:.55rem;width:100%;padding:.5rem;background:transparent;border:1.5px solid var(--red);border-radius:8px;color:var(--red);font-size:.78rem;cursor:pointer">Cancelar agendamento</button>`
-                    : `<div style="margin-top:.55rem;font-size:.7rem;color:var(--yellow)">⏰ Faltam menos de ${CANCELAMENTO_MIN_HORAS}h — fale com o barbeiro pra cancelar</div>`}
+                    : `<div style="margin-top:.55rem;font-size:.7rem;color:var(--yellow)">⏰ Faltam menos de ${CANCELAMENTO_MIN_MINUTOS}min — fale com o barbeiro pra cancelar</div>`}
             </div>`;
         }).join('') : '<div class="empty-state">Nenhum agendamento futuro.</div>';
 
@@ -1099,7 +1099,7 @@ async function abrirMeusAgendamentos(){
                 if(!confirm('Tem certeza que quer cancelar esse agendamento?')) return;
                 btn.disabled = true; btn.textContent = 'Cancelando...';
                 try{
-                    await updateDoc(doc(db,'agendamentos',btn.dataset.cancelarAgend), {status:'cancelado'});
+                    await updateDoc(doc(db,'agendamentos',btn.dataset.cancelarAgend), {status:'cancelado', canceladoPor:'cliente', canceladoEm:new Date().toISOString()});
                     toast('Agendamento cancelado.');
                     abrirMeusAgendamentos();
                 }catch(e){

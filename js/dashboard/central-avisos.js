@@ -36,6 +36,14 @@ function atualizarCentralAvisos(){
         });
     });
 
+    (typeof ultimosAgendamentos!=='undefined' ? (ultimosAgendamentos.canceladosPeloCliente||[]) : []).forEach(a=>{
+        avisos.push({
+            id: `cancel-cliente-${a.id}`,
+            texto: `❌ ${a.clienteNome||'Cliente'} cancelou o agendamento de ${a.data} às ${a.hora}`,
+            tab: 'agendamentos'
+        });
+    });
+
     (typeof produtosCache!=='undefined' ? produtosCache : []).filter(p=>p.estoqueMinimo && p.estoque<=p.estoqueMinimo).forEach(p=>{
         avisos.push({
             id: `estoque-${p.id}`,

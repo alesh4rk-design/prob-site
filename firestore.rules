@@ -190,9 +190,12 @@ service cloud.firestore {
       // lembrete 1h e ajuste de preço (desconto) — nada além disso, pra não
       // deixar reescrever nome, telefone ou horário depois de criado. O dono
       // pode editar o próprio livremente (ex: restaurar um backup).
+      // canceladoPor/canceladoEm: gravados quando o próprio cliente cancela
+      // (tela "Meus Agendamentos"), pra o dono saber que não foi ele quem
+      // cancelou e poder notificar pela Central de Avisos.
       allow update: if isOwner(resource.data.barbeiroId) || isAdmin()
                     || (request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['status','formaPagamento','avisoEnviado','preco','precoOriginal'])
+                        .hasOnly(['status','formaPagamento','avisoEnviado','preco','precoOriginal','canceladoPor','canceladoEm'])
                     && request.resource.data.status in ['pendente','concluido','cancelado']
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['formaPagamento'])
                         || request.resource.data.formaPagamento in ['dinheiro','pix','debito','credito','pendente'])

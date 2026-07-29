@@ -486,7 +486,7 @@ function gerarBadgePromoCliente(wpp){
     return html;
 }
 
-let ultimosAgendamentos = {deHoje:[], proximos:[], pagtoPendente:[]};
+let ultimosAgendamentos = {deHoje:[], proximos:[], pagtoPendente:[], canceladosPeloCliente:[]};
 
 // Renderiza a lista de "aguardando pagamento" — usada tanto na aba
 // Agendamentos quanto na aba Fila, então fica numa função só.
@@ -565,7 +565,10 @@ function carregarAgendamentos(){
             a.status !== 'cancelado' &&
             a.formaPagamento === 'pendente'
         );
-        ultimosAgendamentos = {deHoje, proximos, pagtoPendente};
+        // Cancelados pelo próprio cliente (tela "Meus Agendamentos") — o
+        // dono precisa saber, já que não foi ele quem cancelou.
+        const canceladosPeloCliente = todos.filter(a=>a.status==='cancelado' && a.canceladoPor==='cliente');
+        ultimosAgendamentos = {deHoje, proximos, pagtoPendente, canceladosPeloCliente};
         // Cache completo (não filtrado) usado pelo modal de ações do cliente
         // (desconto, forma de pagamento) — precisa ter TODOS os agendamentos,
         // não só os da lista que foi renderizada por último, senão um
