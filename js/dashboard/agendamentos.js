@@ -1003,6 +1003,28 @@ function formatarWppExibicao(wpp){
     return wpp;
 }
 
+// Modal Sim/Não reutilizável — substitui o confirm() nativo (que mostra
+// "Cancelar/OK" em vez de "Não/Sim") pras perguntas do sistema. Resolve
+// true/false conforme o botão clicado.
+function perguntarSimNao(mensagem){
+    return new Promise(resolve=>{
+        const modal = $('modal-pergunta-simnao');
+        $('pergunta-simnao-texto').textContent = mensagem;
+        modal.style.display = 'flex';
+        const btnSim = $('btn-pergunta-sim');
+        const btnNao = $('btn-pergunta-nao');
+        function limpar(){
+            modal.style.display = 'none';
+            btnSim.removeEventListener('click', onSim);
+            btnNao.removeEventListener('click', onNao);
+        }
+        function onSim(){ limpar(); resolve(true); }
+        function onNao(){ limpar(); resolve(false); }
+        btnSim.addEventListener('click', onSim);
+        btnNao.addEventListener('click', onNao);
+    });
+}
+
 function initAcoesClienteExtras(){
     $('btn-fechar-acoes-cliente').addEventListener('click', ()=>{
         $('modal-acoes-cliente').style.display = 'none';
@@ -1136,7 +1158,7 @@ function initAcoesClienteExtras(){
         const pendente = window.__perguntarConclusaoAposComprovante;
         window.__perguntarConclusaoAposComprovante = null;
         if(pendente && (pendente.agendamentoId || pendente.filaId)){
-            if(confirm('O atendimento já foi concluído?')){
+            if(await perguntarSimNao('O atendimento já foi concluído?')){
                 if(pendente.filaId) await atenderFila(pendente.filaId);
                 else await concluirAgendamento(pendente.agendamentoId);
                 return; // concluirAgendamento/atenderFila cuidam do reload, se precisar
