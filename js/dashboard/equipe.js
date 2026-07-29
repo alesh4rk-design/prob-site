@@ -496,6 +496,7 @@ function ganhoNoPeriodo(nome, pct, inicio, fim){
 }
 
 const FREQ_LABEL = {semanal:'Semanal', quinzenal:'Quinzenal', mensal:'Mensal'};
+const ROTULO_FORMA_PAGAMENTO_COMISSAO = {dinheiro:'Dinheiro', pix:'Pix', transferencia:'Transferência'};
 
 function renderPagamentoComissoes(){
     const cont=$('lista-pagamento-comissoes');
@@ -537,10 +538,18 @@ function renderPagamentoComissoes(){
                             ? `<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border:1px solid rgba(255,75,43,.3);border-radius:20px;padding:.1rem .5rem">⚠️ Pendente</span>`
                             : `<span style="font-size:.65rem;background:rgba(245,166,35,.1);color:var(--yellow);border:1px solid rgba(245,166,35,.3);border-radius:20px;padding:.1rem .5rem">Ainda não pago</span>`}
                 </div>
-                ${pago ? `<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-desmarcar-pago="${pago.id}">Desmarcar</button>`
-                       : `<button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-marcar-pago="${b.id}" data-nome="${escAttr(b.nome)}" data-valor="${valor}" data-periodo="${periodo.id}" data-periodo-label="${escAttr(periodo.label)}">✓ Marcar como pago</button>`}
+                ${pago
+                    ? `<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-desmarcar-pago="${pago.id}">Desmarcar</button>`
+                    : `<div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+                        <select data-forma-pagamento-comissao="${b.id}" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.35rem .5rem;color:var(--text);font-size:.72rem;outline:none">
+                            <option value="dinheiro">💵 Dinheiro</option>
+                            <option value="pix" selected>🔑 Pix</option>
+                            <option value="transferencia">🏦 Transferência</option>
+                        </select>
+                        <button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-marcar-pago="${b.id}" data-nome="${escAttr(b.nome)}" data-valor="${valor}" data-periodo="${periodo.id}" data-periodo-label="${escAttr(periodo.label)}">✓ Marcar como pago</button>
+                       </div>`}
             </div>
-            <div style="font-size:.85rem;color:var(--muted)">Comissão ${periodo.label} (vence ${periodo.vencimento.toLocaleDateString('pt-BR')}): <strong style="color:var(--text)">R$${valor.toFixed(2)}</strong></div>
+            <div style="font-size:.85rem;color:var(--muted)">Comissão ${periodo.label} (vence ${periodo.vencimento.toLocaleDateString('pt-BR')}): <strong style="color:var(--text)">R$${valor.toFixed(2)}</strong>${pago&&pago.formaPagamento?` · ${ROTULO_FORMA_PAGAMENTO_COMISSAO[pago.formaPagamento]||pago.formaPagamento}`:''}</div>
 
             <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap;padding-top:.4rem;border-top:1px dashed var(--border)">
                 <div class="input-group" style="margin-bottom:0;min-width:110px">
@@ -596,15 +605,17 @@ function renderPagamentoComissoes(){
             const valor=Number(btn.dataset.valor);
             const periodo=btn.dataset.periodo;
             const periodoLabel=btn.dataset.periodoLabel;
+            const formaSel=cont.querySelector(`[data-forma-pagamento-comissao="${equipeId}"]`);
+            const formaPagamento=formaSel?formaSel.value:'pix';
             // Dupla confirmação: essa ação já causou marcação sem querer antes.
             if(!confirm(`Marcar a comissão de ${nome} (R$${valor.toFixed(2)}) como paga?`)) return;
-            if(!confirm(`Confirma mesmo? Você já pagou R$${valor.toFixed(2)} pra ${nome} agora?`)) return;
+            if(!confirm(`Confirma mesmo? Você já pagou R$${valor.toFixed(2)} pra ${nome} agora, via ${ROTULO_FORMA_PAGAMENTO_COMISSAO[formaPagamento]}?`)) return;
             await addDoc(collection(db,'barbeiros',barbeiroData.uid,'pagamentosComissao'), {
-                equipeId, nome, periodo, valor, pagoEm:new Date().toISOString()
+                equipeId, nome, periodo, valor, formaPagamento, pagoEm:new Date().toISOString()
             });
             toast(`✓ Comissão de ${nome} marcada como paga`);
             const membro=equipe.find(b=>b.id===equipeId);
-            if(typeof abrirComprovanteComissao==='function') abrirComprovanteComissao(membro||{nome}, valor, periodoLabel);
+            if(typeof abrirComprovanteComissao==='function') abrirComprovanteComissao(membro||{nome}, valor, periodoLabel, formaPagamento);
         });
     });
     cont.querySelectorAll('[data-desmarcar-pago]').forEach(btn=>{
@@ -1013,7 +1024,7 @@ $('btn-add-corte').addEventListener('click',async()=>{
 // comprovante de cliente (agendamentos.js), adaptado pra confirmar pro
 // barbeiro/recepcionista que a comissão dele foi paga e o valor certo.
 // ══════════════════════════════════════════════════════════
-function montarComprovanteComissaoPdfBlob({ nomeBarbearia, barbeiro, periodoLabel, valor }){
+function montarComprovanteComissaoPdfBlob({ nomeBarbearia, barbeiro, periodoLabel, valor, formaPagamento }){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'mm', format:'a5' });
     const W = 148;
@@ -1069,7 +1080,8 @@ function montarComprovanteComissaoPdfBlob({ nomeBarbearia, barbeiro, periodoLabe
     };
 
     let y = 46 + avisoAltura + 7;
-    caixa(14, y, W-28, 20, 'Data do pagamento', agora);
+    caixa(14, y, (W-28-4)/2, 20, 'Data do pagamento', agora);
+    caixa(14+(W-28-4)/2+4, y, (W-28-4)/2, 20, 'Forma de pagamento', ROTULO_FORMA_PAGAMENTO_COMISSAO[formaPagamento]||formaPagamento||'Não informado');
     y += 26;
     caixa(14, y, W-28, 18, 'Barbeiro/Equipe', barbeiro || 'Não informado');
     y += 24;
@@ -1102,7 +1114,7 @@ function montarComprovanteComissaoPdfBlob({ nomeBarbearia, barbeiro, periodoLabe
     return doc.output('blob');
 }
 
-function abrirComprovanteComissao(membro, valor, periodoLabel){
+function abrirComprovanteComissao(membro, valor, periodoLabel, formaPagamento){
     if(typeof window.jspdf === 'undefined') return; // biblioteca ainda carregando — sem comprovante dessa vez
     const modal = $('modal-comprovante');
     if(!modal) return;
@@ -1110,7 +1122,8 @@ function abrirComprovanteComissao(membro, valor, periodoLabel){
         nomeBarbearia: barbeiroData.nome || 'Barbearia',
         barbeiro: membro.nome,
         periodoLabel,
-        valor
+        valor,
+        formaPagamento
     });
     comprovanteAtual = { blob, clienteWhatsapp: membro.wpp||'', nomeArquivo: `comissao-${(membro.nome||'barbeiro').replace(/\s+/g,'_')}-${Date.now()}.pdf` };
     modal.style.display = 'flex';
