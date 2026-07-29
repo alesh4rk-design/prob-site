@@ -209,6 +209,7 @@ function initEstoque(){
         snap.forEach(d=>movimentosEstoqueCache.push({id:d.id,...d.data()}));
         movimentosEstoqueCache.sort((a,b)=>(b.criadoEm||'').localeCompare(a.criadoEm||''));
         renderMovimentosEstoque();
+        renderProdutos();
     }, e=>console.error('movimentosEstoque:',e));
 
     carregarVendasHoje();
@@ -673,12 +674,21 @@ function renderProdutos(){
             const cor = margemReais<0 ? 'var(--red)' : margemPct<15 ? 'var(--yellow)' : 'var(--green)';
             margemHtml = ` · <span style="color:${cor}">margem R$${margemReais.toFixed(2)} (${margemPct.toFixed(0)}%)</span>`;
         }
+        // Última entrada/saída desse produto, achada no histórico já
+        // carregado (ordenado do mais recente pro mais antigo).
+        const ultimaEntrada = movimentosEstoqueCache.find(m=>m.produtoId===p.id && m.tipo==='entrada');
+        const ultimaSaida = movimentosEstoqueCache.find(m=>m.produtoId===p.id && m.tipo==='saida');
+        let datasHtml = '';
+        if(ultimaEntrada) datasHtml += `<span style="color:var(--green)">↓ entrou ${fmtDataMovimento(ultimaEntrada.data)}</span>`;
+        if(ultimaSaida) datasHtml += `${ultimaEntrada?' · ':''}<span style="color:var(--red)">↑ saiu ${fmtDataMovimento(ultimaSaida.data)}</span>`;
+
         return `<div class="service-item" style="flex-wrap:wrap;${baixo?'border-color:rgba(255,75,43,.4)':''}">
             <div style="flex:1;min-width:140px">
                 <div class="service-name" style="padding-right:0">${escapeHtml(p.nome)}${baixo?'<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">⚠️ Estoque baixo</span>':''}</div>
                 <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">
                     ${p.codigoBarras?`Código: ${escapeHtml(p.codigoBarras)} · `:''}Estoque: <span style="color:${baixo?'var(--red)':'var(--text)'};font-weight:700">${p.estoque}</span> · R$${Number(p.preco).toFixed(2)}${margemHtml}
                 </div>
+                ${datasHtml?`<div style="font-size:.68rem;margin-top:.25rem">${datasHtml}</div>`:''}
             </div>
             <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
                 <button class="btn-edit" data-add-estoque="${p.id}">+ Estoque</button>
