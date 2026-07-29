@@ -52,17 +52,20 @@ function atualizarCentralAvisos(){
         });
     });
 
-    // Comissão de equipe pendente — só a partir do dia combinado (dono
-    // define em Equipe → Pagamento de Comissões), pra não avisar cedo demais.
-    if(typeof barbeiroData!=='undefined' && barbeiroData.diaPagamentoComissao && new Date().getDate()>=barbeiroData.diaPagamentoComissao){
-        const mesAtual = (typeof fmtHoje==='function'?fmtHoje():new Date().toISOString().slice(0,10)).slice(0,7);
+    // Comissão de equipe pendente — cada barbeiro tem seu próprio combinado
+    // (semanal/quinzenal/mensal), definido em Equipe → Pagamento de Comissões.
+    if(typeof periodoComissao==='function' && typeof comissaoConfigCache!=='undefined'){
+        const hojeZero=new Date(); hojeZero.setHours(0,0,0,0);
         (barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista').forEach(b=>{
-            const ganho = (typeof ganhosMesCache!=='undefined' && ganhosMesCache[b.nome]) ? ganhosMesCache[b.nome].ganho : 0;
+            const cfg = comissaoConfigCache[b.id] || {freq:'mensal', dia:5};
+            const periodo = periodoComissao(cfg.freq, cfg.dia);
+            if(periodo.vencimento>hojeZero) return;
+            const ganho = typeof ganhoNoPeriodo==='function' ? ganhoNoPeriodo(b.nome, b.pct||50, periodo.inicio, periodo.fim).ganho : 0;
             if(ganho<=0) return;
-            const jaPago = (typeof pagamentosComissaoCache!=='undefined' ? pagamentosComissaoCache : []).some(p=>p.equipeId===b.id && p.mes===mesAtual);
+            const jaPago = (typeof pagamentosComissaoCache!=='undefined' ? pagamentosComissaoCache : []).some(p=>p.equipeId===b.id && p.periodo===periodo.id);
             if(jaPago) return;
             avisos.push({
-                id: `comissao-${b.id}-${mesAtual}`,
+                id: `comissao-${b.id}-${periodo.id}`,
                 texto: `💸 Comissão de ${b.nome} ainda não paga (R$${ganho.toFixed(2)})`,
                 tab: 'equipe'
             });

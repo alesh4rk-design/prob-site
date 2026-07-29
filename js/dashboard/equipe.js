@@ -163,6 +163,10 @@ window.removerConvitePendente = async(equipeId, nome) => {
 // aqui) pra não precisar mexer em todo o resto do código que já lê ".pct"
 // dali; nunca é isso que vai pro banco quando salvamos o array "equipe".
 let comissoesCache = {};
+// Configuração de pagamento de comissão de cada membro (não é mais um dia
+// único global — cada barbeiro pode combinar semanal, quinzenal ou mensal,
+// com o próprio dia). id -> {freq:'semanal'|'quinzenal'|'mensal', dia:number}
+let comissaoConfigCache = {};
 
 function escutarComissoes(){
     if(window.__recepcionista || window.__comissoesListenerAtivo) return;
@@ -170,7 +174,12 @@ function escutarComissoes(){
     migrarComissoesAntigas();
     onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'comissoes'), snap=>{
         comissoesCache = {};
-        snap.forEach(d=>{ comissoesCache[d.id] = d.data().pct; });
+        comissaoConfigCache = {};
+        snap.forEach(d=>{
+            const dados=d.data();
+            comissoesCache[d.id] = dados.pct;
+            comissaoConfigCache[d.id] = {freq: dados.freqComissao||'mensal', dia: dados.diaComissao ?? 5};
+        });
         (barbeiroData.equipe||[]).forEach(e=>{
             if(e.tipo!=='recepcionista') e.pct = comissoesCache[e.id] ?? (e.pct ?? 50);
         });
@@ -325,8 +334,6 @@ $('btn-add-barbeiro').addEventListener('click',async()=>{
     renderEquipe();carregarGanhos();toast((tipo==='recepcionista'?'Recepcionista':'Barbeiro')+' adicionado!');
 });
 
-const btnSalvarDiaPag=$('btn-salvar-dia-pagamento');
-if(btnSalvarDiaPag) btnSalvarDiaPag.addEventListener('click', salvarDiaPagamentoComissao);
 }
 
 // GANHOS
@@ -334,6 +341,11 @@ if(btnSalvarDiaPag) btnSalvarDiaPag.addEventListener('click', salvarDiaPagamento
 // pra alimentar a seção de Pagamento de Comissões sem recalcular tudo de novo.
 let ganhosMesCache = {};
 let mesGanhosCache = '';
+
+// Últimos "concluidos" carregados — reaproveitado pelo cálculo de período
+// de comissão (semanal/quinzenal/mensal), pra não buscar tudo de novo.
+let concluidosCache = [];
+let ganhosCarregados = false;
 
 async function carregarGanhos(){
     const equipe=barbeiroData.equipe||[];
@@ -351,6 +363,8 @@ async function carregarGanhos(){
 
     const todos=[];snap.forEach(d=>todos.push(d.data()));
     const concluidos=todos.filter(a=>a.status==='concluido');
+    concluidosCache = concluidos;
+    ganhosCarregados = true;
 
     function renderGanhos(container, lista, titulo, guardarCache){
         if(!lista.length){
@@ -415,8 +429,8 @@ async function carregarGanhos(){
 }
 
 // ══════════════════════════════════════════════════════════
-// PAGAMENTO DE COMISSÕES — dia do mês combinado pra pagar cada barbeiro,
-// e controle de "já paguei este mês" por pessoa. Não mexe em nada
+// PAGAMENTO DE COMISSÕES — cada barbeiro pode ter o próprio combinado:
+// semanal, quinzenal ou mensal, cada um com seu dia. Não mexe em nada
 // financeiro automático — é só um checklist com lembrete.
 // ══════════════════════════════════════════════════════════
 let pagamentosComissaoCache = [];
@@ -433,45 +447,88 @@ function escutarPagamentosComissao(){
     }, e=>console.error('pagamentosComissao:',e));
 }
 
-async function salvarDiaPagamentoComissao(){
-    const input=$('dia-pagamento-comissao');
-    if(!input) return;
-    const dia=parseInt(input.value);
-    if(isNaN(dia)||dia<1||dia>28){ toast('Escolha um dia entre 1 e 28','var(--red)'); return; }
-    await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{diaPagamentoComissao:dia});
-    barbeiroData.diaPagamentoComissao=dia;
-    toast(`✓ Comissões combinadas pra pagar todo dia ${dia}`);
-    renderPagamentoComissoes();
+function pad2(n){ return String(n).padStart(2,'0'); }
+function toISOLocal(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+
+// Calcula o período de comissão atual (início/fim/vencimento) de acordo
+// com a frequência combinada com aquele barbeiro específico.
+// freq: 'semanal' (dia = 0-6, domingo a sábado) | 'quinzenal' (dia = 1-15,
+// paga nesse dia e de novo 15 dias depois) | 'mensal' (dia = 1-28).
+function periodoComissao(freq, dia){
+    const hoje=new Date();
+    const y=hoje.getFullYear(), m=hoje.getMonth();
+    if(freq==='semanal'){
+        const dow=hoje.getDay();
+        const inicioD=new Date(y,m,hoje.getDate()-dow);
+        const fimD=new Date(inicioD); fimD.setDate(inicioD.getDate()+6);
+        const vencD=new Date(inicioD); vencD.setDate(inicioD.getDate()+(Number(dia)||0));
+        return {id:'S'+toISOLocal(inicioD), inicio:toISOLocal(inicioD), fim:toISOLocal(fimD), vencimento:vencD, label:`semana de ${inicioD.toLocaleDateString('pt-BR')}`};
+    }
+    if(freq==='quinzenal'){
+        const ultimoDia=new Date(y,m+1,0).getDate();
+        const primeira=hoje.getDate()<=15;
+        const inicioD=new Date(y,m,primeira?1:16);
+        const fimD=new Date(y,m,primeira?15:ultimoDia);
+        const diaBase=Math.min(Math.max(Number(dia)||1,1),15);
+        const vencDia=primeira?diaBase:Math.min(diaBase+15,ultimoDia);
+        const vencD=new Date(y,m,vencDia);
+        return {id:`${y}-${pad2(m+1)}-${primeira?'A':'B'}`, inicio:toISOLocal(inicioD), fim:toISOLocal(fimD), vencimento:vencD, label:primeira?'1ª quinzena':'2ª quinzena'};
+    }
+    // mensal
+    const ultimoDia=new Date(y,m+1,0).getDate();
+    const inicioD=new Date(y,m,1);
+    const fimD=new Date(y,m,ultimoDia);
+    const vencD=new Date(y,m,Math.min(Math.max(Number(dia)||1,1),ultimoDia));
+    return {id:`${y}-${pad2(m+1)}`, inicio:toISOLocal(inicioD), fim:toISOLocal(fimD), vencimento:vencD, label:'este mês'};
 }
+
+// Soma o que um barbeiro específico faturou dentro de um período (data
+// no formato YYYY-MM-DD, comparável como texto).
+function ganhoNoPeriodo(nome, pct, inicio, fim){
+    let total=0, cortes=0;
+    concluidosCache.forEach(a=>{
+        if((a.barbeiro||'Sem barbeiro')!==nome) return;
+        if(!a.data || a.data<inicio || a.data>fim) return;
+        total+=Number(a.preco||0); cortes++;
+    });
+    return {total, cortes, ganho: total*pct/100};
+}
+
+const FREQ_LABEL = {semanal:'Semanal', quinzenal:'Quinzenal', mensal:'Mensal'};
 
 function renderPagamentoComissoes(){
     const cont=$('lista-pagamento-comissoes');
     if(!cont) return;
     if(window.__recepcionista) return;
 
-    const diaInput=$('dia-pagamento-comissao');
-    if(diaInput && document.activeElement!==diaInput) diaInput.value = barbeiroData.diaPagamentoComissao||'';
-
     const equipe=(barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista');
     if(!equipe.length){
         cont.innerHTML='<div class="empty-state"><div class="icon">💸</div>Cadastre barbeiros com comissão primeiro.</div>';
         return;
     }
-    const mesAtual=fmtHoje().slice(0,7);
-    if(mesGanhosCache!==mesAtual){ cont.innerHTML='<div class="empty-state"><div class="icon">💸</div>Carregando...</div>'; return; }
+    if(!ganhosCarregados){
+        cont.innerHTML='<div class="empty-state"><div class="icon">💸</div>Carregando...</div>';
+        return;
+    }
 
-    const diaHoje=new Date().getDate();
-    const diaCombinado=barbeiroData.diaPagamentoComissao||null;
+    const hoje=new Date(); hoje.setHours(0,0,0,0);
 
     cont.innerHTML = equipe.map(b=>{
-        const dados=ganhosMesCache[b.nome];
-        const valor=dados?dados.ganho:0;
-        const pago=pagamentosComissaoCache.find(p=>p.equipeId===b.id && p.mes===mesAtual);
-        const atrasado = !pago && diaCombinado && diaHoje>=diaCombinado && valor>0;
+        const cfg = comissaoConfigCache[b.id] || {freq:'mensal', dia:5};
+        const periodo = periodoComissao(cfg.freq, cfg.dia);
+        const dados = ganhoNoPeriodo(b.nome, b.pct||50, periodo.inicio, periodo.fim);
+        const valor = dados.ganho;
+        const pago = pagamentosComissaoCache.find(p=>p.equipeId===b.id && p.periodo===periodo.id);
+        const venceu = periodo.vencimento<=hoje;
+        const atrasado = !pago && venceu && valor>0;
         const corBorda = pago ? 'var(--green)' : atrasado ? 'var(--red)' : 'var(--border)';
-        return `<div class="ganho-card" style="border-color:${corBorda}">
-            <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;flex-wrap:wrap">
+
+        const diaSemanaOpts = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
+            .map((n,i)=>`<option value="${i}" ${cfg.freq==='semanal'&&Number(cfg.dia)===i?'selected':''}>${n}</option>`).join('');
+
+        return `<div class="ganho-card" style="border-color:${corBorda};flex-direction:column;align-items:stretch;gap:.6rem">
+            <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
                     <span class="ganho-nome">✂️ ${escapeHtml(b.nome)}</span>
                     ${pago
                         ? `<span style="font-size:.65rem;background:rgba(0,255,136,.12);color:var(--green);border:1px solid rgba(0,255,136,.3);border-radius:20px;padding:.1rem .5rem">✓ Pago em ${new Date(pago.pagoEm).toLocaleDateString('pt-BR')}</span>`
@@ -479,23 +536,69 @@ function renderPagamentoComissoes(){
                             ? `<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border:1px solid rgba(255,75,43,.3);border-radius:20px;padding:.1rem .5rem">⚠️ Pendente</span>`
                             : `<span style="font-size:.65rem;background:rgba(245,166,35,.1);color:var(--yellow);border:1px solid rgba(245,166,35,.3);border-radius:20px;padding:.1rem .5rem">Ainda não pago</span>`}
                 </div>
-                <div style="font-size:.85rem;color:var(--muted)">Comissão do mês: <strong style="color:var(--text)">R$${valor.toFixed(2)}</strong></div>
+                ${pago ? `<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-desmarcar-pago="${pago.id}">Desmarcar</button>`
+                       : `<button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-marcar-pago="${b.id}" data-nome="${escAttr(b.nome)}" data-valor="${valor}" data-periodo="${periodo.id}">✓ Marcar como pago</button>`}
             </div>
-            ${pago ? `<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-desmarcar-pago="${pago.id}">Desmarcar</button>`
-                   : `<button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-marcar-pago="${b.id}" data-nome="${escAttr(b.nome)}" data-valor="${valor}">✓ Marcar como pago</button>`}
+            <div style="font-size:.85rem;color:var(--muted)">Comissão ${periodo.label} (vence ${periodo.vencimento.toLocaleDateString('pt-BR')}): <strong style="color:var(--text)">R$${valor.toFixed(2)}</strong></div>
+
+            <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap;padding-top:.4rem;border-top:1px dashed var(--border)">
+                <div class="input-group" style="margin-bottom:0;min-width:110px">
+                    <label style="font-size:.68rem">Frequência</label>
+                    <select data-freq-comissao="${b.id}" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.4rem .5rem;color:var(--text);font-size:.8rem;outline:none;width:100%">
+                        <option value="semanal" ${cfg.freq==='semanal'?'selected':''}>Semanal</option>
+                        <option value="quinzenal" ${cfg.freq==='quinzenal'?'selected':''}>Quinzenal</option>
+                        <option value="mensal" ${cfg.freq==='mensal'?'selected':''}>Mensal</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-bottom:0;max-width:130px" data-dia-wrap="${b.id}">
+                    ${cfg.freq==='semanal'
+                        ? `<label style="font-size:.68rem">Dia da semana</label><select data-dia-comissao="${b.id}" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.4rem .5rem;color:var(--text);font-size:.8rem;outline:none;width:100%">${diaSemanaOpts}</select>`
+                        : `<label style="font-size:.68rem">${cfg.freq==='quinzenal'?'Dia base (1-15)':'Dia do mês'}</label><input type="number" data-dia-comissao="${b.id}" value="${cfg.dia}" min="1" max="${cfg.freq==='quinzenal'?15:28}" step="1" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.4rem .5rem;color:var(--text);font-size:.8rem;outline:none;width:100%">`}
+                </div>
+                <button class="btn-save" style="padding:.4rem .7rem;font-size:.72rem" data-salvar-freq="${b.id}">Salvar</button>
+            </div>
         </div>`;
     }).join('');
+
+    cont.querySelectorAll('[data-freq-comissao]').forEach(sel=>{
+        sel.addEventListener('change', ()=>{
+            const id=sel.dataset.freqComissao;
+            const cfgAtual=comissaoConfigCache[id]||{freq:'mensal',dia:5};
+            comissaoConfigCache[id]={...cfgAtual, freq:sel.value};
+            renderPagamentoComissoes();
+        });
+    });
+
+    cont.querySelectorAll('[data-salvar-freq]').forEach(btn=>{
+        btn.addEventListener('click', async()=>{
+            const id=btn.dataset.salvarFreq;
+            const freqSel=cont.querySelector(`[data-freq-comissao="${id}"]`);
+            const diaEl=cont.querySelector(`[data-dia-comissao="${id}"]`);
+            const freq=freqSel?freqSel.value:'mensal';
+            let dia=parseInt(diaEl?diaEl.value:5);
+            if(isNaN(dia)) dia = freq==='semanal'?0:5;
+            if(freq==='semanal') dia=Math.min(Math.max(dia,0),6);
+            else if(freq==='quinzenal') dia=Math.min(Math.max(dia,1),15);
+            else dia=Math.min(Math.max(dia,1),28);
+            const membro=equipe.find(b=>b.id===id);
+            await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',id),{pct:membro?.pct||50, freqComissao:freq, diaComissao:dia},{merge:true});
+            comissaoConfigCache[id]={freq,dia};
+            toast(`✓ Combinado de pagamento de ${membro?.nome||'barbeiro'} salvo`);
+            renderPagamentoComissoes();
+        });
+    });
 
     cont.querySelectorAll('[data-marcar-pago]').forEach(btn=>{
         btn.addEventListener('click', async()=>{
             const equipeId=btn.dataset.marcarPago;
             const nome=btn.dataset.nome;
             const valor=Number(btn.dataset.valor);
+            const periodo=btn.dataset.periodo;
             // Dupla confirmação: essa ação já causou marcação sem querer antes.
             if(!confirm(`Marcar a comissão de ${nome} (R$${valor.toFixed(2)}) como paga?`)) return;
             if(!confirm(`Confirma mesmo? Você já pagou R$${valor.toFixed(2)} pra ${nome} agora?`)) return;
             await addDoc(collection(db,'barbeiros',barbeiroData.uid,'pagamentosComissao'), {
-                equipeId, nome, mes:mesAtual, valor, pagoEm:new Date().toISOString()
+                equipeId, nome, periodo, valor, pagoEm:new Date().toISOString()
             });
             toast(`✓ Comissão de ${nome} marcada como paga`);
         });
