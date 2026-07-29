@@ -218,6 +218,16 @@ async function atenderFila(filaId){
     await updateDoc(doc(db,'fila',filaId),{status:'atendido',atendidoEm:new Date().toISOString()});
     registrarClienteConcluido(barbeiroData.uid, item.clienteNome, item.clienteWhatsapp, item.corte||'Corte (fila)');
     toast('✓ Atendimento concluído!');
+    $('modal-acoes-cliente').style.display = 'none';
+    abrirModalComprovante({
+        nomeBarbearia: barbeiroData.nome || 'Barbearia',
+        clienteNome: item.clienteNome,
+        clienteWhatsapp: item.clienteWhatsapp,
+        barbeiro: item.barbeiro || '',
+        descricao: item.corte || 'Corte (fila)',
+        valor: item.preco || 0,
+        formaPagamento: item.formaPagamento || 'nao_informado'
+    });
 }
 
 async function removerFila(filaId){
@@ -642,12 +652,27 @@ async function concluirAgendamento(id){
     const item=ultimaListaAppts.find(a=>a.id===id);
     await updateDoc(doc(db,'agendamentos',id),{status:'concluido'});
     if(item) registrarClienteConcluido(barbeiroData.uid, item.clienteNome, item.clienteWhatsapp, item.corte);
-    // No modo funcionário não existe a tela/DOM que carregarAgendamentos()
-    // atualiza (é tudo owner-only) — só recarrega a página, igual os
-    // próprios botões de concluir/cancelar do painel do funcionário já fazem.
-    if(window.__funcionarioMode){ toast('Corte concluído! ✓'); setTimeout(()=>location.reload(),600); return; }
-    carregarAgendamentos();
     toast('Corte concluído! ✓');
+    if(!window.__funcionarioMode) carregarAgendamentos();
+    if(item){
+        $('modal-acoes-cliente').style.display = 'none';
+        // No modo funcionário, a lista só atualiza recarregando a página —
+        // mas isso derrubaria o comprovante no meio da leitura, então o
+        // reload fica pendente até o dono fechar/baixar/enviar o PDF (ver
+        // os 3 handlers de modal-comprovante logo abaixo).
+        if(window.__funcionarioMode) window.__reloadAposComprovante = true;
+        abrirModalComprovante({
+            nomeBarbearia: barbeiroData.nome || 'Barbearia',
+            clienteNome: item.clienteNome,
+            clienteWhatsapp: item.clienteWhatsapp,
+            barbeiro: item.barbeiro || '',
+            descricao: item.corte || 'Serviço',
+            valor: item.preco || 0,
+            formaPagamento: item.formaPagamento || 'nao_informado'
+        });
+        return;
+    }
+    if(window.__funcionarioMode) setTimeout(()=>location.reload(),600);
 }
 
 async function cancelarAgendamento(id){
@@ -677,7 +702,7 @@ function fmtDataExtenso(dataStr){
 // Mesmo padrão visual usado no Pro'Bronze, adaptado pras cores do Pro'B.
 let comprovanteAtual = null; // { blob, clienteWhatsapp, nomeArquivo }
 
-const ROTULO_FORMA_PAGAMENTO = { dinheiro:'Dinheiro', pix:'Pix', debito:'Débito', credito:'Crédito' };
+const ROTULO_FORMA_PAGAMENTO = { dinheiro:'Dinheiro', pix:'Pix', debito:'Débito', credito:'Crédito', nao_informado:'Não informado' };
 
 function montarComprovantePdfBlob({ nomeBarbearia, clienteNome, barbeiro, descricao, valor, formaPagamento }){
     const { jsPDF } = window.jspdf;
@@ -1051,10 +1076,19 @@ function initAcoesClienteExtras(){
         });
     });
 
-    $('btn-fechar-comprovante').addEventListener('click', () => {
+    // No modo funcionário, o reload da lista (que só funciona recarregando
+    // a página inteira) fica pendente até fechar/baixar/enviar o comprovante
+    // — ver window.__reloadAposComprovante em concluirAgendamento().
+    function fecharModalComprovante(){
         $('modal-comprovante').style.display = 'none';
         comprovanteAtual = null;
-    });
+        if(window.__reloadAposComprovante){
+            window.__reloadAposComprovante = false;
+            location.reload();
+        }
+    }
+
+    $('btn-fechar-comprovante').addEventListener('click', fecharModalComprovante);
 
     $('btn-baixar-comprovante').addEventListener('click', () => {
         if(!comprovanteAtual) return;
@@ -1074,8 +1108,7 @@ function initAcoesClienteExtras(){
             }catch(e){
                 return; // cliente cancelou o compartilhamento — deixa o modal aberto
             }
-            $('modal-comprovante').style.display = 'none';
-            comprovanteAtual = null;
+            fecharModalComprovante();
             return;
         }
 
@@ -1088,8 +1121,7 @@ function initAcoesClienteExtras(){
         const wppNum = (comprovanteAtual.clienteWhatsapp||'').replace(/\D/g,'');
         const msg = encodeURIComponent('Olá! Segue o comprovante do seu pagamento (não é nota fiscal). O PDF acabou de ser baixado — é só anexar aqui na conversa.');
         window.open(wppNum ? `https://wa.me/55${wppNum}?text=${msg}` : `https://wa.me/?text=${msg}`, '_blank');
-        $('modal-comprovante').style.display = 'none';
-        comprovanteAtual = null;
+        fecharModalComprovante();
     });
 
     $('ac-btn-desconto').addEventListener('click', async()=>{
