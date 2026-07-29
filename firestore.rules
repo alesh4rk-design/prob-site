@@ -155,8 +155,14 @@ service cloud.firestore {
 
     // ── Status de acesso (trial / ativo / bloqueado / pendente) ──
     match /acessos/{bId} {
-      // Leitura pública: barbeiro.html e cliente.html verificam bloqueio em tempo real.
-      allow read: if true;
+      // "get" (leitura de UM doc, id já conhecido) é público: barbeiro.html e
+      // cliente.html verificam bloqueio em tempo real sem estar logado como
+      // admin. "list" (listar a coleção inteira, com todos os dias restantes
+      // de todo mundo) fica restrito ao admin — antes estava público também,
+      // o que permitia qualquer pessoa enumerar a coleção pelo SDK e ver a
+      // situação de pagamento de todos os donos cadastrados.
+      allow get: if true;
+      allow list: if isAdmin();
 
       // Autocadastro: o próprio barbeiro cria seu pedido de acesso ao se cadastrar,
       // sempre como 'pendente' ou 'trial' — nunca já 'ativo'.
