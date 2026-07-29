@@ -77,6 +77,11 @@ service cloud.firestore {
       match /movimentosEstoque/{doc} {
         allow read, write: if isOwner(bId) || isAdmin();
       }
+      // Controle de pagamento de comissão de cada mês (quando foi marcado
+      // como pago, pra qual funcionário e qual valor) — só o dono mexe.
+      match /pagamentosComissao/{doc} {
+        allow read, write: if isOwner(bId) || isAdmin();
+      }
       match /insumos/{doc} {
         allow read, write: if isOwner(bId) || isAdmin();
       }

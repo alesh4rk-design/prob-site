@@ -701,6 +701,19 @@
 
             <div class="section-title" style="margin-top:1.5rem">Ganhos do Mês</div>
             <div id="ganhos-mes"><div class="empty-state"><div class="icon">📊</div>Carregando...</div></div>
+
+            <div class="section-title" style="margin-top:1.5rem">💸 Pagamento de Comissões</div>
+            <div class="card" style="margin-bottom:1rem">
+                <div style="display:flex;align-items:flex-end;gap:.6rem;flex-wrap:wrap">
+                    <div class="input-group" style="margin-bottom:0;max-width:140px">
+                        <label>Dia do mês pra pagar</label>
+                        <input type="number" id="dia-pagamento-comissao" placeholder="5" min="1" max="28" step="1">
+                    </div>
+                    <button class="btn-save" style="padding:.6rem 1rem" id="btn-salvar-dia-pagamento">Salvar</button>
+                </div>
+                <div style="font-size:.75rem;color:var(--muted);margin-top:.5rem">Combine um dia fixo do mês pra acertar a comissão da equipe. A partir desse dia, quem ainda não foi marcado como pago aparece com aviso aqui e na Central de Avisos.</div>
+            </div>
+            <div id="lista-pagamento-comissoes"><div class="empty-state"><div class="icon">💸</div>Carregando...</div></div>
         </div>
     </div>
 
@@ -2912,6 +2925,7 @@ async function initDash(){
         if(!snap.exists())return;
         barbeiroData={...barbeiroData,...snap.data()};
         if(!window.__recepcionista && typeof escutarComissoes==='function') escutarComissoes();
+        if(!window.__recepcionista && typeof escutarPagamentosComissao==='function') escutarPagamentosComissao();
         renderCortes();
         renderEquipe();
         if(!window.__recepcionista){
@@ -3042,9 +3056,9 @@ async function initDash(){
 <script defer src="js/dashboard/estoque.js?v=20260729c"></script>
 <script defer src="js/dashboard/backup.js?v=20260727o"></script>
 <script defer src="js/dashboard/novidades.js?v=20260729a"></script>
-<script defer src="js/dashboard/central-avisos.js?v=20260727p"></script>
+<script defer src="js/dashboard/central-avisos.js?v=20260729a"></script>
 <script defer src="js/dashboard/tour.js?v=20260727o"></script>
-<script defer src="js/dashboard/equipe.js?v=20260727q"></script>
+<script defer src="js/dashboard/equipe.js?v=20260729a"></script>
 <script defer src="js/dashboard/promocoes.js?v=20260727q"></script>
 <script defer src="js/dashboard/clientes.js?v=20260727o"></script>
 <script defer src="js/dashboard/agendamentos.js?v=20260729b"></script>

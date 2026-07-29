@@ -324,9 +324,17 @@ $('btn-add-barbeiro').addEventListener('click',async()=>{
     $('eq-nome').value='';$('eq-pct').value='';$('eq-atende').checked=false;
     renderEquipe();carregarGanhos();toast((tipo==='recepcionista'?'Recepcionista':'Barbeiro')+' adicionado!');
 });
+
+const btnSalvarDiaPag=$('btn-salvar-dia-pagamento');
+if(btnSalvarDiaPag) btnSalvarDiaPag.addEventListener('click', salvarDiaPagamentoComissao);
 }
 
 // GANHOS
+// Guarda o ganho de cada barbeiro no mês atual (nome -> {total,cortes,pct,ganho})
+// pra alimentar a seção de Pagamento de Comissões sem recalcular tudo de novo.
+let ganhosMesCache = {};
+let mesGanhosCache = '';
+
 async function carregarGanhos(){
     const equipe=barbeiroData.equipe||[];
     if(!equipe.length){
@@ -344,9 +352,10 @@ async function carregarGanhos(){
     const todos=[];snap.forEach(d=>todos.push(d.data()));
     const concluidos=todos.filter(a=>a.status==='concluido');
 
-    function renderGanhos(container, lista, titulo){
+    function renderGanhos(container, lista, titulo, guardarCache){
         if(!lista.length){
             container.innerHTML=`<div class="empty-state"><div class="icon">💰</div>Nenhum corte concluído ${titulo}.</div>`;
+            if(guardarCache){ ganhosMesCache={}; mesGanhosCache=mesAtual; }
             return;
         }
         // Agrupa por barbeiro
@@ -361,6 +370,16 @@ async function carregarGanhos(){
         });
 
         const maxTotal=Math.max(...Object.values(porBarbeiro).map(v=>v.total));
+
+        if(guardarCache){
+            ganhosMesCache={};
+            mesGanhosCache=mesAtual;
+            Object.entries(porBarbeiro).forEach(([nome,dados])=>{
+                const membroEquipe=equipe.find(b=>b.nome===nome);
+                const pct=membroEquipe?.pct||50;
+                ganhosMesCache[nome]={total:dados.total,cortes:dados.cortes,pct,ganho:dados.total*pct/100};
+            });
+        }
 
         container.innerHTML=Object.entries(porBarbeiro).map(([nome,dados])=>{
             const membroEquipe=equipe.find(b=>b.nome===nome);
@@ -389,8 +408,102 @@ async function carregarGanhos(){
         </div>`;
     }
 
-    renderGanhos($('ganhos-hoje'), concluidos.filter(a=>a.data===hoje), 'hoje');
-    renderGanhos($('ganhos-mes'),  concluidos.filter(a=>a.data&&a.data.startsWith(mesAtual)), 'este mês');
+    renderGanhos($('ganhos-hoje'), concluidos.filter(a=>a.data===hoje), 'hoje', false);
+    renderGanhos($('ganhos-mes'),  concluidos.filter(a=>a.data&&a.data.startsWith(mesAtual)), 'este mês', true);
+    renderPagamentoComissoes();
+    if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
+}
+
+// ══════════════════════════════════════════════════════════
+// PAGAMENTO DE COMISSÕES — dia do mês combinado pra pagar cada barbeiro,
+// e controle de "já paguei este mês" por pessoa. Não mexe em nada
+// financeiro automático — é só um checklist com lembrete.
+// ══════════════════════════════════════════════════════════
+let pagamentosComissaoCache = [];
+let unsubPagamentosComissao = null;
+
+function escutarPagamentosComissao(){
+    if(window.__recepcionista || window.__pagamentosComissaoListenerAtivo) return;
+    window.__pagamentosComissaoListenerAtivo = true;
+    unsubPagamentosComissao = onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'pagamentosComissao'), snap=>{
+        pagamentosComissaoCache = [];
+        snap.forEach(d=>pagamentosComissaoCache.push({id:d.id,...d.data()}));
+        renderPagamentoComissoes();
+        if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
+    }, e=>console.error('pagamentosComissao:',e));
+}
+
+async function salvarDiaPagamentoComissao(){
+    const input=$('dia-pagamento-comissao');
+    if(!input) return;
+    const dia=parseInt(input.value);
+    if(isNaN(dia)||dia<1||dia>28){ toast('Escolha um dia entre 1 e 28','var(--red)'); return; }
+    await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{diaPagamentoComissao:dia});
+    barbeiroData.diaPagamentoComissao=dia;
+    toast(`✓ Comissões combinadas pra pagar todo dia ${dia}`);
+    renderPagamentoComissoes();
+}
+
+function renderPagamentoComissoes(){
+    const cont=$('lista-pagamento-comissoes');
+    if(!cont) return;
+    if(window.__recepcionista) return;
+
+    const diaInput=$('dia-pagamento-comissao');
+    if(diaInput && document.activeElement!==diaInput) diaInput.value = barbeiroData.diaPagamentoComissao||'';
+
+    const equipe=(barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista');
+    if(!equipe.length){
+        cont.innerHTML='<div class="empty-state"><div class="icon">💸</div>Cadastre barbeiros com comissão primeiro.</div>';
+        return;
+    }
+    const mesAtual=fmtHoje().slice(0,7);
+    if(mesGanhosCache!==mesAtual){ cont.innerHTML='<div class="empty-state"><div class="icon">💸</div>Carregando...</div>'; return; }
+
+    const diaHoje=new Date().getDate();
+    const diaCombinado=barbeiroData.diaPagamentoComissao||null;
+
+    cont.innerHTML = equipe.map(b=>{
+        const dados=ganhosMesCache[b.nome];
+        const valor=dados?dados.ganho:0;
+        const pago=pagamentosComissaoCache.find(p=>p.equipeId===b.id && p.mes===mesAtual);
+        const atrasado = !pago && diaCombinado && diaHoje>=diaCombinado && valor>0;
+        const corBorda = pago ? 'var(--green)' : atrasado ? 'var(--red)' : 'var(--border)';
+        return `<div class="ganho-card" style="border-color:${corBorda}">
+            <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;flex-wrap:wrap">
+                    <span class="ganho-nome">✂️ ${escapeHtml(b.nome)}</span>
+                    ${pago
+                        ? `<span style="font-size:.65rem;background:rgba(0,255,136,.12);color:var(--green);border:1px solid rgba(0,255,136,.3);border-radius:20px;padding:.1rem .5rem">✓ Pago em ${new Date(pago.pagoEm).toLocaleDateString('pt-BR')}</span>`
+                        : atrasado
+                            ? `<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border:1px solid rgba(255,75,43,.3);border-radius:20px;padding:.1rem .5rem">⚠️ Pendente</span>`
+                            : `<span style="font-size:.65rem;background:rgba(245,166,35,.1);color:var(--yellow);border:1px solid rgba(245,166,35,.3);border-radius:20px;padding:.1rem .5rem">Ainda não pago</span>`}
+                </div>
+                <div style="font-size:.85rem;color:var(--muted)">Comissão do mês: <strong style="color:var(--text)">R$${valor.toFixed(2)}</strong></div>
+            </div>
+            ${pago ? `<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-desmarcar-pago="${pago.id}">Desmarcar</button>`
+                   : `<button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-marcar-pago="${b.id}" data-nome="${escAttr(b.nome)}" data-valor="${valor}">✓ Marcar como pago</button>`}
+        </div>`;
+    }).join('');
+
+    cont.querySelectorAll('[data-marcar-pago]').forEach(btn=>{
+        btn.addEventListener('click', async()=>{
+            const equipeId=btn.dataset.marcarPago;
+            const nome=btn.dataset.nome;
+            const valor=Number(btn.dataset.valor);
+            await addDoc(collection(db,'barbeiros',barbeiroData.uid,'pagamentosComissao'), {
+                equipeId, nome, mes:mesAtual, valor, pagoEm:new Date().toISOString()
+            });
+            toast(`✓ Comissão de ${nome} marcada como paga`);
+        });
+    });
+    cont.querySelectorAll('[data-desmarcar-pago]').forEach(btn=>{
+        btn.addEventListener('click', async()=>{
+            if(!confirm('Desmarcar esse pagamento como pago?')) return;
+            await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'pagamentosComissao',btn.dataset.desmarcarPago));
+            toast('Pagamento desmarcado');
+        });
+    });
 }
 
 
