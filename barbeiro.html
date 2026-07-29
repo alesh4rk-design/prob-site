@@ -2262,9 +2262,12 @@ async function verificarAcesso(uid){
         return {status:d.status,diasRestantes:dias};
     }catch(e){
         console.error('verificarAcesso erro:', e.code, e.message);
-        // Em caso de erro NÃO desloga — retorna trial para não prejudicar o barbeiro
-        // O erro provavelmente é temporário (rede, permissão)
-        return {status:'trial', diasRestantes:1};
+        // Em caso de erro NÃO desloga e NÃO inventa um número de dias — isso
+        // já causou um bug real: uma falha temporária de rede fazia o dono
+        // ver "seu acesso expira HOJE" mesmo tendo 21 dias reais no sistema.
+        // status 'erro' faz o chamador pular a verificação de bloqueio e não
+        // mostrar nenhum banner/alerta de expiração nessa sessão.
+        return {status:'erro', diasRestantes:null};
     }
 }
 
@@ -2554,7 +2557,7 @@ onAuthStateChanged(auth,async user=>{
             const msg = encodeURIComponent(`Olá! Quero renovar meu acesso Pro'B. E-mail: ${user.email}`);
             pendWpp.href = `https://wa.me/${WPP_ADMIN}?text=${msg}`;
         }
-        mostrarBanner(acesso.diasRestantes);
+        if(acesso.status!=='erro') mostrarBanner(acesso.diasRestantes);
         go('screen-dash');
         initDash();
     } else {
