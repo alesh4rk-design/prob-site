@@ -1111,12 +1111,17 @@
             <div class="input-group" style="margin-top:.6rem"><label>Avisar quando chegar em (opcional)</label><input type="number" id="insumo-qtd-min" placeholder="5" min="0" step="0.5"></div>
             <div class="input-group" style="margin-top:.6rem"><label>Quanto custou esse lote (R$, opcional)</label><input type="number" id="insumo-custo" placeholder="Ex: 45.00" min="0" step="0.01"></div>
             <p style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Informar o custo registra o gasto automaticamente na aba Gestão da Barbearia.</p>
+            <div class="input-group" style="margin-top:.6rem"><label>Data de entrada (opcional — hoje se deixar em branco)</label><input type="date" id="insumo-data-entrada"></div>
             <button class="btn-add" id="btn-add-insumo">+ Adicionar Insumo</button>
             <button style="width:100%;margin-top:.5rem;font-size:.8rem;padding:.6rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer" id="btn-cancelar-form-insumo">Cancelar</button>
         </div>
 
         <div class="section-title">Insumos Cadastrados</div>
         <div id="lista-insumos"><div class="empty-state"><div class="icon">🧴</div>Nenhum insumo cadastrado ainda.</div></div>
+
+        <div class="section-title" style="margin-top:1.5rem">📜 Histórico de Entrada e Saída de Insumos</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Toda entrada (cadastro, reposição) e saída (uso, baixa) de insumo fica registrada aqui, com a data.</div>
+        <div id="lista-movimentos-insumos"><div class="empty-state"><div class="icon">📜</div>Nenhuma movimentação registrada ainda.</div></div>
     </div>
 
     <!-- TAB Visual -->
@@ -3078,7 +3083,7 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20260729c"></script>
+<script defer src="js/dashboard/estoque.js?v=20260729d"></script>
 <script defer src="js/dashboard/backup.js?v=20260727o"></script>
 <script defer src="js/dashboard/novidades.js?v=20260729e"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20260729b"></script>

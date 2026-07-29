@@ -259,6 +259,21 @@ function initEstoque(){
 let insumosCache = [];
 let unsubInsumos = null;
 
+// Histórico de entrada e saída de insumos — mesmo padrão do histórico de
+// produtos (movimentosEstoque), só que numa subcoleção separada.
+let movimentosInsumosCache = [];
+let unsubMovimentosInsumos = null;
+
+async function registrarMovimentoInsumo(insumoId, insumoNome, tipo, quantidade, motivo, dataMovimento){
+    try{
+        await addDoc(collection(db,'barbeiros',barbeiroData.uid,'movimentosInsumos'), {
+            insumoId, insumoNome, tipo, quantidade, motivo: motivo||'',
+            data: dataMovimento || fmtHoje(),
+            criadoEm: new Date().toISOString()
+        });
+    }catch(e){ console.error('registrarMovimentoInsumo:', e); }
+}
+
 function initInsumos(){
     if(window.__insumosBound) return;
     window.__insumosBound = true;
@@ -270,6 +285,15 @@ function initInsumos(){
         insumosCache.sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
         renderInsumos();
     }, e=>console.error('insumos:',e));
+
+    if(unsubMovimentosInsumos) unsubMovimentosInsumos();
+    unsubMovimentosInsumos = onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'movimentosInsumos'), snap=>{
+        movimentosInsumosCache = [];
+        snap.forEach(d=>movimentosInsumosCache.push({id:d.id,...d.data()}));
+        movimentosInsumosCache.sort((a,b)=>(b.criadoEm||'').localeCompare(a.criadoEm||''));
+        renderMovimentosInsumos();
+        renderInsumos();
+    }, e=>console.error('movimentosInsumos:',e));
 
     $('btn-add-insumo').addEventListener('click', adicionarInsumo);
 
@@ -305,6 +329,8 @@ async function adicionarInsumo(){
     const qtd = parseFloat($('insumo-qtd').value);
     const qtdMinima = $('insumo-qtd-min').value ? parseFloat($('insumo-qtd-min').value) : null;
     const custo = $('insumo-custo').value ? parseFloat($('insumo-custo').value) : null;
+    const dataEl = $('insumo-data-entrada');
+    const dataEntrada = dataEl && dataEl.value ? dataEl.value : fmtHoje();
     if(!nome){ toast('Digite o nome do insumo','var(--red)'); return; }
     if(isNaN(qtd) || qtd<0){ toast('Informe a quantidade','var(--red)'); return; }
 
@@ -318,6 +344,7 @@ async function adicionarInsumo(){
         if(existente){
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',existente.id), {quantidade:increment(qtd)});
             await registrarGastoInsumo(existente.id, existente.nome, qtd, custo);
+            await registrarMovimentoInsumo(existente.id, existente.nome, 'entrada', qtd, 'Reposição', dataEntrada);
             toast(`✓ +${qtd} ${unidade} adicionado(s) a "${existente.nome}"${custo?' — gasto registrado':''}`);
         } else {
             const novoRef = await addDoc(collection(db,'barbeiros',barbeiroData.uid,'insumos'), {
@@ -325,9 +352,10 @@ async function adicionarInsumo(){
                 criadoEm: new Date().toISOString()
             });
             await registrarGastoInsumo(novoRef.id, nome, qtd, custo);
+            await registrarMovimentoInsumo(novoRef.id, nome, 'entrada', qtd, 'Cadastro inicial', dataEntrada);
             toast('✓ Insumo cadastrado!'+(custo?' Gasto registrado.':''));
         }
-        $('insumo-nome').value=''; $('insumo-qtd').value=''; $('insumo-qtd-min').value=''; $('insumo-custo').value='';
+        $('insumo-nome').value=''; $('insumo-qtd').value=''; $('insumo-qtd-min').value=''; $('insumo-custo').value=''; if(dataEl) dataEl.value='';
         $('insumo-form-wrap').style.display='none';
         $('insumo-card-intro').style.display='block';
     }catch(e){ toast('Erro ao cadastrar: '+e.message,'var(--red)'); }
@@ -348,12 +376,20 @@ function renderInsumos(){
     cont.innerHTML = insumosCache.map(i=>{
         const baixo = i.quantidadeMinima!=null && i.quantidade<=i.quantidadeMinima;
         const un = UNIDADE_ABREV[i.unidade] || i.unidade || 'un';
+        // Última entrada/saída desse insumo, achada no histórico já
+        // carregado (ordenado do mais recente pro mais antigo).
+        const ultimaEntrada = movimentosInsumosCache.find(m=>m.insumoId===i.id && m.tipo==='entrada');
+        const ultimaSaida = movimentosInsumosCache.find(m=>m.insumoId===i.id && m.tipo==='saida');
+        let datasHtml = '';
+        if(ultimaEntrada) datasHtml += `<span style="color:var(--green)">↓ entrou ${fmtDataMovimento(ultimaEntrada.data)}</span>`;
+        if(ultimaSaida) datasHtml += `${ultimaEntrada?' · ':''}<span style="color:var(--red)">↑ saiu ${fmtDataMovimento(ultimaSaida.data)}</span>`;
         return `<div class="service-item" style="flex-wrap:wrap;${baixo?'border-color:rgba(255,75,43,.4)':''}">
             <div style="flex:1;min-width:140px">
                 <div class="service-name" style="padding-right:0">${escapeHtml(i.nome)}${baixo?'<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">⚠️ Acabando</span>':''}</div>
                 <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">
                     Quantidade: <span style="color:${baixo?'var(--red)':'var(--text)'};font-weight:700">${i.quantidade}</span> ${un}
                 </div>
+                ${datasHtml?`<div style="font-size:.68rem;margin-top:.2rem">${datasHtml}</div>`:''}
             </div>
             <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
                 <button class="btn-del" data-baixa-insumo="${i.id}" style="border-color:rgba(245,166,35,.4);color:var(--yellow)">− Dar baixa</button>
@@ -373,6 +409,7 @@ function renderInsumos(){
             const custo = custoStr ? parseFloat(custoStr) : null;
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',item.id), {quantidade:increment(n)});
             await registrarGastoInsumo(item.id, item.nome, n, custo);
+            await registrarMovimentoInsumo(item.id, item.nome, 'entrada', n, 'Reposição');
             toast(`✓ +${n} adicionado(s) a "${item.nome}"${custo?' — gasto registrado':''}`);
         });
     });
@@ -384,6 +421,7 @@ function renderInsumos(){
             if(!qtd || isNaN(n) || n<=0) return;
             if(n > item.quantidade){ toast('Não tem tanto assim para dar baixa','var(--red)'); return; }
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',item.id), {quantidade:increment(-n)});
+            await registrarMovimentoInsumo(item.id, item.nome, 'saida', n, 'Uso/baixa');
             toast(`✓ Baixa de ${n} em "${item.nome}"`);
         });
     });
@@ -759,6 +797,29 @@ function renderMovimentosEstoque(){
         return `<div class="service-item" style="flex-wrap:wrap">
             <div style="flex:1;min-width:140px">
                 <div class="service-name" style="padding-right:0">${escapeHtml(m.produtoNome||'—')}</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">${fmtDataMovimento(m.data)}${m.motivo?' · '+escapeHtml(m.motivo):''}</div>
+            </div>
+            <div style="font-family:'Courier New',monospace;font-weight:900;color:${cor};font-size:.95rem">${sinal}${m.quantidade}</div>
+        </div>`;
+    }).join('');
+}
+
+// Mesma coisa, só que pro histórico de insumos (café, copo descartável,
+// água oxigenada...) — últimos 40 movimentos, mais recente primeiro.
+function renderMovimentosInsumos(){
+    const cont = $('lista-movimentos-insumos');
+    if(!cont) return;
+    if(!movimentosInsumosCache.length){
+        cont.innerHTML = '<div class="empty-state"><div class="icon">📜</div>Nenhuma movimentação registrada ainda.</div>';
+        return;
+    }
+    cont.innerHTML = movimentosInsumosCache.slice(0,40).map(m=>{
+        const ehEntrada = m.tipo==='entrada';
+        const cor = ehEntrada ? 'var(--green)' : 'var(--red)';
+        const sinal = ehEntrada ? '+' : '−';
+        return `<div class="service-item" style="flex-wrap:wrap">
+            <div style="flex:1;min-width:140px">
+                <div class="service-name" style="padding-right:0">${escapeHtml(m.insumoNome||'—')}</div>
                 <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">${fmtDataMovimento(m.data)}${m.motivo?' · '+escapeHtml(m.motivo):''}</div>
             </div>
             <div style="font-family:'Courier New',monospace;font-weight:900;color:${cor};font-size:.95rem">${sinal}${m.quantidade}</div>
