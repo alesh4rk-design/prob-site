@@ -8,12 +8,36 @@
 // sempre crescente (data serve bem) — é o que o sistema usa pra saber se o
 // dono já viu ou não. Não precisa mexer em mais nada.
 //
-// Itens somem sozinhos da lista depois de NOVIDADES_DIAS_VISIVEL dias —
-// continuam guardados aqui (histórico), só não aparecem mais no painel.
+// Itens somem sozinhos da lista depois de NOVIDADES_DIAS_VISIVEL dias, e
+// no máximo NOVIDADES_MAX_VISIVEIS de uma vez (as mais recentes) — mesmo
+// que várias ainda estejam dentro do prazo de dias, só as N mais novas
+// aparecem. Em ambos os casos, continuam guardadas aqui (histórico), só
+// não aparecem mais no painel.
 // ══════════════════════════════════════════════════════════
 const NOVIDADES_DIAS_VISIVEL = 21;
+const NOVIDADES_MAX_VISIVEIS = 6;
 
 const NOVIDADES = [
+    {
+        id: '2026-07-29-08',
+        data: '29/07/2026',
+        titulo: 'Pagamento de Comissão da Equipe',
+        itens: [
+            'Nova seção em Equipe: combine um dia fixo do mês pra acertar a comissão de cada barbeiro.',
+            'Cada barbeiro mostra o valor devido no mês e um botão "Marcar como pago" (com dupla confirmação, pra evitar clique sem querer).',
+            'A partir do dia combinado, quem ainda não foi pago aparece com aviso na Central de Avisos.'
+        ]
+    },
+    {
+        id: '2026-07-29-07',
+        data: '29/07/2026',
+        titulo: 'Estoque e segurança',
+        itens: [
+            'Cadastrar Produto agora tem campo opcional de data de entrada — se deixar em branco, usa hoje.',
+            'Corrigido alarme falso de "acesso expira hoje" causado por instabilidade de rede.',
+            'Corrigida brecha que permitia listar os dias restantes de todos os clientes cadastrados.'
+        ]
+    },
     {
         id: '2026-07-29-01',
         data: '29/07/2026',
@@ -137,7 +161,9 @@ function initNovidades(){
     }
     const limite = new Date();
     limite.setDate(limite.getDate() - NOVIDADES_DIAS_VISIVEL);
-    const novidadesVisiveis = NOVIDADES.filter(n => dataDaNovidade(n.data) >= limite);
+    const novidadesVisiveis = NOVIDADES
+        .filter(n => dataDaNovidade(n.data) >= limite)
+        .slice(0, NOVIDADES_MAX_VISIVEIS);
 
     if(!novidadesVisiveis.length){
         lista.innerHTML = '<p style="font-size:.8rem;color:var(--muted);margin:0">Nenhuma novidade recente.</p>';
