@@ -23,11 +23,11 @@ let vendaQtdAtual = 1;
 let movimentosEstoqueCache = [];
 let unsubMovimentosEstoque = null;
 
-async function registrarMovimentoEstoque(produtoId, produtoNome, tipo, quantidade, motivo){
+async function registrarMovimentoEstoque(produtoId, produtoNome, tipo, quantidade, motivo, dataMovimento){
     try{
         await addDoc(collection(db,'barbeiros',barbeiroData.uid,'movimentosEstoque'), {
             produtoId, produtoNome, tipo, quantidade, motivo: motivo||'',
-            data: fmtHoje(),
+            data: dataMovimento || fmtHoje(),
             criadoEm: new Date().toISOString()
         });
     }catch(e){ console.error('registrarMovimentoEstoque:', e); }
@@ -626,6 +626,8 @@ async function adicionarProduto(){
     const preco = parseFloat($('prod-preco').value);
     const qtd = parseInt($('prod-estoque').value);
     const estoqueMinimo = $('prod-estoque-min').value ? parseInt($('prod-estoque-min').value) : null;
+    const dataEl = $('prod-data-entrada');
+    const dataEntrada = dataEl && dataEl.value ? dataEl.value : fmtHoje();
     if(!nome){ toast('Digite o nome do produto','var(--red)'); return; }
     if(isNaN(preco) || preco<0){ toast('Informe um preço válido','var(--red)'); return; }
     if(custo!==null && (isNaN(custo) || custo<0)){ toast('Informe um custo válido','var(--red)'); return; }
@@ -643,17 +645,17 @@ async function adicionarProduto(){
     try{
         if(existente){
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',existente.id), {estoque:increment(qtd)});
-            await registrarMovimentoEstoque(existente.id, existente.nome, 'entrada', qtd, 'Reposição de estoque');
+            await registrarMovimentoEstoque(existente.id, existente.nome, 'entrada', qtd, 'Reposição de estoque', dataEntrada);
             toast(`✓ +${qtd} unidade(s) adicionada(s) a "${existente.nome}" (já cadastrado)`);
         } else {
             const novoRef = await addDoc(collection(db,'barbeiros',barbeiroData.uid,'produtos'), {
                 nome, codigoBarras: codigoBarras||null, custo, preco, estoque: qtd, estoqueMinimo,
                 criadoEm: new Date().toISOString()
             });
-            await registrarMovimentoEstoque(novoRef.id, nome, 'entrada', qtd, 'Cadastro inicial');
+            await registrarMovimentoEstoque(novoRef.id, nome, 'entrada', qtd, 'Cadastro inicial', dataEntrada);
             toast('✓ Produto cadastrado!');
         }
-        $('prod-nome').value=''; $('prod-codigo').value=''; $('prod-custo').value=''; $('prod-preco').value=''; $('prod-estoque').value=''; $('prod-estoque-min').value='';
+        $('prod-nome').value=''; $('prod-codigo').value=''; $('prod-custo').value=''; $('prod-preco').value=''; $('prod-estoque').value=''; $('prod-estoque-min').value=''; if(dataEl) dataEl.value='';
         $('prod-margem-aviso').style.display='none';
         $('prod-form-wrap').style.display='none';
         $('prod-card-intro').style.display='block';

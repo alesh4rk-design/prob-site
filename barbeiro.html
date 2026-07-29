@@ -1047,6 +1047,7 @@
                 <div class="input-group"><label id="prod-estoque-label">Quantidade</label><input type="number" id="prod-estoque" placeholder="10" min="1" step="1"></div>
                 <div class="input-group"><label>Avisar quando estoque chegar em (opcional)</label><input type="number" id="prod-estoque-min" placeholder="3" min="0" step="1"></div>
             </div>
+            <div class="input-group"><label>Data de entrada (opcional — hoje se deixar em branco)</label><input type="date" id="prod-data-entrada"></div>
             <button class="btn-add" id="btn-add-produto">+ Adicionar Produto</button>
             <button style="width:100%;margin-top:.5rem;font-size:.8rem;padding:.6rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer" id="btn-cancelar-form-produto">Cancelar</button>
         </div>
@@ -3038,7 +3039,7 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20260729b"></script>
+<script defer src="js/dashboard/estoque.js?v=20260729c"></script>
 <script defer src="js/dashboard/backup.js?v=20260727o"></script>
 <script defer src="js/dashboard/novidades.js?v=20260729a"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20260727p"></script>
