@@ -7,8 +7,72 @@
 // NOVIDADES abaixo (mais recente primeiro). O "id" precisa ser único e
 // sempre crescente (data serve bem) — é o que o sistema usa pra saber se o
 // dono já viu ou não. Não precisa mexer em mais nada.
+//
+// Itens somem sozinhos da lista depois de NOVIDADES_DIAS_VISIVEL dias —
+// continuam guardados aqui (histórico), só não aparecem mais no painel.
 // ══════════════════════════════════════════════════════════
+const NOVIDADES_DIAS_VISIVEL = 21;
+
 const NOVIDADES = [
+    {
+        id: '2026-07-29-01',
+        data: '29/07/2026',
+        titulo: 'Cliente ganhou mais autonomia',
+        itens: [
+            'Botão "Fale comigo" flutuante na tela de agendar: WhatsApp e PIX do barbeiro sempre à mão.',
+            'Cliente agora vê "Meus Agendamentos" (com botão de cancelar, até 30min antes) e o histórico dos últimos cortes.',
+            'Cliente pode atualizar o próprio WhatsApp cadastrado se trocar de número.',
+            'Corrigido bug raro em que a tela de escolher corte podia aparecer vazia numa conexão lenta.'
+        ]
+    },
+    {
+        id: '2026-07-29-02',
+        data: '29/07/2026',
+        titulo: 'Aviso quando o cliente cancela',
+        itens: [
+            'Quando o cliente cancela pelo próprio celular, cai um aviso no sininho flutuante do rodapé, avisando quem foi e qual horário.'
+        ]
+    },
+    {
+        id: '2026-07-29-03',
+        data: '29/07/2026',
+        titulo: 'Ações do Cliente: mais informação',
+        itens: [
+            'O menu que abre ao clicar num cliente agora mostra o corte agendado e um histórico (colapsável) de tudo que ele já cortou com você.',
+            'Nova mensagem pronta "Enviar link de agendamento" — manda o link já pro WhatsApp salvo do cliente, sem digitar nada.',
+            'Aba Clientes ganhou um botão de enviar o link de agendamento direto por WhatsApp.'
+        ]
+    },
+    {
+        id: '2026-07-29-04',
+        data: '29/07/2026',
+        titulo: 'Cobrança e Equipe',
+        itens: [
+            'Aba Cobrança: agora dá pra criar uma cobrança manual (produto danificado, sinal combinado etc.), não só as que vêm de "ainda não pagou".',
+            'Recepcionista pode ser marcada como "também corta cabelo" — só assim ela aparece nas telas de escolher barbeiro.',
+            'Convites pendentes da equipe agora têm botão de remover, e o link de convite parou de dar "link inválido" pra quem nunca tinha feito login.'
+        ]
+    },
+    {
+        id: '2026-07-29-05',
+        data: '29/07/2026',
+        titulo: 'Estoque, Insumos e Promoções mais organizados',
+        itens: [
+            'Cadastrar Produto, Insumo e Promoção agora ficam escondidos atrás de um botão "+ Adicionar", em vez do formulário sempre aberto.',
+            'Novo botão de baixa manual de estoque (perda, quebra, uso interno).',
+            'Serviços agrupados por categoria no Agendamento Presencial e na Fila de Espera — sem mais corte infantil misturado com adulto.'
+        ]
+    },
+    {
+        id: '2026-07-29-06',
+        data: '29/07/2026',
+        titulo: 'Correções no Financeiro e no PIX',
+        itens: [
+            'Ranking "Cortes Mais Vendidos" estava travado por um bug antigo e nunca mostrava nada — corrigido.',
+            'QR Code do PIX corrigido: chave cadastrada com máscara (CPF com pontos, telefone com parênteses) podia gerar um QR que o banco recusava.',
+            'Cards clicáveis (Agenda, cabines) não ficam mais selecionando o texto sem querer ao tocar no celular.'
+        ]
+    },
     {
         id: '2026-07-27-01',
         data: '27/07/2026',
@@ -64,7 +128,21 @@ function initNovidades(){
     const lista = $('novidades-lista');
     if(!btn || !painel || !lista) return;
 
-    lista.innerHTML = NOVIDADES.map(n => `
+    // Converte "dd/mm/aaaa" pra Date e só mantém quem ainda está dentro do
+    // prazo de exibição — o array inteiro fica guardado no código, isso só
+    // filtra o que aparece na tela.
+    function dataDaNovidade(str){
+        const [d,m,a] = (str||'').split('/');
+        return new Date(Number(a), Number(m)-1, Number(d));
+    }
+    const limite = new Date();
+    limite.setDate(limite.getDate() - NOVIDADES_DIAS_VISIVEL);
+    const novidadesVisiveis = NOVIDADES.filter(n => dataDaNovidade(n.data) >= limite);
+
+    if(!novidadesVisiveis.length){
+        lista.innerHTML = '<p style="font-size:.8rem;color:var(--muted);margin:0">Nenhuma novidade recente.</p>';
+    } else {
+    lista.innerHTML = novidadesVisiveis.map(n => `
         <div style="border-left:2.5px solid var(--yellow);padding-left:.65rem">
             <div style="font-size:.68rem;color:var(--muted);margin-bottom:.15rem">${n.data}</div>
             <div style="font-size:.85rem;font-weight:700;margin-bottom:.3rem">${escapeHtml(n.titulo)}</div>
@@ -73,6 +151,7 @@ function initNovidades(){
             </ul>
         </div>
     `).join('');
+    }
 
     function ultimaVista(){
         try{ return localStorage.getItem('prob_novidades_vista') || ''; }catch(e){ return ''; }
