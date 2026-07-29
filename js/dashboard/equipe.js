@@ -324,13 +324,14 @@ $('btn-add-barbeiro').addEventListener('click',async()=>{
     const tipo=$('eq-tipo').value;
     const pct=tipo==='recepcionista'?0:(Number($('eq-pct').value)||50);
     const atende = tipo==='barbeiro' ? true : $('eq-atende').checked;
+    const wpp=($('eq-wpp')?.value||'').replace(/\D/g,'');
     if(!nome){toast('Informe o nome','var(--red)');return;}
     barbeiroData.equipe=barbeiroData.equipe||[];
     const novoId=Date.now().toString();
-    barbeiroData.equipe.push({id:novoId,nome,pct,tipo,atende,criadoEm:new Date().toISOString()});
+    barbeiroData.equipe.push({id:novoId,nome,pct,tipo,atende,wpp:wpp||null,criadoEm:new Date().toISOString()});
     await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
     await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',novoId),{pct});
-    $('eq-nome').value='';$('eq-pct').value='';$('eq-atende').checked=false;
+    $('eq-nome').value='';$('eq-pct').value='';$('eq-atende').checked=false;if($('eq-wpp'))$('eq-wpp').value='';
     renderEquipe();carregarGanhos();toast((tipo==='recepcionista'?'Recepcionista':'Barbeiro')+' adicionado!');
 });
 
@@ -537,7 +538,7 @@ function renderPagamentoComissoes(){
                             : `<span style="font-size:.65rem;background:rgba(245,166,35,.1);color:var(--yellow);border:1px solid rgba(245,166,35,.3);border-radius:20px;padding:.1rem .5rem">Ainda não pago</span>`}
                 </div>
                 ${pago ? `<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-desmarcar-pago="${pago.id}">Desmarcar</button>`
-                       : `<button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-marcar-pago="${b.id}" data-nome="${escAttr(b.nome)}" data-valor="${valor}" data-periodo="${periodo.id}">✓ Marcar como pago</button>`}
+                       : `<button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-marcar-pago="${b.id}" data-nome="${escAttr(b.nome)}" data-valor="${valor}" data-periodo="${periodo.id}" data-periodo-label="${escAttr(periodo.label)}">✓ Marcar como pago</button>`}
             </div>
             <div style="font-size:.85rem;color:var(--muted)">Comissão ${periodo.label} (vence ${periodo.vencimento.toLocaleDateString('pt-BR')}): <strong style="color:var(--text)">R$${valor.toFixed(2)}</strong></div>
 
@@ -594,6 +595,7 @@ function renderPagamentoComissoes(){
             const nome=btn.dataset.nome;
             const valor=Number(btn.dataset.valor);
             const periodo=btn.dataset.periodo;
+            const periodoLabel=btn.dataset.periodoLabel;
             // Dupla confirmação: essa ação já causou marcação sem querer antes.
             if(!confirm(`Marcar a comissão de ${nome} (R$${valor.toFixed(2)}) como paga?`)) return;
             if(!confirm(`Confirma mesmo? Você já pagou R$${valor.toFixed(2)} pra ${nome} agora?`)) return;
@@ -601,6 +603,8 @@ function renderPagamentoComissoes(){
                 equipeId, nome, periodo, valor, pagoEm:new Date().toISOString()
             });
             toast(`✓ Comissão de ${nome} marcada como paga`);
+            const membro=equipe.find(b=>b.id===equipeId);
+            if(typeof abrirComprovanteComissao==='function') abrirComprovanteComissao(membro||{nome}, valor, periodoLabel);
         });
     });
     cont.querySelectorAll('[data-desmarcar-pago]').forEach(btn=>{
@@ -1002,4 +1006,112 @@ $('btn-add-corte').addEventListener('click',async()=>{
     // Mantém categoria selecionada para facilitar adicionar vários serviços da mesma categoria
     renderCortes();toast('Serviço adicionado!');
 });
+}
+
+// ══════════════════════════════════════════════════════════
+// COMPROVANTE DE PAGAMENTO DE COMISSÃO — mesmo padrão visual do
+// comprovante de cliente (agendamentos.js), adaptado pra confirmar pro
+// barbeiro/recepcionista que a comissão dele foi paga e o valor certo.
+// ══════════════════════════════════════════════════════════
+function montarComprovanteComissaoPdfBlob({ nomeBarbearia, barbeiro, periodoLabel, valor }){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a5' });
+    const W = 148;
+    const agora = new Date().toLocaleString('pt-BR');
+
+    const bg = [10,14,20];
+    const azul = [0,212,255];
+    const azulClaro = [130,230,255];
+    const verde = [0,255,136];
+    const textoClaro = [232,244,248];
+    const cinza = [122,159,181];
+
+    doc.setFillColor(...bg);
+    doc.rect(0, 0, W, 40, 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...azul);
+    doc.text("PRO'B", W/2, 18, { align:'center' });
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...azulClaro);
+    doc.text(nomeBarbearia, W/2, 25, { align:'center', maxWidth: W-40 });
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.6);
+    doc.line(30, 30, W-30, 30);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...azul);
+    doc.text('COMPROVANTE DE PAGAMENTO DE COMISSÃO', W/2, 36, { align:'center', maxWidth: W-30 });
+
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8.5);
+    const avisoTexto = 'ATENÇÃO: ESTE DOCUMENTO NÃO É CUPOM FISCAL NEM NOTA FISCAL';
+    const avisoLinhas = doc.splitTextToSize(avisoTexto, W-40);
+    const avisoAltura = 8 + avisoLinhas.length*4.2;
+    doc.setFillColor(40,16,14);
+    doc.roundedRect(14, 46, W-28, avisoAltura, 2, 2, 'F');
+    doc.setTextColor(255,110,90);
+    doc.text(avisoLinhas, W/2, 46+5.5, { align:'center', lineHeightFactor:1.3 });
+
+    const caixa = (x,y,w,h,rotulo,valorTexto,opts={}) => {
+        doc.setFillColor(18,22,28);
+        doc.setDrawColor(42,63,95);
+        doc.roundedRect(x, y, w, h, 2, 2, 'FD');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...cinza);
+        doc.text(rotulo.toUpperCase(), x+4, y+6);
+        doc.setFont('helvetica', opts.negrito ? 'bold' : 'normal');
+        doc.setFontSize(opts.fontSize || 11);
+        doc.setTextColor(...textoClaro);
+        doc.text(String(valorTexto), x+4, y+(opts.fontSize?15:13), { maxWidth: w-8 });
+    };
+
+    let y = 46 + avisoAltura + 7;
+    caixa(14, y, W-28, 20, 'Data do pagamento', agora);
+    y += 26;
+    caixa(14, y, W-28, 18, 'Barbeiro/Equipe', barbeiro || 'Não informado');
+    y += 24;
+    caixa(14, y, W-28, 18, 'Período', periodoLabel || '—');
+    y += 24;
+
+    doc.setFillColor(...bg);
+    doc.setDrawColor(...verde);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(14, y, W-28, 22, 2, 2, 'FD');
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...cinza);
+    doc.text('VALOR PAGO', 20, y+8);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(18);
+    doc.setTextColor(...verde);
+    doc.text(`R$ ${Number(valor).toFixed(2)}`, W-20, y+16, { align:'right' });
+    y += 30;
+
+    doc.setDrawColor(...azul);
+    doc.setLineWidth(0.3);
+    doc.line(14, y, W-14, y);
+    y += 6;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(140,150,160);
+    doc.text("Recibo interno de controle, sem validade fiscal. Gerado pelo sistema Pro'B.", W/2, y, { align:'center', maxWidth: W-24 });
+
+    return doc.output('blob');
+}
+
+function abrirComprovanteComissao(membro, valor, periodoLabel){
+    if(typeof window.jspdf === 'undefined') return; // biblioteca ainda carregando — sem comprovante dessa vez
+    const modal = $('modal-comprovante');
+    if(!modal) return;
+    const blob = montarComprovanteComissaoPdfBlob({
+        nomeBarbearia: barbeiroData.nome || 'Barbearia',
+        barbeiro: membro.nome,
+        periodoLabel,
+        valor
+    });
+    comprovanteAtual = { blob, clienteWhatsapp: membro.wpp||'', nomeArquivo: `comissao-${(membro.nome||'barbeiro').replace(/\s+/g,'_')}-${Date.now()}.pdf` };
+    modal.style.display = 'flex';
 }
