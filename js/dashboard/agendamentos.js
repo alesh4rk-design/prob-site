@@ -677,6 +677,7 @@ function fmtDataExtenso(dataStr){
 // incluído nas mensagens que convidam a marcar um novo horário, pra já
 // deixar o caminho pronto em vez de só falar "agende".
 const MENSAGENS_PRONTAS = {
+    link: (c) => `Olá, ${c.nome}! Agora você pode marcar seu horário na ${barbeiroData.nome||'barbearia'} direto pelo celular, sem precisar ligar — é só abrir esse link e escolher o dia e horário:\n\n${linkClienteAtual}`,
     confirmacao: (c) => `Olá, ${c.nome}! Passando para confirmar seu horário marcado para ${fmtDataExtenso(c.data)} às ${c.hora} na ${barbeiroData.nome||'barbearia'}. Contamos com sua presença!`,
     promocao: (c) => `Olá, ${c.nome}! Temos uma condição especial disponível para você. Que tal aproveitar e agendar seu próximo horário?\n\n${linkClienteAtual}`,
     ausente: (c) => `Olá, ${c.nome}! Notamos que já faz um tempo desde sua última visita na ${barbeiroData.nome||'barbearia'}. Que tal agendar um novo horário? Ficaremos felizes em atendê-lo(a) novamente!\n\n${linkClienteAtual}`,
