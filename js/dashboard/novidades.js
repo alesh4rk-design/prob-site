@@ -197,6 +197,20 @@ function initNovidades(){
         badge.style.display = 'none';
     }
 
+    // O botão flutuante some depois de clicado/visto, e só volta a aparecer
+    // na próxima sessão (aba/navegador fechado e reaberto) — sessionStorage
+    // dura só a sessão atual, diferente do localStorage usado acima só pra
+    // saber se já tem novidade nova.
+    function jaEscondidaNestaSessao(){
+        try{ return sessionStorage.getItem('prob_novidades_escondida')==='1'; }catch(e){ return false; }
+    }
+    function esconderNestaSessao(){
+        try{ sessionStorage.setItem('prob_novidades_escondida','1'); }catch(e){}
+        btn.style.display = 'none';
+    }
+
+    if(jaEscondidaNestaSessao()) btn.style.display = 'none';
+
     if(NOVIDADES.length && NOVIDADES[0].id > ultimaVista()){
         badge.style.display = 'block';
     }
@@ -206,11 +220,15 @@ function initNovidades(){
         painel.style.display = aberto ? 'none' : 'block';
         if(!aberto) marcarComoVista();
     });
-    $('btn-fechar-novidades').addEventListener('click', () => { painel.style.display = 'none'; });
+    $('btn-fechar-novidades').addEventListener('click', () => {
+        painel.style.display = 'none';
+        esconderNestaSessao();
+    });
 
     document.addEventListener('click', (e) => {
         if(painel.style.display === 'block' && !painel.contains(e.target) && e.target !== btn){
             painel.style.display = 'none';
+            esconderNestaSessao();
         }
     });
 }
