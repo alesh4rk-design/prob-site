@@ -688,7 +688,7 @@ async function cancelarAgendamento(id){
 // AÇÕES DO CLIENTE — clicar no nome do cliente num agendamento abre
 // esse menu: forma de pagamento, WhatsApp e modelos de mensagem prontos.
 // ══════════════════════════════════════════════════════════
-let acClienteAtual = {nome:'', wpp:'', agendamentoId:'', data:'', hora:''};
+let acClienteAtual = {nome:'', wpp:'', agendamentoId:'', data:'', hora:'', formaPagamento:null};
 
 function fmtDataExtenso(dataStr){
     if(!dataStr) return '';
@@ -900,6 +900,7 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
         const item = ultimaListaAppts.find(a=>a.id===agendamentoId);
         formaPagamentoAtual = item?.formaPagamento;
     }
+    acClienteAtual.formaPagamento = formaPagamentoAtual || null;
     if(formaPagamentoAtual){
         const btnAtivo = document.querySelector(`.ac-pag-btn[data-pag="${formaPagamentoAtual}"]`);
         if(btnAtivo) btnAtivo.classList.add('active');
@@ -1040,6 +1041,13 @@ function initAcoesClienteExtras(){
     });
 
     $('ac-btn-concluir').addEventListener('click', async()=>{
+        // Exige forma de pagamento antes de concluir — sem isso, o
+        // atendimento fica de fora do gráfico "Receita por forma de
+        // pagamento" no Financeiro, mesmo já concluído e faturado.
+        if(!acClienteAtual.formaPagamento){
+            toast('Escolha a forma de pagamento antes de concluir','var(--yellow)');
+            return;
+        }
         $('modal-acoes-cliente').style.display = 'none';
         if(acClienteAtual.filaId){
             await atenderFila(acClienteAtual.filaId);
@@ -1074,6 +1082,7 @@ function initAcoesClienteExtras(){
                 } else {
                     await updateDoc(doc(db,'fila',acClienteAtual.filaId), {formaPagamento:btn.dataset.pag});
                 }
+                acClienteAtual.formaPagamento = btn.dataset.pag;
                 toast('✓ Forma de pagamento registrada: '+btn.textContent.replace(/[^\wÀ-ÿ]/g,' ').trim());
                 if(!window.__funcionarioMode) carregarAgendamentos();
 
