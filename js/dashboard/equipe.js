@@ -1068,7 +1068,7 @@ function montarComprovanteComissaoPdfBlob({ nomeBarbearia, barbeiro, periodoLabe
     doc.setFont('helvetica','bold');
     doc.setFontSize(14);
     doc.setTextColor(...textoClaro);
-    doc.text(nomeBarbearia, logoW ? (W+logoW)/2 : W/2, 18, { align:'center', maxWidth: W-45 });
+    doc.text(nomeBarbearia, W/2, 18, { align:'center', maxWidth: W-45 });
     doc.setDrawColor(...azul);
     doc.setLineWidth(0.6);
     doc.line(30, 24, W-30, 24);
