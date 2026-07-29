@@ -491,6 +491,9 @@ function renderPagamentoComissoes(){
             const equipeId=btn.dataset.marcarPago;
             const nome=btn.dataset.nome;
             const valor=Number(btn.dataset.valor);
+            // Dupla confirmação: essa ação já causou marcação sem querer antes.
+            if(!confirm(`Marcar a comissão de ${nome} (R$${valor.toFixed(2)}) como paga?`)) return;
+            if(!confirm(`Confirma mesmo? Você já pagou R$${valor.toFixed(2)} pra ${nome} agora?`)) return;
             await addDoc(collection(db,'barbeiros',barbeiroData.uid,'pagamentosComissao'), {
                 equipeId, nome, mes:mesAtual, valor, pagoEm:new Date().toISOString()
             });
