@@ -31,6 +31,14 @@
 <div style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;background:linear-gradient(to bottom,rgba(8,12,20,0.5) 0%,rgba(8,12,20,0.72) 50%,rgba(8,12,20,0.96) 100%);"></div>
 <canvas id="particles-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
 
+<!-- Tela de carregamento — cobre tudo enquanto o Firebase confere se a
+     pessoa já está logada. Sem isso, quem já tinha sessão aberta via um
+     pisca rápido da tela de login antes de cair direto no painel. -->
+<div id="tela-carregando" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg);">
+    <div style="width:44px;height:44px;border-radius:50%;border:4px solid rgba(232,244,248,.12);border-top-color:var(--blue);animation:spinner-girar .8s linear infinite;"></div>
+</div>
+<style>@keyframes spinner-girar{to{transform:rotate(360deg);}}</style>
+
 <!-- ════════ BLOQUEIO ════════ -->
 <section class="screen" id="screen-bloqueio" style="min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;padding:2rem 1rem;">
     <div class="login-box" style="max-width:400px;text-align:center;">
@@ -2075,7 +2083,7 @@ function escapeHtml(str){
 function escAttr(str){
     return String(str??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-const go=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');};
+const go=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');const tc=$('tela-carregando');if(tc)tc.style.display='none';};
 
 function toast(msg,color='var(--green)',duracaoMs){
     const t=$('toast');t.textContent=msg;t.style.borderColor=color;t.style.color=color;
