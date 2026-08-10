@@ -285,6 +285,16 @@
                                 <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('https://alesh4rk-design.github.io/prob-bronze-site/vender.html');toast('✓ Copiado!')">Copiar</button>
                             </div>
                         </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:var(--card2);border:1px solid rgba(93,79,158,.35);border-radius:8px;gap:.5rem;flex-wrap:wrap">
+                            <div style="min-width:0">
+                                <div style="font-size:.8rem;font-weight:700;color:#B39DDB">🖋️ Página de Vendas — Pro'Ink</div>
+                                <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem;word-break:break-all">https://alesh4rk-design.github.io/prob-tatuagem/vender.html</div>
+                            </div>
+                            <div style="display:flex;gap:.4rem;flex-shrink:0">
+                                <a href="https://alesh4rk-design.github.io/prob-tatuagem/vender.html" target="_blank" class="btn-sm btn-ativar" style="text-decoration:none;font-size:.68rem">Abrir</a>
+                                <button class="btn-sm" style="border-color:var(--border);color:var(--muted);font-size:.68rem" onclick="navigator.clipboard.writeText('https://alesh4rk-design.github.io/prob-tatuagem/vender.html');toast('✓ Copiado!')">Copiar</button>
+                            </div>
+                        </div>
                         <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:var(--card2);border:1px solid var(--border);border-radius:8px;gap:.5rem;flex-wrap:wrap">
                             <div style="min-width:0">
                                 <div style="font-size:.8rem;font-weight:700;color:var(--text)">📋 Termos de Uso</div>
@@ -351,6 +361,54 @@
                             <input type="number" id="pb-ren-valor" placeholder="45.00" step="0.01" min="0" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:1rem;outline:none;">
                         </div>
                         <button id="btn-pb-confirmar-renovacao" style="width:100%;padding:.85rem;background:transparent;border:2px solid var(--green);border-radius:8px;color:var(--green);font-weight:700;cursor:pointer;font-size:.9rem;margin-top:.5rem">
+                            Confirmar Renovação
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section-title" style="margin-top:1.5rem">🖋️ Pro'Ink — Assinantes</div>
+                <div class="config-card" id="pi-login-box">
+                    <p style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem">Faça login com a conta admin do Pro'Ink pra ver os negócios cadastrados.</p>
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end">
+                        <div class="input-group" style="flex:1;min-width:160px;margin-bottom:0"><label>E-mail</label><input type="email" id="pi-email" placeholder="admin@email.com"></div>
+                        <div class="input-group" style="flex:1;min-width:160px;margin-bottom:0"><label>Senha</label><input type="password" id="pi-senha"></div>
+                        <button class="btn-sm btn-ativar" style="padding:.55rem 1.1rem;font-size:.8rem" id="btn-pi-login">Entrar</button>
+                    </div>
+                    <p class="err" id="pi-login-erro" style="display:none">Login inválido ou sem permissão de admin.</p>
+                    <p style="margin-top:.4rem"><a href="#" id="pi-link-esqueci-senha" style="font-size:.78rem;color:var(--blue)">Esqueci minha senha</a></p>
+                </div>
+                <div id="pi-painel" style="display:none">
+                    <div class="kpis" style="margin-bottom:1rem">
+                        <div class="kpi"><div class="kpi-val" id="pi-k-pendentes">0</div><div class="kpi-lbl">⏳ Pendentes</div></div>
+                        <div class="kpi green"><div class="kpi-val" id="pi-k-ativos">0</div><div class="kpi-lbl">Ativos</div></div>
+                        <div class="kpi"><div class="kpi-val" id="pi-k-trial">0</div><div class="kpi-lbl">Em trial</div></div>
+                        <div class="kpi red"><div class="kpi-val" id="pi-k-exp">0</div><div class="kpi-lbl">Expirados/vencidos</div></div>
+                    </div>
+                    <div id="pi-lista"><div class="empty">Carregando...</div></div>
+                    <button class="btn-sm" style="border-color:var(--border);color:var(--muted);margin-top:.75rem" id="btn-pi-logout">Sair do Pro'Ink</button>
+                </div>
+
+                <!-- MODAL Renovar assinatura Pro'Ink -->
+                <div id="pi-modal-renovar" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;">
+                    <div style="background:var(--card);border-radius:16px;padding:1.5rem;width:100%;max-width:380px;border:1px solid var(--border);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+                            <div style="font-size:1rem;font-weight:700;color:var(--green)">Renovar assinatura Pro'Ink</div>
+                            <button onclick="document.getElementById('pi-modal-renovar').style.display='none'" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
+                        </div>
+                        <p style="font-size:.82rem;color:var(--text);margin-bottom:1.2rem">Negócio: <strong id="pi-ren-nome" style="color:var(--blue)"></strong></p>
+                        <div class="input-group">
+                            <label>Plano</label>
+                            <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+                                <button class="pi-plano-btn active" data-dias="30" data-plano="Mensal" style="flex:1;padding:.6rem;background:var(--card2);border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-size:.78rem;cursor:pointer">Mensal<br><span style="font-size:.65rem;opacity:.7">30 dias</span></button>
+                                <button class="pi-plano-btn" data-dias="90" data-plano="Trimestral" style="flex:1;padding:.6rem;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer">Trimestral<br><span style="font-size:.65rem;opacity:.7">90 dias</span></button>
+                                <button class="pi-plano-btn" data-dias="365" data-plano="Anual" style="flex:1;padding:.6rem;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer">Anual<br><span style="font-size:.65rem;opacity:.7">365 dias</span></button>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Valor cobrado (R$)</label>
+                            <input type="number" id="pi-ren-valor" placeholder="45.00" step="0.01" min="0" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:1rem;outline:none;">
+                        </div>
+                        <button id="btn-pi-confirmar-renovacao" style="width:100%;padding:.85rem;background:transparent;border:2px solid var(--green);border-radius:8px;color:var(--green);font-weight:700;cursor:pointer;font-size:.9rem;margin-top:.5rem">
                             Confirmar Renovação
                         </button>
                     </div>
@@ -1330,6 +1388,216 @@ window.pbExcluir=async(id,nome)=>{
     try{
         await deleteDoc(doc(pbDb,'usuarios',id));
         await deleteDoc(doc(pbDb,'negocios',id));
+        toast(`${nome} excluído permanentemente`,'var(--red)');
+    }catch(e){
+        toast('Erro ao excluir: '+e.message,'var(--red)');
+    }
+};
+
+// ── Pro'Ink (terceiro projeto Firebase, admin unificado) ──
+const piFirebaseConfig={
+    apiKey:"AIzaSyAC7dqhWfwjK1XixZm7FMzGzKoUKHnUNIA",
+    authDomain:"prob-tatuagem.firebaseapp.com",
+    projectId:"prob-tatuagem",
+    storageBucket:"prob-tatuagem.firebasestorage.app",
+    messagingSenderId:"151431512598",
+    appId:"1:151431512598:web:f25865912348ba01fc6b37"
+};
+const piApp=initializeApp(piFirebaseConfig,"proink");
+const piAuth=getAuth(piApp);
+const piDb=getFirestore(piApp);
+let piNegocios=[];
+let unsubPi=null;
+
+const PI_ADMIN_UID='1nMVCKQqPFaLFdCYrQFOL9LamHl2'; // ADMIN_UID do Pro'Ink (js/admin-config.js daquele projeto)
+
+onAuthStateChanged(piAuth,user=>{
+    if(user && user.uid===PI_ADMIN_UID){
+        $('pi-login-box').style.display='none';
+        $('pi-painel').style.display='block';
+        carregarPiNegocios();
+    }else if(user){
+        // Logado, mas não é a conta admin do Pro'Ink — antes disso ficava
+        // preso mostrando o erro de permissão em vez de voltar pro login.
+        signOut(piAuth);
+        $('pi-login-box').style.display='block';
+        $('pi-painel').style.display='none';
+        $('pi-login-erro').style.display='block';
+        $('pi-login-erro').textContent='Essa conta não tem permissão de admin no Pro\'Ink.';
+        if(unsubPi){unsubPi();unsubPi=null;}
+    }else{
+        $('pi-login-box').style.display='block';
+        $('pi-painel').style.display='none';
+        if(unsubPi){unsubPi();unsubPi=null;}
+    }
+});
+
+$('btn-pi-login').addEventListener('click',async()=>{
+    $('pi-login-erro').style.display='none';
+    try{
+        await signInWithEmailAndPassword(piAuth,$('pi-email').value.trim(),$('pi-senha').value);
+    }catch(e){
+        $('pi-login-erro').style.display='block';
+    }
+});
+$('btn-pi-logout').addEventListener('click',()=>signOut(piAuth));
+
+$('pi-link-esqueci-senha').addEventListener('click',async e=>{
+    e.preventDefault();
+    const email=$('pi-email').value.trim();
+    if(!email){$('pi-login-erro').style.display='block';$('pi-login-erro').textContent='Digite seu e-mail no campo acima e clique em "Esqueci minha senha" de novo.';return;}
+    try{
+        await sendPasswordResetEmail(piAuth,email);
+        $('pi-login-erro').style.display='none';
+        toast(`Enviamos um link de redefinição de senha pra ${email}.`);
+    }catch(err){
+        $('pi-login-erro').style.display='block';
+        $('pi-login-erro').textContent='Não foi possível enviar o e-mail de redefinição.';
+    }
+});
+
+function piDiasRestantes(config){
+    const fim=config.trialFim?.toDate?config.trialFim.toDate():(config.trialFim?new Date(config.trialFim):null);
+    if(!fim)return null;
+    return Math.ceil((fim-new Date())/(1000*60*60*24));
+}
+function piStatusEfetivo(config){
+    if(config.status==='pendente')return 'pendente';
+    if(config.status==='expirado')return 'expirado';
+    if(config.status==='ativo')return 'ativo';
+    const d=piDiasRestantes(config);
+    if(config.status==='trial'&&d!==null&&d<0)return 'vencido';
+    return 'trial';
+}
+
+function carregarPiNegocios(){
+    if(unsubPi)unsubPi();
+    unsubPi=onSnapshot(collection(piDb,'negocios'),snap=>{
+        piNegocios=[];
+        snap.forEach(d=>piNegocios.push({id:d.id,...d.data()}));
+        renderPiLista();
+    },err=>{
+        console.error('pro-ink:',err);
+        $('pi-lista').innerHTML=`<div class="empty">Erro ao carregar (${err.code||err.message}). Confira se essa conta tem permissão de admin no Pro'Ink.</div>`;
+    });
+}
+
+function renderPiLista(){
+    let at=0,tr=0,ex=0,pd=0;
+    piNegocios.forEach(n=>{
+        const s=piStatusEfetivo(n);
+        if(s==='ativo')at++;else if(s==='trial')tr++;else if(s==='pendente')pd++;else ex++;
+    });
+    $('pi-k-ativos').textContent=at;
+    $('pi-k-trial').textContent=tr;
+    $('pi-k-exp').textContent=ex;
+    const kPend=$('pi-k-pendentes');
+    if(kPend)kPend.textContent=pd;
+
+    if(!piNegocios.length){$('pi-lista').innerHTML='<div class="empty">Nenhum negócio cadastrado ainda.</div>';return;}
+
+    const bc={ativo:'badge-ativo',trial:'badge-trial',expirado:'badge-exp',vencido:'badge-exp',pendente:'badge-pendente'};
+    $('pi-lista').innerHTML=piNegocios.map(n=>{
+        const s=piStatusEfetivo(n);
+        const d=piDiasRestantes(n);
+        const diasTxt=s==='pendente'?'aguardando aprovação':(s==='trial'&&d!==null?`${d}d de trial restantes`:(s==='ativo'?'assinatura ativa':'vencido/bloqueado'));
+        const wpp=n.whatsappNegocio?`<a class="btn-sm btn-wpp-cobrar" style="text-decoration:none" href="https://wa.me/${n.whatsappNegocio.replace(/\D/g,'')}" target="_blank">💬 WPP</a>`:'';
+        const hist=n.historicoPagamentos||[];
+        const ultimoPag=hist.length?hist[hist.length-1]:null;
+        const totalPagoHist=hist.reduce((s,p)=>s+Number(p.valor||0),0);
+        const planoTag=ultimoPag
+            ?`<span style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:5px;padding:.15rem .5rem;color:var(--yellow)">💳 ${ultimoPag.plano} · R$${Number(ultimoPag.valor).toFixed(2)}</span>
+              <span style="background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);border-radius:5px;padding:.15rem .5rem;color:var(--green)">Total pago: R$${totalPagoHist.toFixed(2)}</span>`
+            :`<span style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:5px;padding:.15rem .5rem;color:var(--muted)">Nenhum pagamento registrado</span>`;
+        return `<div class="barb-card">
+            <div class="barb-info">
+                <div class="barb-nome">${escapeHtml(n.nome||'Sem nome')}</div>
+                <div class="barb-meta">${diasTxt}</div>
+                <div class="barb-meta" style="margin-top:.3rem;display:flex;gap:.6rem;flex-wrap:wrap">${planoTag}</div>
+                <div class="barb-meta" style="font-size:.68rem;font-family:'Courier New',monospace;color:var(--muted)">${n.id}</div>
+            </div>
+            <span class="badge ${bc[s]||'badge-bloq'}">${s}</span>
+            <div class="barb-actions">
+                ${s==='pendente'?`<button class="btn-sm btn-ativar-trial" onclick="piAtivarTrial('${n.id}')">🎁 Ativar Trial (7 dias)</button>`:''}
+                <a class="btn-sm btn-ativar" style="text-decoration:none" href="https://alesh4rk-design.github.io/prob-tatuagem/tatuador.html" target="_blank">🔗 Painel do Dono</a>
+                <button class="btn-sm btn-renovar" onclick="piAbrirRenovar('${n.id}','${escAttr(n.nome||'negócio')}')">Renovar</button>
+                ${s!=='expirado'?`<button class="btn-sm btn-bloquear" onclick="piBloquear('${n.id}')">Bloquear</button>`:`<button class="btn-sm btn-ativar" onclick="piAtivar('${n.id}')">Reativar</button>`}
+                ${wpp}
+                <button class="btn-sm" style="border-color:rgba(255,75,43,.4);color:var(--red)" onclick="piExcluir('${n.id}','${escAttr(n.nome||'negócio')}')">Excluir</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+window.piAtivarTrial=async id=>{
+    const trialFim=new Date();trialFim.setDate(trialFim.getDate()+7);
+    await updateDoc(doc(piDb,'negocios',id),{status:'trial',trialInicio:new Date().toISOString(),trialFim:trialFim.toISOString()});
+    toast('Teste grátis de 7 dias liberado!');
+};
+window.piAtivar=async id=>{
+    await updateDoc(doc(piDb,'negocios',id),{status:'ativo'});
+    toast('Pro\'Ink ativado!');
+};
+window.piBloquear=async id=>{
+    if(!confirm('Bloquear o acesso desse negócio no Pro\'Ink?'))return;
+    await updateDoc(doc(piDb,'negocios',id),{status:'expirado'});
+    toast('Bloqueado','var(--red)');
+};
+
+let piRenId=null,piRenNome=null,piRenDias=30,piRenPlano='Mensal';
+window.piAbrirRenovar=(id,nome)=>{
+    piRenId=id;piRenNome=nome;piRenDias=30;piRenPlano='Mensal';
+    $('pi-ren-nome').textContent=nome;
+    $('pi-ren-valor').value='45.00';
+    document.querySelectorAll('.pi-plano-btn').forEach(b=>{
+        const ativo=b.dataset.dias==='30';
+        b.classList.toggle('active',ativo);
+        b.style.borderColor=ativo?'var(--blue)':'var(--border)';
+        b.style.color=ativo?'var(--blue)':'var(--muted)';
+    });
+    $('pi-modal-renovar').style.display='flex';
+};
+document.querySelectorAll('.pi-plano-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        document.querySelectorAll('.pi-plano-btn').forEach(b=>{
+            b.classList.remove('active');
+            b.style.borderColor='var(--border)';b.style.color='var(--muted)';
+        });
+        btn.classList.add('active');
+        btn.style.borderColor='var(--blue)';btn.style.color='var(--blue)';
+        piRenDias=Number(btn.dataset.dias);
+        piRenPlano=btn.dataset.plano;
+    });
+});
+$('btn-pi-confirmar-renovacao').addEventListener('click',async()=>{
+    const valor=parseFloat($('pi-ren-valor').value);
+    if(!valor||valor<=0){toast('Informe um valor válido','var(--red)');return;}
+    const btn=$('btn-pi-confirmar-renovacao');
+    btn.disabled=true;btn.textContent='Salvando...';
+    try{
+        const n=piNegocios.find(x=>x.id===piRenId);
+        const historico=(n?.historicoPagamentos||[]).slice();
+        const validaAte=new Date();validaAte.setDate(validaAte.getDate()+piRenDias);
+        historico.push({data:new Date().toISOString(),plano:piRenPlano,dias:piRenDias,valor});
+        await updateDoc(doc(piDb,'negocios',piRenId),{
+            status:'ativo',
+            assinaturaValidaAte:validaAte.toISOString(),
+            historicoPagamentos:historico
+        });
+        toast(`✓ ${piRenNome} renovado — ${piRenPlano} (R$${valor.toFixed(2)})`);
+        $('pi-modal-renovar').style.display='none';
+    }catch(e){
+        toast('Erro ao renovar: '+e.message,'var(--red)');
+    }
+    btn.disabled=false;btn.textContent='Confirmar Renovação';
+});
+
+window.piExcluir=async(id,nome)=>{
+    if(!confirm(`⚠️ EXCLUIR "${nome}" permanentemente do Pro'Ink?\n\nIsso vai remover o acesso e os dados de configuração do negócio.\n\nEssa ação NÃO pode ser desfeita!`))return;
+    if(!confirm(`Tem certeza que quer excluir "${nome}"?`))return;
+    try{
+        await deleteDoc(doc(piDb,'usuarios',id));
+        await deleteDoc(doc(piDb,'negocios',id));
         toast(`${nome} excluído permanentemente`,'var(--red)');
     }catch(e){
         toast('Erro ao excluir: '+e.message,'var(--red)');
