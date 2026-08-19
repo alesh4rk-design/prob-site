@@ -440,6 +440,91 @@ async function confirmarPresencial(){
     btn.disabled=false;btn.textContent='Confirmar Agendamento';
 }
 
+// ══ CORTE ESQUECIDO — lançamento retroativo ══
+// Deixa registrar um atendimento que já aconteceu (e já foi pago ou não)
+// mas ninguém lançou no sistema na hora. Ao contrário do agendamento
+// presencial, entra direto como "concluido" — não precisa passar pelo
+// fluxo de aguardar/concluir, já que o corte já foi feito de verdade.
+function initEsquecido(){
+    const btnAbrir=document.getElementById('btn-abrir-esquecido');
+    const modal=document.getElementById('modal-esquecido');
+    if(!btnAbrir||!modal)return;
+
+    btnAbrir.addEventListener('click',()=>{
+        renderChecklistCortes('esq-corte-lista','esq-corte-total');
+
+        const equipe=(barbeiroData.equipe||[]).filter(atendeClientes);
+        const eqWrap=document.getElementById('esq-equipe-wrap');
+        const eqSel=document.getElementById('esq-barbeiro');
+        if(equipe.length>0){
+            eqWrap.style.display='block';
+            eqSel.innerHTML='<option value="">Selecione...</option>'+
+                equipe.map(b=>`<option value="${b.nome}">${b.nome}</option>`).join('');
+        } else {
+            eqWrap.style.display='none';
+        }
+
+        const hoje=fmtHoje();
+        document.getElementById('esq-data').value=hoje;
+        document.getElementById('esq-data').max=hoje; // não faz sentido lançar um esquecido "do futuro"
+        document.getElementById('esq-hora').value=new Date().toTimeString().slice(0,5);
+        document.getElementById('esq-nome').value='';
+        document.getElementById('esq-wpp').value='';
+        document.getElementById('esq-forma-pagamento').value='';
+        document.getElementById('esq-status-msg').textContent='';
+
+        modal.style.display='flex';
+    });
+
+    document.getElementById('btn-confirmar-esquecido').addEventListener('click',confirmarEsquecido);
+}
+
+async function confirmarEsquecido(){
+    const nome=document.getElementById('esq-nome').value.trim();
+    const wpp=document.getElementById('esq-wpp').value.replace(/\D/g,'');
+    const selecao=getSelecaoCortes('esq-corte-lista');
+    const equipe=barbeiroData.equipe||[];
+    const barbeiroNome=equipe.length>0?document.getElementById('esq-barbeiro').value:'';
+    const data=document.getElementById('esq-data').value;
+    const hora=document.getElementById('esq-hora').value;
+    const formaPagamento=document.getElementById('esq-forma-pagamento').value;
+    const statusMsg=document.getElementById('esq-status-msg');
+
+    if(!nome){toast('Informe o nome do cliente','var(--red)');return;}
+    if(!selecao){toast('Selecione pelo menos um serviço','var(--red)');return;}
+    if(equipe.length>0&&!barbeiroNome){toast('Selecione o barbeiro','var(--red)');return;}
+    if(!data||!hora){toast('Informe data e hora do atendimento','var(--red)');return;}
+    if(!formaPagamento){toast('Selecione a forma de pagamento','var(--red)');return;}
+
+    const btn=document.getElementById('btn-confirmar-esquecido');
+    btn.disabled=true;btn.textContent='Salvando...';
+
+    try{
+        await addDoc(collection(db,'agendamentos'),{
+            barbeiroId:barbeiroData.uid,
+            clienteNome:nome,
+            clienteWhatsapp:wpp||'',
+            corte:selecao.nome,
+            preco:selecao.preco,
+            barbeiro:barbeiroNome,
+            data,hora,
+            status:'concluido',
+            origem:'esquecido',
+            formaPagamento,
+            criadoEm:new Date().toISOString()
+        });
+
+        registrarClienteConcluido(barbeiroData.uid, nome, wpp, selecao.nome);
+        toast('✓ Atendimento lançado!');
+        document.getElementById('modal-esquecido').style.display='none';
+    }catch(e){
+        statusMsg.textContent='Erro ao salvar: '+e.message;
+        statusMsg.style.color='var(--red)';
+        toast('Erro ao salvar: '+e.message,'var(--red)');
+    }
+    btn.disabled=false;btn.textContent='Lançar Atendimento';
+}
+
 // Cache de promoções vinculadas a cliente (simples/pacote/desconto/
 // fidelidade — tudo, exceto cupom, que não tem dono) e de fidelidade por
 // WhatsApp do cliente, usado para mostrar um selo na Agenda quando o

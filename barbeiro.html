@@ -544,8 +544,11 @@
             <div class="stat-card" style="border-color:rgba(255,75,43,0.3)"><div class="stat-val" id="stat-cancelados" style="color:var(--red)">0</div><div class="stat-lbl">Cancelados hoje</div></div>
         </div>
 
-        <button id="btn-abrir-presencial" style="width:100%;padding:.75rem;margin-bottom:1rem;background:rgba(0,255,136,.08);border:1.5px dashed rgba(0,255,136,.4);border-radius:10px;color:var(--green);font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s">
+        <button id="btn-abrir-presencial" style="width:100%;padding:.75rem;margin-bottom:.6rem;background:rgba(0,255,136,.08);border:1.5px dashed rgba(0,255,136,.4);border-radius:10px;color:var(--green);font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s">
             ➕ Agendamento Presencial
+        </button>
+        <button id="btn-abrir-esquecido" style="width:100%;padding:.75rem;margin-bottom:1rem;background:rgba(245,166,35,.08);border:1.5px dashed rgba(245,166,35,.4);border-radius:10px;color:var(--yellow);font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s">
+            🕐 Lançar Corte Esquecido
         </button>
 
         <div class="section-title">Agendamentos de Hoje</div>
@@ -609,6 +612,68 @@
 
             <button id="btn-confirmar-presencial" style="width:100%;padding:.85rem;background:transparent;border:2px solid var(--green);border-radius:8px;color:var(--green);font-weight:700;cursor:pointer;font-size:.9rem">
                 Confirmar Agendamento
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL Corte Esquecido (lançamento retroativo) -->
+    <div id="modal-esquecido" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;">
+        <div style="background:var(--card);border-radius:16px;padding:1.5rem;width:100%;max-width:400px;border:1px solid var(--border);max-height:90vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+                <div style="font-size:1rem;font-weight:700;color:var(--yellow)">🕐 Lançar Corte Esquecido</div>
+                <button onclick="document.getElementById('modal-esquecido').style.display='none'" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
+            </div>
+            <p style="font-size:.75rem;color:var(--muted);margin:0 0 1.1rem">Use quando um atendimento já aconteceu (e foi pago) mas ninguém registrou na hora. Ele entra direto como concluído.</p>
+
+            <div class="input-group" style="margin-bottom:.85rem">
+                <label>Nome do cliente</label>
+                <input type="text" id="esq-nome" placeholder="Digite o nome">
+            </div>
+            <div class="input-group" style="margin-bottom:.85rem">
+                <label>WhatsApp (opcional)</label>
+                <input type="tel" id="esq-wpp" placeholder="21999990000">
+            </div>
+            <div class="input-group" style="margin-bottom:.85rem">
+                <label>Serviços</label>
+                <details style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;overflow:hidden">
+                    <summary style="padding:.75rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:.85rem;color:var(--text)">
+                        <span>Toque para escolher (pode marcar mais de um)</span>
+                        <span id="esq-corte-total" style="color:var(--green);font-weight:700;flex-shrink:0;margin-left:.6rem">Total: R$0</span>
+                    </summary>
+                    <div id="esq-corte-lista" style="max-height:180px;overflow-y:auto;padding:.6rem;border-top:1.5px solid var(--border)"></div>
+                </details>
+            </div>
+            <div class="input-group" id="esq-equipe-wrap" style="display:none;margin-bottom:.85rem">
+                <label>Barbeiro</label>
+                <select id="esq-barbeiro" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:.6rem;margin-bottom:.85rem">
+                <div class="input-group" style="flex:1;margin-bottom:0">
+                    <label>Data do atendimento</label>
+                    <input type="date" id="esq-data">
+                </div>
+                <div class="input-group" style="flex:1;margin-bottom:0">
+                    <label>Hora</label>
+                    <input type="time" id="esq-hora">
+                </div>
+            </div>
+            <div class="input-group" style="margin-bottom:1rem">
+                <label>Forma de pagamento</label>
+                <select id="esq-forma-pagamento" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
+                    <option value="">Selecione...</option>
+                    <option value="dinheiro">💵 Dinheiro</option>
+                    <option value="pix">📱 Pix</option>
+                    <option value="debito">💳 Débito</option>
+                    <option value="credito">💳 Crédito</option>
+                    <option value="pendente">⏳ Ainda não pagou</option>
+                </select>
+            </div>
+            <div style="font-size:.72rem;color:var(--muted);margin-bottom:1rem" id="esq-status-msg"></div>
+
+            <button id="btn-confirmar-esquecido" style="width:100%;padding:.85rem;background:transparent;border:2px solid var(--yellow);border-radius:8px;color:var(--yellow);font-weight:700;cursor:pointer;font-size:.9rem">
+                Lançar Atendimento
             </button>
         </div>
     </div>
@@ -2987,6 +3052,7 @@ async function initDash(){
     initHorarios();
     initVisual();
     initPresencial();
+    initEsquecido();
     initFila();
     initEstoque();
     if(typeof initNovidades==='function') initNovidades();
@@ -3099,7 +3165,7 @@ async function initDash(){
 <script defer src="js/dashboard/equipe.js?v=20260729g"></script>
 <script defer src="js/dashboard/promocoes.js?v=20260727q"></script>
 <script defer src="js/dashboard/clientes.js?v=20260727o"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20260729h"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20260819a"></script>
 <script defer src="js/dashboard/horarios.js?v=20260727q"></script>
 <script defer src="js/dashboard/financeiro.js?v=20260729b"></script>
 <script defer src="js/dashboard/auth.js?v=20260727r"></script>
