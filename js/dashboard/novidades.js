@@ -15,9 +15,93 @@
 // não aparecem mais no painel.
 // ══════════════════════════════════════════════════════════
 const NOVIDADES_DIAS_VISIVEL = 21;
-const NOVIDADES_MAX_VISIVEIS = 6;
+const NOVIDADES_MAX_VISIVEIS = 8;
 
 const NOVIDADES = [
+    {
+        id: '2026-10-03-08',
+        data: '03/10/2026',
+        titulo: 'Nova aba: Histórico de Cortes',
+        itens: [
+            'Menu Pessoas → Histórico de Cortes: todos os cortes concluídos de cada barbeiro e seus, do mais recente pro mais antigo.',
+            'Filtre por período (hoje, 7 dias, 30 dias, mês, tudo ou datas), por barbeiro e busque por cliente ou serviço.',
+            'Veja quantidade de cortes, faturado, ticket médio, quanto está a receber e o total de cada barbeiro.',
+            'Toque num corte pra editar, registrar pagamento ou chamar no WhatsApp. Os cortes de quem só aluga a cadeira não entram.'
+        ]
+    },
+    {
+        id: '2026-10-03-07',
+        data: '03/10/2026',
+        titulo: 'Equipe: dono na lista e barbeiro que aluga a cadeira',
+        itens: [
+            'Novo tipo "Eu (dono)": você aparece pro cliente escolher, sem comissão e sem precisar de link de acesso.',
+            'Novo tipo "Barbeiro que aluga a cadeira": informe o valor do aluguel, se é semanal, quinzenal ou mensal e o dia. Ele não aparece nos agendamentos e os cortes dele não entram no seu faturamento.',
+            'No dia combinado, em Pagamento de Comissões, aparece o aluguel que ele deve e o botão "Recebi dele". O aluguel entra no seu lucro (card Aluguel de cadeiras na Gestão) e o sino avisa quando está pendente.',
+            'Cada barbeiro agora tem "Forma de pagamento": comissionado (% do corte) ou aluga a cadeira (aluguel + %, só % ou só aluguel). Só o dono altera.'
+        ]
+    },
+    {
+        id: '2026-10-03-06',
+        data: '03/10/2026',
+        titulo: 'Despesas com data de pagamento',
+        itens: [
+            'Gastos agora podem ser semanais (ex: diarista toda sexta), além de fixos, parcelados e só do mês.',
+            'Informe o dia do vencimento de cada gasto. O card "Próximos pagamentos" mostra o que vence nos próximos 14 dias e o que está atrasado, com o botão "Paguei".',
+            'O sino de avisos lembra de pagamento atrasado ou que vence hoje ou amanhã. Use "Editar" pra colocar data nos gastos que você já tinha.',
+            'Insumos e produtos: o campo agora é "Data da compra" e o gasto vai pro mês certo. Em "+ Repor" o sistema pergunta quando você comprou.'
+        ]
+    },
+    {
+        id: '2026-10-03-05',
+        data: '03/10/2026',
+        titulo: 'Cortes: editar, esquecido na fila e concluídos recentes',
+        itens: [
+            'Dá pra editar um atendimento já concluído (serviço, valor, data, hora, barbeiro, cliente e forma de pagamento): abra o corte e toque em "Editar este atendimento".',
+            'Aba Agendamentos ganhou "Concluídos recentes (7 dias)" pra achar cortes de dias passados e corrigi-los.',
+            'O botão "Lançar Corte Esquecido" agora também aparece na Fila de Espera.'
+        ]
+    },
+    {
+        id: '2026-10-03-04',
+        data: '03/10/2026',
+        titulo: 'Quem não pagou não conta como faturado',
+        itens: [
+            'Corte marcado como "Ainda não pagou" não entra mais no faturamento, no lucro, nos gráficos, nos relatórios nem na comissão do barbeiro até o pagamento ser registrado.',
+            'O que falta receber aparece como "A receber" na Gestão, na Equipe e no painel do barbeiro.',
+            'Ao registrar a forma de pagamento, o valor entra sozinho no faturamento e na comissão. O faturamento do mês pode ficar menor do que antes: agora ele mostra só o que foi pago.'
+        ]
+    },
+    {
+        id: '2026-10-03-03',
+        data: '03/10/2026',
+        titulo: 'Agenda respeita a duração dos serviços',
+        itens: [
+            'Um atendimento ocupa o tempo todo do serviço (campo Duração em Cortes): um Corte + Barba de 1h às 10h bloqueia também as 10h30.',
+            'Horários que encostariam em outro atendimento, em um bloqueio ou passariam do fechamento não aparecem pro cliente nem no agendamento presencial.',
+            'Horário bloqueado pra barbearia toda (almoço, feriado) agora vale mesmo quando o cliente escolhe um barbeiro específico. Confira se cada serviço está com a duração certa.'
+        ]
+    },
+    {
+        id: '2026-10-03-02',
+        data: '03/10/2026',
+        titulo: 'Privacidade dos clientes',
+        itens: [
+            'Nome completo e WhatsApp dos clientes (agendamentos, fila e lista de clientes) ficam visíveis só pra você, sua equipe logada e o próprio cliente.',
+            'A tela do cliente e a TV mostram só o primeiro nome e a inicial, sem telefone.',
+            'Quem agenda sem login vê "Meus Agendamentos" só no mesmo celular em que agendou; com conta, vê pela conta.'
+        ]
+    },
+    {
+        id: '2026-10-03-01',
+        data: '03/10/2026',
+        titulo: 'Correções',
+        itens: [
+            'Depois das 21h o sistema achava que já era o dia seguinte (agenda de hoje, receita do dia e data dos cortes). Agora usa a data do seu aparelho.',
+            'Segundo desconto pra cliente da fila era calculado sobre o valor já descontado. Corrigido.',
+            'Funcionário que atende alguém da fila agora leva o WhatsApp, a forma de pagamento e o desconto do cliente.',
+            'Salvar a % de comissão de um barbeiro não apaga mais o combinado de pagamento dele.'
+        ]
+    },
     {
         id: '2026-07-29-09',
         data: '29/07/2026',
