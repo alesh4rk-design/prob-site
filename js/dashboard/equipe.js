@@ -168,6 +168,51 @@ let comissoesCache = {};
 // com o próprio dia). id -> {freq:'semanal'|'quinzenal'|'mensal', dia:number}
 let comissaoConfigCache = {};
 
+// ── Forma de pagamento de cada barbeiro ──
+// comissao: o barbeiro recebe X% de cada corte (padrão).
+// cadeira : o barbeiro aluga a cadeira. O cliente paga no caixa da
+//           barbearia; o dono repassa ao barbeiro o valor dos cortes menos a
+//           parte do dono (% por corte) e menos o aluguel fixo do período
+//           (semanal/quinzenal/mensal, o mesmo combinado de Pagamento de
+//           Comissões). cadeiraTipo: 'misto' (aluguel + %), 'pct' (só %),
+//           'fixo' (só aluguel).
+function pctDoBarbeiro(m){
+    if(!m) return 50;
+    if(m.modelo==='cadeira') return m.cadeiraTipo==='fixo' ? 100 : Math.max(0, 100 - Number(m.pctDono||0));
+    return Number(m.pctComissao ?? m.pct ?? 50);
+}
+function aluguelDoBarbeiro(m){
+    return (m && m.modelo==='cadeira' && m.cadeiraTipo!=='pct') ? Number(m.aluguel||0) : 0;
+}
+function descricaoPagamentoBarbeiro(m){
+    if(m.modelo!=='cadeira') return `Comissão: <span style="color:var(--blue);font-weight:700">${m.pct}%</span> por corte`;
+    const cfg = comissaoConfigCache[m.id] || {freq:'mensal'};
+    const per = {semanal:'semana',quinzenal:'quinzena',mensal:'mês'}[cfg.freq]||'mês';
+    const partes = [];
+    if(m.cadeiraTipo!=='pct') partes.push(`aluguel <b style="color:var(--yellow)">R$${Number(m.aluguel||0).toFixed(2)}/${per}</b>`);
+    if(m.cadeiraTipo!=='fixo') partes.push(`<b style="color:var(--yellow)">${m.pctDono||0}%</b> de cada corte pro dono`);
+    return `🪑 Aluga a cadeira: ${partes.join(' + ')}`;
+}
+// Quantas vezes o aluguel vence dentro de um mês (pro lucro do mês)
+function vezesAluguelNoMes(cfg, mesStr){
+    if(cfg.freq==='quinzenal') return 2;
+    if(cfg.freq!=='semanal') return 1;
+    // semanal: quantas vezes o dia combinado cai no mês (4 ou 5)
+    const [a,mm]=mesStr.split('-').map(Number);
+    let n=0; const ultimo=new Date(a,mm,0).getDate();
+    for(let d=1; d<=ultimo; d++) if(new Date(a,mm-1,d).getDay()===Number(cfg.dia||0)) n++;
+    return n;
+}
+// Total de aluguel de cadeira que o dono recebe no mês
+function aluguelCadeirasNoMes(mesStr){
+    return (barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista').reduce((s,b)=>{
+        const v=aluguelDoBarbeiro(b); if(!v) return s;
+        const cfg = comissaoConfigCache[b.id] || {freq:'mensal', dia:5};
+        return s + v*vezesAluguelNoMes(cfg, mesStr);
+    },0);
+}
+window.pctDoBarbeiro=pctDoBarbeiro; window.aluguelDoBarbeiro=aluguelDoBarbeiro; window.aluguelCadeirasNoMes=aluguelCadeirasNoMes;
+
 function escutarComissoes(){
     if(window.__recepcionista || window.__comissoesListenerAtivo) return;
     window.__comissoesListenerAtivo = true;
@@ -175,13 +220,24 @@ function escutarComissoes(){
     onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'comissoes'), snap=>{
         comissoesCache = {};
         comissaoConfigCache = {};
+        const modelos = {};
         snap.forEach(d=>{
             const dados=d.data();
             comissoesCache[d.id] = dados.pct;
             comissaoConfigCache[d.id] = {freq: dados.freqComissao||'mensal', dia: dados.diaComissao ?? 5};
+            modelos[d.id] = dados;
         });
         (barbeiroData.equipe||[]).forEach(e=>{
-            if(e.tipo!=='recepcionista') e.pct = comissoesCache[e.id] ?? (e.pct ?? 50);
+            if(e.tipo==='recepcionista') return;
+            const m = modelos[e.id] || {};
+            e.modelo = m.modelo || 'comissao';
+            e.cadeiraTipo = m.cadeiraTipo || 'misto';
+            e.pctDono = Number(m.pctDono || 0);
+            e.aluguel = Number(m.aluguel || 0);
+            e.pctComissao = m.pctComissao ?? comissoesCache[e.id] ?? (e.pct ?? 50);
+            // ".pct" = quanto do valor do corte fica com o barbeiro — é o que o
+            // resto do sistema (ganhos, comissões, lucro) já usa
+            e.pct = pctDoBarbeiro(e);
         });
         renderEquipe();
         if(typeof carregarGanhos==='function') carregarGanhos();
@@ -225,39 +281,97 @@ function renderEquipe(){
             ? `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">Organiza agendamentos, fila e clientes${recepAtende?' · <span style="color:var(--green)">✂️ também corta cabelo</span>':''}</div>`
             : (modoLeitura
                 ? ''
-                : `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">Comissão: <span style="color:var(--blue);font-weight:700">${b.pct||50}%</span> por corte</div>`);
+                : `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">${descricaoPagamentoBarbeiro(b)}</div>`);
 
         const acoes = modoLeitura ? '' : `
             <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
-                ${ehRecep?'':`
-                <input type="number" class="pct-input" data-idx="${i}" value="${b.pct||50}"
-                    min="0" max="100" step="5"
-                    style="width:58px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;color:var(--text);font-size:.85rem;text-align:center;">
-                <span style="font-size:.75rem;color:var(--muted)">%</span>
-                <button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-save="${i}">Salvar</button>`}
+                ${ehRecep?'':`<button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-editar-pagto="${i}">💰 Forma de pagamento</button>`}
                 ${ehRecep?`<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-toggle-atende="${i}">${recepAtende?'✂️ Também corta: Sim':'✂️ Também corta: Não'}</button>`:''}
                 <button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-trocar-tipo="${i}" title="Trocar entre Barbeiro e Recepcionista">🔄 ${ehRecep?'Virar Barbeiro':'Virar Recepcionista'}</button>
                 <button class="btn-del" data-idx="${i}">Remover</button>
             </div>`;
 
+        const editor = (ehRecep||modoLeitura) ? '' : `
+            <div data-editor-pagto="${i}" style="display:none;width:100%;margin-top:.6rem;padding:.75rem;background:var(--card2);border:1px dashed var(--border);border-radius:10px">
+                <div class="input-group" style="margin-bottom:.6rem"><label>Como esse barbeiro trabalha?</label>
+                    <select data-modelo="${i}" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none">
+                        <option value="comissao" ${b.modelo!=='cadeira'?'selected':''}>✂️ Comissionado — recebe uma % de cada corte</option>
+                        <option value="cadeira" ${b.modelo==='cadeira'?'selected':''}>🪑 Aluga a cadeira — paga ao dono</option>
+                    </select></div>
+                <div data-campos-comissao="${i}" style="${b.modelo==='cadeira'?'display:none':''}">
+                    <div class="input-group" style="margin-bottom:.6rem"><label>% de cada corte que fica com o barbeiro</label>
+                        <input type="number" data-pct-comissao="${i}" value="${b.pctComissao??b.pct??50}" min="0" max="100" step="5" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none"></div>
+                </div>
+                <div data-campos-cadeira="${i}" style="${b.modelo==='cadeira'?'':'display:none'}">
+                    <div class="input-group" style="margin-bottom:.6rem"><label>Como ele paga pela cadeira?</label>
+                        <select data-cadeira-tipo="${i}" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none">
+                            <option value="misto" ${b.cadeiraTipo==='misto'||!b.cadeiraTipo?'selected':''}>Aluguel fixo + % dos cortes</option>
+                            <option value="pct" ${b.cadeiraTipo==='pct'?'selected':''}>Só % dos cortes</option>
+                            <option value="fixo" ${b.cadeiraTipo==='fixo'?'selected':''}>Só aluguel fixo</option>
+                        </select></div>
+                    <div class="input-group" data-campo-aluguel="${i}" style="margin-bottom:.6rem;${b.cadeiraTipo==='pct'?'display:none':''}"><label>Valor do aluguel (R$ por período)</label>
+                        <input type="number" data-aluguel="${i}" value="${b.aluguel||''}" min="0" step="10" placeholder="Ex: 300" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none"></div>
+                    <div class="input-group" data-campo-pctdono="${i}" style="margin-bottom:.6rem;${b.cadeiraTipo==='fixo'?'display:none':''}"><label>% de cada corte que vai pro dono</label>
+                        <input type="number" data-pct-dono="${i}" value="${b.pctDono||''}" min="0" max="100" step="5" placeholder="Ex: 10" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none"></div>
+                    <p style="font-size:.7rem;color:var(--muted);margin:0 0 .6rem">O cliente paga no caixa da barbearia. No fim de cada período (semanal, quinzenal ou mensal — escolha em <b>Pagamento de Comissões</b>, logo abaixo), o sistema calcula o repasse: valor dos cortes − % do dono − aluguel. Se ele faturar menos que o aluguel, aparece quanto ele deve ao dono.</p>
+                </div>
+                <button class="btn-save" style="width:100%;padding:.55rem" data-salvar-pagto="${i}">Salvar forma de pagamento</button>
+            </div>`;
         return `<div class="service-item" style="flex-wrap:wrap">
             <div style="flex:1;min-width:140px">
                 <div class="service-name" style="padding-right:0">${escapeHtml(b.nome)}${badge}</div>
                 ${infoLinha}
             </div>
             ${acoes}
+            ${editor}
         </div>`;
     }).join('');
 
     if(modoLeitura) return; // recepcionista não edita/remove/vê comissão
 
-    container.querySelectorAll('[data-save]').forEach(btn=>{
+    const q1=(attr,i)=>container.querySelector(`[${attr}="${i}"]`);
+    container.querySelectorAll('[data-editar-pagto]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            const ed=q1('data-editor-pagto',btn.dataset.editarPagto);
+            ed.style.display = ed.style.display==='none' ? 'block' : 'none';
+        });
+    });
+    container.querySelectorAll('[data-modelo]').forEach(sel=>{
+        sel.addEventListener('change',()=>{
+            const i=sel.dataset.modelo;
+            q1('data-campos-comissao',i).style.display = sel.value==='cadeira'?'none':'block';
+            q1('data-campos-cadeira',i).style.display = sel.value==='cadeira'?'block':'none';
+        });
+    });
+    container.querySelectorAll('[data-cadeira-tipo]').forEach(sel=>{
+        sel.addEventListener('change',()=>{
+            const i=sel.dataset.cadeiraTipo;
+            q1('data-campo-aluguel',i).style.display = sel.value==='pct'?'none':'block';
+            q1('data-campo-pctdono',i).style.display = sel.value==='fixo'?'none':'block';
+        });
+    });
+    container.querySelectorAll('[data-salvar-pagto]').forEach(btn=>{
         btn.addEventListener('click',async()=>{
-            const i=Number(btn.dataset.save);
-            const pct=Number(container.querySelector(`.pct-input[data-idx="${i}"]`).value);
-            barbeiroData.equipe[i].pct=pct;
-            await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',barbeiroData.equipe[i].id),{pct});
-            toast(`${barbeiroData.equipe[i].nome}: ${pct}% salvo!`);
+            const i=Number(btn.dataset.salvarPagto);
+            const membro=barbeiroData.equipe[i];
+            const modelo=q1('data-modelo',i).value;
+            const dados={modelo};
+            if(modelo==='cadeira'){
+                dados.cadeiraTipo=q1('data-cadeira-tipo',i).value;
+                dados.aluguel=dados.cadeiraTipo==='pct'?0:Number(q1('data-aluguel',i).value||0);
+                dados.pctDono=dados.cadeiraTipo==='fixo'?0:Number(q1('data-pct-dono',i).value||0);
+                if(dados.cadeiraTipo!=='pct' && !(dados.aluguel>0)){toast('Informe o valor do aluguel','var(--red)');return;}
+                if(dados.cadeiraTipo!=='fixo' && !(dados.pctDono>0 && dados.pctDono<=100)){toast('Informe a % do dono (1 a 100)','var(--red)');return;}
+            } else {
+                const p=Number(q1('data-pct-comissao',i).value);
+                if(isNaN(p)||p<0||p>100){toast('A % deve ser de 0 a 100','var(--red)');return;}
+                dados.pctComissao=p;
+            }
+            // "pct" gravado = parte do barbeiro em cada corte (o painel dele lê esse campo)
+            dados.pct=pctDoBarbeiro({...membro,...dados});
+            await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',membro.id),dados,{merge:true});
+            Object.assign(membro,dados);
+            toast(`✓ Forma de pagamento de ${membro.nome} salva`);
             renderEquipe();
             carregarGanhos();
         });
@@ -281,7 +395,7 @@ function renderEquipe(){
             barbeiroData.equipe[i].tipo = novoTipo;
             if(novoTipo==='recepcionista'){
                 barbeiroData.equipe[i].pct = 0;
-                await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',membro.id),{pct:0});
+                await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',membro.id),{pct:0},{merge:true});
             }
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
             toast(`${membro.nome} agora é ${novoTipo==='recepcionista'?'Recepcionista':'Barbeiro'}!`);
@@ -393,14 +507,14 @@ async function carregarGanhos(){
             mesGanhosCache=mesAtual;
             Object.entries(porBarbeiro).forEach(([nome,dados])=>{
                 const membroEquipe=equipe.find(b=>b.nome===nome);
-                const pct=membroEquipe?.pct||50;
+                const pct=membroEquipe?.pct??50;
                 ganhosMesCache[nome]={total:dados.total,cortes:dados.cortes,pct,ganho:dados.total*pct/100};
             });
         }
 
         container.innerHTML=Object.entries(porBarbeiro).map(([nome,dados])=>{
             const membroEquipe=equipe.find(b=>b.nome===nome);
-            const pct=membroEquipe?.pct||50;
+            const pct=membroEquipe?.pct??50;
             const ganhoBarb=(dados.total*pct/100);
             const barra=maxTotal>0?Math.round((dados.total/maxTotal)*100):0;
             return `<div class="ganho-card">
@@ -524,11 +638,16 @@ function renderPagamentoComissoes(){
     cont.innerHTML = equipe.map(b=>{
         const cfg = comissaoConfigCache[b.id] || {freq:'mensal', dia:5};
         const periodo = periodoComissao(cfg.freq, cfg.dia);
-        const dados = ganhoNoPeriodo(b.nome, b.pct||50, periodo.inicio, periodo.fim);
-        const valor = dados.ganho;
+        const dados = ganhoNoPeriodo(b.nome, b.pct??50, periodo.inicio, periodo.fim);
+        // Aluguel de cadeira sai do repasse; se o barbeiro faturou menos que o
+        // aluguel, o valor fica negativo = ele deve a diferença ao dono
+        const aluguel = aluguelDoBarbeiro(b);
+        const valor = Math.round((dados.ganho - aluguel)*100)/100;
+        const ehCadeira = b.modelo==='cadeira';
+        const deve = valor<0;
         const pago = pagamentosComissaoCache.find(p=>p.equipeId===b.id && p.periodo===periodo.id);
         const venceu = periodo.vencimento<=hoje;
-        const atrasado = !pago && venceu && valor>0;
+        const atrasado = !pago && venceu && valor!==0;
         const corBorda = pago ? 'var(--green)' : atrasado ? 'var(--red)' : 'var(--border)';
 
         const diaSemanaOpts = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
@@ -552,10 +671,11 @@ function renderPagamentoComissoes(){
                             <option value="pix" selected>🔑 Pix</option>
                             <option value="transferencia">🏦 Transferência</option>
                         </select>
-                        <button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-marcar-pago="${b.id}" data-nome="${escAttr(b.nome)}" data-valor="${valor}" data-periodo="${periodo.id}" data-periodo-label="${escAttr(periodo.label)}">✓ Marcar como pago</button>
+                        <button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-marcar-pago="${b.id}" data-nome="${escAttr(b.nome)}" data-valor="${valor}" data-periodo="${periodo.id}" data-periodo-label="${escAttr(periodo.label)}">${deve?'✓ Recebi dele':'✓ Marcar como pago'}</button>
                        </div>`}
             </div>
-            <div style="font-size:.85rem;color:var(--muted)">Comissão ${periodo.label} (vence ${periodo.vencimento.toLocaleDateString('pt-BR')}): <strong style="color:var(--text)">R$${valor.toFixed(2)}</strong>${pago&&pago.formaPagamento?` · ${ROTULO_FORMA_PAGAMENTO_COMISSAO[pago.formaPagamento]||pago.formaPagamento}`:''}</div>
+            <div style="font-size:.85rem;color:var(--muted)">${ehCadeira?(deve?'Aluguel a receber dele':'Repasse ao barbeiro'):'Comissão'} ${periodo.label} (vence ${periodo.vencimento.toLocaleDateString('pt-BR')}): <strong style="color:${deve?'var(--yellow)':'var(--text)'}">R$${Math.abs(valor).toFixed(2)}</strong>${pago&&pago.formaPagamento?` · ${ROTULO_FORMA_PAGAMENTO_COMISSAO[pago.formaPagamento]||pago.formaPagamento}`:''}</div>
+            ${ehCadeira?`<div style="font-size:.72rem;color:var(--muted)">Cortes pagos no período: R$${dados.total.toFixed(2)} (${dados.cortes}) · parte do dono (${b.pctDono||0}%): −R$${(dados.total-dados.ganho).toFixed(2)}${aluguel?` · aluguel da cadeira: −R$${aluguel.toFixed(2)}`:''}${deve?` → <b style="color:var(--yellow)">${escapeHtml(b.nome)} deve R$${Math.abs(valor).toFixed(2)} ao dono</b>`:''}</div>`:''}
 
             <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap;padding-top:.4rem;border-top:1px dashed var(--border)">
                 <div class="input-group" style="margin-bottom:0;min-width:110px">
@@ -597,7 +717,7 @@ function renderPagamentoComissoes(){
             else if(freq==='quinzenal') dia=Math.min(Math.max(dia,1),15);
             else dia=Math.min(Math.max(dia,1),28);
             const membro=equipe.find(b=>b.id===id);
-            await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',id),{pct:membro?.pct||50, freqComissao:freq, diaComissao:dia},{merge:true});
+            await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',id),{pct:membro?.pct??50, freqComissao:freq, diaComissao:dia},{merge:true});
             comissaoConfigCache[id]={freq,dia};
             toast(`✓ Combinado de pagamento de ${membro?.nome||'barbeiro'} salvo`);
             renderPagamentoComissoes();
@@ -614,14 +734,18 @@ function renderPagamentoComissoes(){
             const formaSel=cont.querySelector(`[data-forma-pagamento-comissao="${equipeId}"]`);
             const formaPagamento=formaSel?formaSel.value:'pix';
             // Dupla confirmação: essa ação já causou marcação sem querer antes.
-            if(!confirm(`Marcar a comissão de ${nome} (R$${valor.toFixed(2)}) como paga?`)) return;
-            if(!confirm(`Confirma mesmo? Você já pagou R$${valor.toFixed(2)} pra ${nome} agora, via ${ROTULO_FORMA_PAGAMENTO_COMISSAO[formaPagamento]}?`)) return;
+            if(valor<0){
+                if(!confirm(`Confirma que recebeu R$${Math.abs(valor).toFixed(2)} de ${nome} (aluguel da cadeira), via ${ROTULO_FORMA_PAGAMENTO_COMISSAO[formaPagamento]}?`)) return;
+            } else {
+                if(!confirm(`Marcar o pagamento de ${nome} (R$${valor.toFixed(2)}) como pago?`)) return;
+                if(!confirm(`Confirma mesmo? Você já pagou R$${valor.toFixed(2)} pra ${nome} agora, via ${ROTULO_FORMA_PAGAMENTO_COMISSAO[formaPagamento]}?`)) return;
+            }
             await addDoc(collection(db,'barbeiros',barbeiroData.uid,'pagamentosComissao'), {
                 equipeId, nome, periodo, valor, formaPagamento, pagoEm:new Date().toISOString()
             });
-            toast(`✓ Comissão de ${nome} marcada como paga`);
+            toast(valor<0?`✓ Aluguel de ${nome} registrado como recebido`:`✓ Pagamento de ${nome} marcado como pago`);
             const membro=equipe.find(b=>b.id===equipeId);
-            if(typeof abrirComprovanteComissao==='function') abrirComprovanteComissao(membro||{nome}, valor, periodoLabel, formaPagamento);
+            if(valor>0 && typeof abrirComprovanteComissao==='function') abrirComprovanteComissao(membro||{nome}, valor, periodoLabel, formaPagamento);
         });
     });
     cont.querySelectorAll('[data-desmarcar-pago]').forEach(btn=>{

@@ -60,13 +60,15 @@ function atualizarCentralAvisos(){
             const cfg = comissaoConfigCache[b.id] || {freq:'mensal', dia:5};
             const periodo = periodoComissao(cfg.freq, cfg.dia);
             if(periodo.vencimento>hojeZero) return;
-            const ganho = typeof ganhoNoPeriodo==='function' ? ganhoNoPeriodo(b.nome, b.pct||50, periodo.inicio, periodo.fim).ganho : 0;
-            if(ganho<=0) return;
+            const ganhoCortes = typeof ganhoNoPeriodo==='function' ? ganhoNoPeriodo(b.nome, b.pct??50, periodo.inicio, periodo.fim).ganho : 0;
+            // Aluguel de cadeira sai do repasse (negativo = barbeiro deve ao dono)
+            const ganho = ganhoCortes - (typeof aluguelDoBarbeiro==='function' ? aluguelDoBarbeiro(b) : 0);
+            if(ganho===0) return;
             const jaPago = (typeof pagamentosComissaoCache!=='undefined' ? pagamentosComissaoCache : []).some(p=>p.equipeId===b.id && p.periodo===periodo.id);
             if(jaPago) return;
             avisos.push({
                 id: `comissao-${b.id}-${periodo.id}`,
-                texto: `💸 Comissão de ${b.nome} ainda não paga (R$${ganho.toFixed(2)})`,
+                texto: ganho<0 ? `🪑 ${b.nome} ainda não pagou o aluguel da cadeira (R$${Math.abs(ganho).toFixed(2)})` : `💸 ${b.modelo==='cadeira'?'Repasse':'Comissão'} de ${b.nome} ainda não pago (R$${ganho.toFixed(2)})`,
                 tab: 'equipe'
             });
         });

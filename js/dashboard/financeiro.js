@@ -510,7 +510,7 @@ async function exportarPDF(){
             return s+(Number(a.preco||0)*(b?.pct||0)/100);
         },0);
         const despesasFixas=totalGastosFixos();
-        const lucroLiquido=totalFaturado-comissoesPeriodo-despesasFixas;
+        const lucroLiquido=totalFaturado-comissoesPeriodo-despesasFixas+(typeof aluguelCadeirasNoMes==='function'?aluguelCadeirasNoMes(dataLocal(new Date()).slice(0,7)):0);
 
         // Últimos 7 dias (sempre relativo a hoje, igual ao painel)
         const hoje=new Date();
@@ -822,7 +822,7 @@ async function carregarFaturamento(){
         const pct=b?.pct||0;
         return s+(Number(a.preco||0)*pct/100);
     },0);
-    const liquidoMes=totalMes-comissoesMes;
+    const liquidoMes=totalMes-comissoesMes+(typeof aluguelCadeirasNoMes==='function'?aluguelCadeirasNoMes(mesAtual):0);
 
     // % cancelamentos
     const totalAgend=todos.filter(a=>a.data&&a.data.startsWith(mesAtual)).length;
@@ -1356,7 +1356,14 @@ async function carregarResumoGestao(){
         return s+(Number(a.preco||0)*pct/100);
     },0);
 
-    const lucroLiquido=receitaMes-comissoesMes-totalGastos-totalGastosInsumosMes;
+    // Aluguel de cadeira dos barbeiros que alugam (entra pro dono)
+    const aluguelCadeiras=typeof aluguelCadeirasNoMes==='function'?aluguelCadeirasNoMes(mesAtual):0;
+    const lucroLiquido=receitaMes-comissoesMes+aluguelCadeiras-totalGastos-totalGastosInsumosMes;
+    const elAluguel=document.getElementById('gest-aluguel-cadeiras');
+    if(elAluguel){
+        elAluguel.textContent='R$'+aluguelCadeiras.toFixed(0);
+        elAluguel.closest('.fat-kpi').style.display=aluguelCadeiras>0?'':'none';
+    }
 
     const elReceita=document.getElementById('gest-receita');
     const elReceitaProdutos=document.getElementById('gest-receita-produtos');

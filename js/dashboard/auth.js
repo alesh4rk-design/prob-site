@@ -73,7 +73,13 @@ async function initFuncionarioMode(bId, funcId){
     if(funcMembro.tipo!=='recepcionista'){
         try{
             const comSnap=await getDoc(doc(db,'barbeiros',bId,'comissoes',funcId));
-            funcMembro.pct = comSnap.exists() ? comSnap.data().pct : 50;
+            const com = comSnap.exists() ? comSnap.data() : {};
+            funcMembro.pct = com.pct ?? 50;
+            funcMembro.modelo = com.modelo || 'comissao';
+            funcMembro.cadeiraTipo = com.cadeiraTipo || 'misto';
+            funcMembro.aluguel = Number(com.aluguel||0);
+            funcMembro.pctDono = Number(com.pctDono||0);
+            funcMembro.freqComissao = com.freqComissao || 'mensal';
         }catch(e){ console.error('comissao func:',e); funcMembro.pct=50; }
     }
 
@@ -145,6 +151,7 @@ async function initFuncionarioMode(bId, funcId){
                 <div class="fat-kpi green"><div class="fat-kpi-val" id="func-ganho-semana">R$0</div><div class="fat-kpi-lbl">Ganho na semana</div></div>
                 <div class="fat-kpi" style="border-color:rgba(192,160,96,.35)"><div class="fat-kpi-val" id="func-ganho-mes" style="color:#c0a060">R$0</div><div class="fat-kpi-lbl">Ganho no mês</div></div>
             </div>
+            <div id="func-info-cadeira" style="display:none;font-size:.75rem;color:var(--blue);margin:-.3rem 0 .8rem;padding:.5rem .7rem;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.25);border-radius:8px;text-align:center"></div>
             <div id="func-a-receber" style="display:none;font-size:.75rem;color:var(--yellow);margin:-.3rem 0 .8rem;padding:.5rem .7rem;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.25);border-radius:8px;text-align:center"></div>
             <p style="font-size:.7rem;color:var(--muted);margin-bottom:1rem;text-align:center">📅 Semana: <span id="func-periodo-semana"></span></p>
             <div class="section-title">Histórico</div>
@@ -279,7 +286,7 @@ async function initFuncionarioMode(bId, funcId){
     renderFuncAppts(document.getElementById('func-lista-prox'),proximos,'Nenhum agendamento futuro.');
 
     // Ganhos — semana civil (segunda a domingo)
-    const pct=funcMembro.pct||50;
+    const pct=funcMembro.pct??50;
     const agoraDate=new Date();
     const diaSemAtual=agoraDate.getDay()||7; // 1=segunda...7=domingo
     const inicioSemana=new Date(agoraDate);inicioSemana.setDate(agoraDate.getDate()-diaSemAtual+1);
@@ -302,6 +309,19 @@ async function initFuncionarioMode(bId, funcId){
     document.getElementById('func-ganho-hoje').textContent='R$'+ganhoHoje.toFixed(2);
     document.getElementById('func-ganho-semana').textContent='R$'+ganhoSemana.toFixed(2);
     document.getElementById('func-ganho-mes').textContent='R$'+ganhoMes.toFixed(2);
+    // Barbeiro que aluga a cadeira: mostra o combinado (o aluguel é
+    // descontado no repasse do período, em Pagamento de Comissões do dono)
+    const elCadeira=document.getElementById('func-info-cadeira');
+    if(elCadeira){
+        if(funcMembro.modelo==='cadeira'){
+            const per={semanal:'semana',quinzenal:'quinzena',mensal:'mês'}[funcMembro.freqComissao]||'mês';
+            const partes=[];
+            if(funcMembro.cadeiraTipo!=='pct') partes.push(`aluguel de R$${funcMembro.aluguel.toFixed(2)} por ${per}`);
+            if(funcMembro.cadeiraTipo!=='fixo') partes.push(`${funcMembro.pctDono}% de cada corte para a barbearia`);
+            elCadeira.style.display='block';
+            elCadeira.textContent=`🪑 Você aluga a cadeira: ${partes.join(' + ')}. Os ganhos acima já descontam a % da barbearia; o aluguel é descontado no repasse${funcMembro.cadeiraTipo!=='pct'?' de cada '+per:''}.`;
+        } else elCadeira.style.display='none';
+    }
     const elFuncAReceber=document.getElementById('func-a-receber');
     if(elFuncAReceber){
         const v=aReceberMesFunc.reduce((s,a)=>s+Number(a.preco||0)*pct/100,0);
