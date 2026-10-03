@@ -812,7 +812,7 @@ function renderAppts(container,lista,emptyMsg){
     // pagamento), e o cache completo é mantido à parte em carregarAgendamentos().
     if(!lista.length){container.innerHTML=`<div class="empty-state"><div class="icon">📅</div>${emptyMsg}</div>`;return;}
     container.innerHTML=lista.map(a=>{
-        const barberTag=a.barbeiro?`<span class="appt-barber-tag">✂️ ${a.barbeiro}</span>`:'';
+        const barberTag=barbeiroDoCorte(a)?`<span class="appt-barber-tag">✂️ ${escapeHtml(barbeiroDoCorte(a))}</span>`:'';
         const presencialTag=a.origem==='presencial'?`<span class="appt-barber-tag" style="background:rgba(255,255,255,.06);color:var(--muted)">🏠 presencial</span>`:'';
         const promoTag=gerarBadgePromoCliente(a.clienteWhatsapp);
         const dataFmt=(d=>{

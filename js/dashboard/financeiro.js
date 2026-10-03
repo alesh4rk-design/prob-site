@@ -506,7 +506,7 @@ async function exportarPDF(){
 
         const equipe=barbeiroData.equipe||[];
         const comissoesPeriodo=concP.reduce((s,a)=>{
-            const b=equipe.find(e=>e.nome===a.barbeiro);
+            const b=equipe.find(e=>e.nome===barbeiroDoCorte(a));
             return s+(Number(a.preco||0)*(b?.pct||0)/100);
         },0);
         const despesasFixas=totalGastosFixos();
@@ -818,7 +818,7 @@ async function carregarFaturamento(){
     // Líquido dono (total - comissões) — produtos não têm comissão, entram inteiros
     const equipe=barbeiroData.equipe||[];
     const comissoesMes=doMes.reduce((s,a)=>{
-        const b=equipe.find(e=>e.nome===a.barbeiro);
+        const b=equipe.find(e=>e.nome===barbeiroDoCorte(a));
         const pct=b?.pct||0;
         return s+(Number(a.preco||0)*pct/100);
     },0);
@@ -1351,7 +1351,7 @@ async function carregarResumoGestao(){
 
     const equipe=barbeiroData.equipe||[];
     const comissoesMes=concMes.reduce((s,a)=>{
-        const b=equipe.find(e=>e.nome===a.barbeiro);
+        const b=equipe.find(e=>e.nome===barbeiroDoCorte(a));
         const pct=b?.pct||0;
         return s+(Number(a.preco||0)*pct/100);
     },0);
