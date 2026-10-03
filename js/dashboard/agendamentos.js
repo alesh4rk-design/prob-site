@@ -190,7 +190,7 @@ async function verificarConflitoAgendamento(barbeiroFiltro){
         snap.forEach(d=>{
             const a=d.data();
             if(a.status==='cancelado'||a.status==='concluido')return;
-            if(barbeiroFiltro && a.barbeiro!==barbeiroFiltro)return;
+            if(barbeiroFiltro && barbeiroDoCorte(a)!==barbeiroFiltro)return;
             const min=horaParaMin(a.hora);
             // Conflito se o agendamento é nos próximos 30 minutos
             if(min>=agoraMin && min<=agoraMin+30){
@@ -372,7 +372,7 @@ async function carregarHorasPresencial(){
     snap.forEach(d=>{
         const ag=d.data();
         if(ag.status==='cancelado'||ag.origem==='cobranca-manual')return;
-        if(barbSel && ag.barbeiro!==barbSel)return;
+        if(barbSel && barbeiroDoCorte(ag)!==barbSel)return;
         ocupados.push({hora:ag.hora,duracao:duracaoAtendimento(ag)});
     });
 
@@ -435,7 +435,7 @@ async function confirmarPresencial(){
         snap.forEach(d=>{
             const ag=d.data();
             if(ag.status==='cancelado'||ag.origem==='cobranca-manual')return;
-            if(barbeiroNome && ag.barbeiro!==barbeiroNome)return;
+            if(barbeiroNome && barbeiroDoCorte(ag)!==barbeiroNome)return;
             ocupadosAgora.push({hora:ag.hora,duracao:duracaoAtendimento(ag)});
         });
         // Encosta em outro atendimento considerando a duração dos dois?

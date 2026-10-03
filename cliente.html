@@ -942,7 +942,9 @@ function duracaoPorNomeCorte(corte){
 }
 async function buscarOcupadosDoDia(data){
     const equipe = barbeiroInfo.equipe || [];
-    const filtrarBarbeiro = (b) => !(equipe.length > 0 && barbeiroCortador && b !== barbeiroCortador);
+    // Agendamentos de antes de o dono entrar na equipe ficaram sem barbeiro: valem pro dono
+    const donoNome = (equipe.find(x=>x.dono) || {}).nome || '';
+    const filtrarBarbeiro = (b) => !(equipe.length > 0 && barbeiroCortador && (b || donoNome) !== barbeiroCortador);
     const mapa = {};
     // Cópia pública (regras novas)
     try{

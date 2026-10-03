@@ -373,7 +373,7 @@ async function exportarExcel(){
         const equipe=barbeiroData.equipe||[];
         const porBarbeiro={};
         concluidos.forEach(a=>{
-            const nome=a.barbeiro||'(dono)';
+            const nome=barbeiroDoCorte(a)||'(dono)';
             if(!porBarbeiro[nome])porBarbeiro[nome]={cortes:0,total:0};
             porBarbeiro[nome].cortes++;
             porBarbeiro[nome].total+=Number(a.preco||0);
@@ -442,7 +442,7 @@ async function exportarExcel(){
         const dadosAgend=todos.map(a=>({
             'Data':a.data?a.data.split('-').reverse().join('/'):'',
             'Hora':a.hora,'Cliente':a.clienteNome,'WhatsApp':a.clienteWhatsapp||'-',
-            'Corte':a.corte,'Barbeiro':a.barbeiro||'(dono)','Preço (R$)':Number(a.preco||0).toFixed(2),
+            'Corte':a.corte,'Barbeiro':barbeiroDoCorte(a)||'(dono)','Preço (R$)':Number(a.preco||0).toFixed(2),
             'Status':a.status==='concluido'?'Concluído':a.status==='cancelado'?'Cancelado':'Pendente',
             'Origem':a.origem==='presencial'?'Presencial':'Online'
         }));
@@ -547,7 +547,7 @@ async function exportarPDF(){
         // Por barbeiro
         const porBarbeiro={};
         concP.forEach(a=>{
-            const nome=a.barbeiro||'(dono)';
+            const nome=barbeiroDoCorte(a)||'(dono)';
             if(!porBarbeiro[nome])porBarbeiro[nome]={cortes:0,total:0};
             porBarbeiro[nome].cortes++;porBarbeiro[nome].total+=Number(a.preco||0);
         });

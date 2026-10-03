@@ -41,7 +41,7 @@ function histPreencherBarbeiros(cortes){
     const atual=sel.value;
     const nomes=new Set();
     (barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista' && !b.independente).forEach(b=>nomes.add(b.nome));
-    cortes.forEach(a=>{ if(a.barbeiro) nomes.add(a.barbeiro); });
+    cortes.forEach(a=>{ const n=barbeiroDoCorte(a); if(n) nomes.add(n); });
     const lista=[...nomes].sort((a,b)=>a.localeCompare(b,'pt-BR'));
     sel.innerHTML='<option value="">Todos os barbeiros</option>'+
         lista.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')+
@@ -63,7 +63,7 @@ function renderHistoricoCortes(){
 
     const lista=todos.filter(a=>{
         if(!a.data || a.data<ini || a.data>fim) return false;
-        if(barb==='__sem__' ? !!a.barbeiro : (barb && a.barbeiro!==barb)) return false;
+        if(barb==='__sem__' ? !!barbeiroDoCorte(a) : (barb && barbeiroDoCorte(a)!==barb)) return false;
         if(busca && !String(a.clienteNome||'').toLowerCase().includes(busca) && !String(a.corte||'').toLowerCase().includes(busca)) return false;
         return true;
     }).sort((a,b)=>(b.data+(b.hora||'')).localeCompare(a.data+(a.hora||'')));
@@ -83,7 +83,7 @@ function renderHistoricoCortes(){
     if(resumoEl){
         const por={};
         lista.forEach(a=>{
-            const n=a.barbeiro||'Sem barbeiro definido';
+            const n=barbeiroDoCorte(a)||'Sem barbeiro definido';
             if(!por[n]) por[n]={qtd:0,total:0};
             por[n].qtd++;
             if(foiPago(a)) por[n].total+=Number(a.preco||0);
@@ -117,7 +117,7 @@ function renderHistoricoCortes(){
                 <span class="appt-name">${escapeHtml(a.clienteNome||'—')}</span>
                 <span class="appt-sep">·</span>
                 <span class="appt-corte">${escapeHtml(a.corte||'')}</span>
-                ${a.barbeiro?`<span class="appt-barber-tag">✂️ ${escapeHtml(a.barbeiro)}</span>`:''}
+                ${barbeiroDoCorte(a)?`<span class="appt-barber-tag">✂️ ${escapeHtml(barbeiroDoCorte(a))}</span>`:''}
                 <span class="badge ${pago?'badge-ok':'badge-pend'}">${forma}</span>
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.35rem">

@@ -143,7 +143,7 @@ async function renderHours(){
     agendSnap.forEach(d=>{
         const ag=d.data();
         if(ag.status==='cancelado'||ag.origem==='cobranca-manual')return; // cancelado libera o horário
-        if(barbSel && ag.barbeiro!==barbSel)return;
+        if(barbSel && barbeiroDoCorte(ag)!==barbSel)return;
         ocupadosDia.push({hora:ag.hora,duracao:duracaoAtendimento(ag)});
     });
     const intervalosDia=intervalosOcupados(ocupadosDia,[],intervaloMin);

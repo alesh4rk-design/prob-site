@@ -12,6 +12,18 @@
 // atende; recepcionista só se marcou explicitamente que também atende.
 // Registros antigos (antes desse campo existir) não tinham "atende"
 // salvo, então cai no padrão por tipo pra não sumir barbeiro nenhum.
+// Dono na lista da equipe ("Eu (dono)"). Cortes lançados antes dele se
+// cadastrar ficaram sem barbeiro: pra todos os efeitos (ganhos, histórico,
+// conflito de horário) "sem barbeiro" passa a valer como ele, sem precisar
+// mexer nos registros antigos.
+function donoDaEquipe(){ return (barbeiroData.equipe||[]).find(b=>b.dono) || null; }
+function barbeiroDoCorte(a){
+    if(a && a.barbeiro) return a.barbeiro;
+    const d=donoDaEquipe();
+    return d ? d.nome : '';
+}
+window.donoDaEquipe=donoDaEquipe; window.barbeiroDoCorte=barbeiroDoCorte;
+
 function atendeClientes(membro){
     // Independente: só paga o aluguel da cadeira, atende pelo próprio sistema
     if(membro.independente) return false;
@@ -606,7 +618,7 @@ async function carregarGanhos(){
         const porBarbeiro={};
         let totalGeral=0;
         lista.forEach(a=>{
-            const nome=a.barbeiro||'Sem barbeiro';
+            const nome=barbeiroDoCorte(a)||'Sem barbeiro';
             if(!porBarbeiro[nome])porBarbeiro[nome]={total:0,cortes:0};
             porBarbeiro[nome].total+=Number(a.preco||0);
             porBarbeiro[nome].cortes++;
@@ -721,7 +733,7 @@ function periodoComissao(freq, dia){
 function ganhoNoPeriodo(nome, pct, inicio, fim){
     let total=0, cortes=0;
     concluidosCache.forEach(a=>{
-        if((a.barbeiro||'Sem barbeiro')!==nome) return;
+        if((barbeiroDoCorte(a)||'Sem barbeiro')!==nome) return;
         if(!a.data || a.data<inicio || a.data>fim) return;
         total+=Number(a.preco||0); cortes++;
     });
