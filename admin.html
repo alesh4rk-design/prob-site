@@ -489,6 +489,10 @@
 <script src="config.js?v=20260727o"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
+// Data local (toISOString usa UTC: no Brasil, depois das 21h virava o dia seguinte)
+function dataLocal(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+window.dataLocal=dataLocal;
+
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, getDocs, collection, deleteDoc, query, where, onSnapshot, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -638,7 +642,7 @@ async function carregarBarbeiros(){
     try{
         const agSnap=await getDocs(collection(db,'agendamentos'));
         agendPorBarbearia={};
-        const hoje=new Date().toISOString().split('T')[0];
+        const hoje=dataLocal(new Date());
         const mes=hoje.slice(0,7);
         agSnap.forEach(d=>{
             const a=d.data();
@@ -664,7 +668,7 @@ async function carregarBarbeiros(){
 async function atualizarUso(){
     try{
         // Coleta dados do Firestore
-        const hoje = new Date().toISOString().split('T')[0];
+        const hoje = dataLocal(new Date());
         const ativos   = todos.filter(b=>b.acesso?.status==='ativo'||b.acesso?.status==='trial').length;
         const pendentes= todos.filter(b=>b.acesso?.status==='pendente').length;
         const totalBarb= todos.length;
@@ -729,7 +733,7 @@ function atualizarKPIs(){
     $('k-ativos').textContent=at;$('k-trial').textContent=tr;$('k-vencendo').textContent=vc;$('k-exp').textContent=ex;
 
     // Receita real do mês atual, baseada no histórico de pagamentos
-    const mesAtual=new Date().toISOString().slice(0,7);
+    const mesAtual=dataLocal(new Date()).slice(0,7);
     let receitaMes=0;
     todos.forEach(b=>{
         const hist=b.acesso?.historicoPagamentos||[];
@@ -1139,7 +1143,7 @@ window.gerarContratoPDF = (uid) => {
     }
 
     // Salva
-    const nomeArq = `contrato_${(b.nome||'barbeiro').replace(/[^a-z0-9]/gi,'_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+    const nomeArq = `contrato_${(b.nome||'barbeiro').replace(/[^a-z0-9]/gi,'_').toLowerCase()}_${dataLocal(new Date())}.pdf`;
     doc.save(nomeArq);
     toast(`✓ Contrato de ${b.nome||'barbeiro'} baixado!`);
 };

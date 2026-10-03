@@ -899,6 +899,10 @@
 
 <script src="config.js?v=20260727o"></script>
 <script type="module">
+// Data local (toISOString usa UTC: no Brasil, depois das 21h virava o dia seguinte)
+function dataLocal(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+window.dataLocal=dataLocal;
+
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -1271,7 +1275,7 @@ async function carregarPromocoesCliente(){
         const todas = [];
         snap.forEach(d=>todas.push({id:d.id,...d.data()}));
 
-        const hoje = new Date().toISOString().split('T')[0];
+        const hoje = dataLocal(new Date());
 
         promosCupomAtivas = todas.filter(p=>
             p.tipo==='cupom' && p.ativo && (p.usosFeitos||0) < (p.limiteUsos||1) && (!p.validoAte || hoje<=p.validoAte)
@@ -1917,7 +1921,7 @@ $('btn-entrar-fila').addEventListener('click', entrarNaFila);
 $('back-s1').addEventListener('click', () => goStep(0));
 
 /* ── STEP 2: Data e Hora ── */
-function getTodayKey() { return new Date().toISOString().split('T')[0]; }
+function getTodayKey() { return dataLocal(new Date()); }
 
 async function carregarHorarios() {
     const scroll = $('date-scroll');
@@ -1927,7 +1931,7 @@ async function carregarHorarios() {
     for (let i = 0; i < 14; i++) {
         const d = new Date(hoje);
         d.setDate(hoje.getDate() + i);
-        const key = d.toISOString().split('T')[0];
+        const key = dataLocal(d);
         const chip = document.createElement('div');
         chip.className = 'date-chip' + (i===0?' active':'');
         chip.textContent = i===0 ? 'Hoje' : fmt(key);
@@ -1943,7 +1947,7 @@ async function carregarHorarios() {
         chips.push(chip);
         scroll.appendChild(chip);
     }
-    dataEscolhida = hoje.toISOString().split('T')[0];
+    dataEscolhida = dataLocal(hoje);
     renderHours(dataEscolhida);
 }
 
@@ -1970,7 +1974,7 @@ async function renderHours(data) {
 
     // Hora atual — bloquear passados
     const agora = new Date();
-    const isHoje = data === new Date().toISOString().split('T')[0];
+    const isHoje = data === dataLocal(new Date());
     const agoraMin = isHoje ? agora.getHours()*60+agora.getMinutes() : 0;
 
     // Agendamentos filtrados por barbeiro da equipe (se escolhido)
@@ -1995,9 +1999,16 @@ async function renderHours(data) {
     let bloqueados = [];
     if (equipe.length > 0 && barbeiroCortador) {
         // Bloqueios específicos do barbeiro da equipe
-        const bRef = doc(db,'barbeiros',barbeiroId,'bloqueios', `${data}_${barbeiroCortador}`);
-        const bSnap = await getDoc(bRef);
-        bloqueados = bSnap.exists() ? (bSnap.data().horas||[]) : [];
+        // Bloqueios do barbeiro + bloqueios gerais da barbearia (almoço,
+        // feriado...) — antes os gerais eram ignorados ao escolher um barbeiro
+        const [bSnap, bGeralSnap] = await Promise.all([
+            getDoc(doc(db,'barbeiros',barbeiroId,'bloqueios', `${data}_${barbeiroCortador}`)),
+            getDoc(doc(db,'barbeiros',barbeiroId,'bloqueios',data))
+        ]);
+        bloqueados = [
+            ...(bSnap.exists() ? (bSnap.data().horas||[]) : []),
+            ...(bGeralSnap.exists() ? (bGeralSnap.data().horas||[]) : [])
+        ];
     } else {
         // Bloqueios gerais da barbearia
         const bRef = doc(db,'barbeiros',barbeiroId,'bloqueios',data);

@@ -201,7 +201,7 @@ document.querySelectorAll('.filtro-ausencia-btn').forEach(btn=>{
 // Aviso 1h antes — painel de lembretes
 async function carregarAvisos1h(){
     const agora = new Date();
-    const hoje = agora.toISOString().split('T')[0];
+    const hoje = dataLocal(agora);
     const agoraMin = agora.getHours()*60 + agora.getMinutes();
 
     try{

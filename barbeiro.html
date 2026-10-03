@@ -2205,7 +2205,10 @@ function fecharDrawer(){
     if(o){ o.style.opacity='0'; o.style.pointerEvents='none'; }
 }
 function fmtDate(d){return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});}
-function fmtHoje(){return new Date().toISOString().split('T')[0];}
+// Data local do aparelho (toISOString usa UTC: no Brasil, depois das 21h
+// já virava o dia seguinte)
+function dataLocal(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmtHoje(){return dataLocal(new Date());}
 function horaParaMin(h){const[hh,mm]=h.split(':').map(Number);return hh*60+mm;}
 
 // Registra/atualiza o cliente na base (barbeiros/{uid}/clientes/{id}) sempre
@@ -2287,7 +2290,7 @@ Object.defineProperty(window,'todosClientes',{
 Object.defineProperty(window,'funcData',{ get:()=>funcData, set:(v)=>{funcData=v;}, configurable:true });
 Object.defineProperty(window,'intervaloMin',{ get:()=>intervaloMin, set:(v)=>{intervaloMin=v;}, configurable:true });
 Object.defineProperty(window,'selectedDate',{ get:()=>selectedDate, set:(v)=>{selectedDate=v;}, configurable:true });
-window.$=$; window.escapeHtml=escapeHtml; window.toast=toast; window.fmtHoje=fmtHoje; window.fecharDrawer=fecharDrawer;
+window.$=$; window.escapeHtml=escapeHtml; window.toast=toast; window.fmtHoje=fmtHoje; window.dataLocal=dataLocal; window.fecharDrawer=fecharDrawer;
 window.escAttr=escAttr; window.fmtDate=fmtDate; window.DIAS=DIAS; window.gerarHorasOpcoes=gerarHorasOpcoes;
 window.registrarClienteConcluido=registrarClienteConcluido; window.gerarSlots=gerarSlots; window.horaParaMin=horaParaMin;
 // initDash, initSessaoBtns: funções declaradas mais abaixo no arquivo, mas
@@ -3197,17 +3200,17 @@ async function initDash(){
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
 <script defer src="js/dashboard/estoque.js?v=20261003a"></script>
-<script defer src="js/dashboard/backup.js?v=20260727o"></script>
+<script defer src="js/dashboard/backup.js?v=20261003c"></script>
 <script defer src="js/dashboard/novidades.js?v=20260729e"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003a"></script>
 <script defer src="js/dashboard/tour.js?v=20260727o"></script>
 <script defer src="js/dashboard/equipe.js?v=20261003a"></script>
-<script defer src="js/dashboard/promocoes.js?v=20260727q"></script>
-<script defer src="js/dashboard/clientes.js?v=20260727o"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20261003b"></script>
-<script defer src="js/dashboard/horarios.js?v=20260727q"></script>
-<script defer src="js/dashboard/financeiro.js?v=20261003b"></script>
-<script defer src="js/dashboard/auth.js?v=20261003a"></script>
+<script defer src="js/dashboard/promocoes.js?v=20261003c"></script>
+<script defer src="js/dashboard/clientes.js?v=20261003c"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20261003c"></script>
+<script defer src="js/dashboard/horarios.js?v=20261003c"></script>
+<script defer src="js/dashboard/financeiro.js?v=20261003c"></script>
+<script defer src="js/dashboard/auth.js?v=20261003c"></script>
 <script defer src="js/dashboard/visual.js?v=20260727o"></script>
 
 

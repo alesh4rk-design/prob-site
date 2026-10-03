@@ -218,6 +218,7 @@ async function atenderFila(filaId){
         clienteWhatsapp:item.clienteWhatsapp||'',
         corte:item.corte||'Corte (fila)',
         preco:item.preco||0,
+        ...(item.precoOriginal!=null?{precoOriginal:item.precoOriginal}:{}),
         barbeiro:item.barbeiro||'',
         data:fmtHoje(),
         hora:new Date().toTimeString().slice(0,5),
@@ -367,9 +368,13 @@ async function carregarHorasPresencial(){
     });
 
     // Bloqueios
-    const bloqKey=barbSel?`${data}_${barbSel}`:data;
-    const bSnap=await getDoc(doc(db,'barbeiros',barbeiroData.uid,'bloqueios',bloqKey));
-    const bloqueadas=bSnap.exists()?(bSnap.data().horas||[]):[];
+    // Bloqueios gerais da barbearia valem para todos os barbeiros
+    const bGeral=await getDoc(doc(db,'barbeiros',barbeiroData.uid,'bloqueios',data));
+    const bloqueadas=bGeral.exists()?[...(bGeral.data().horas||[])]:[];
+    if(barbSel){
+        const bSnap=await getDoc(doc(db,'barbeiros',barbeiroData.uid,'bloqueios',`${data}_${barbSel}`));
+        if(bSnap.exists()) bloqueadas.push(...(bSnap.data().horas||[]));
+    }
 
     const agora=new Date();
     const isHoje=data===fmtHoje();
@@ -576,6 +581,8 @@ async function confirmarEsquecido(){
                 barbeiro:barbeiroNome,
                 data,hora,
                 formaPagamento,
+                // Valor corrigido à mão passa a ser o valor cheio (desconto antigo deixa de valer)
+                ...(Number(selecao.preco)!==Number(agEditando.preco)?{precoOriginal:null}:{}),
                 editadoEm:new Date().toISOString()
             });
             toast('✓ Atendimento atualizado!');
@@ -1420,7 +1427,9 @@ function initAcoesClienteExtras(){
 
         try{
             if(naFila){
-                await updateDoc(doc(db,'fila',acClienteAtual.filaId), { preco: novoPreco });
+                // Guarda o valor cheio também na fila — sem isso um segundo
+                // desconto era calculado em cima do valor já descontado
+                await updateDoc(doc(db,'fila',acClienteAtual.filaId), { preco: novoPreco, precoOriginal: precoAtual });
             } else {
                 await updateDoc(doc(db,'agendamentos',acClienteAtual.agendamentoId), {
                     preco: novoPreco,

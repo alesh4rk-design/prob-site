@@ -288,8 +288,8 @@ function calcularPeriodo(tipo){
         label='Histórico completo';
     }
     return {
-        inicioStr:inicio.toISOString().split('T')[0],
-        fimStr:fim.toISOString().split('T')[0],
+        inicioStr:dataLocal(inicio),
+        fimStr:dataLocal(fim),
         inicioBR:inicio.toLocaleDateString('pt-BR'),
         fimBR:fim.toLocaleDateString('pt-BR'),
         label
@@ -514,9 +514,9 @@ async function exportarPDF(){
 
         // Últimos 7 dias (sempre relativo a hoje, igual ao painel)
         const hoje=new Date();
-        const hojeStr=hoje.toISOString().split('T')[0];
+        const hojeStr=dataLocal(hoje);
         const dias7=[];
-        for(let i=6;i>=0;i--){const d=new Date(hoje);d.setDate(hoje.getDate()-i);dias7.push(d.toISOString().split('T')[0]);}
+        for(let i=6;i>=0;i--){const d=new Date(hoje);d.setDate(hoje.getDate()-i);dias7.push(dataLocal(d));}
         const nomes7=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
         const concTodos=todos.filter(a=>a.status==='concluido'&&foiPago(a));
         const vals7=dias7.map(d=>
@@ -774,7 +774,7 @@ async function exportarPDF(){
 
 async function carregarFaturamento(){
     const hoje=new Date();
-    const hojeStr=hoje.toISOString().split('T')[0];
+    const hojeStr=dataLocal(hoje);
     const mesAtual=hojeStr.slice(0,7);
 
     // Inicio da semana (segunda)
@@ -788,8 +788,8 @@ async function carregarFaturamento(){
     const conc=todos.filter(a=>a.status==='concluido');
     const canc=todos.filter(a=>a.status==='cancelado');
 
-    const inicioSemStr=inicioSemana.toISOString().split('T')[0];
-    const inicioSemAntStr=inicioSemAnt.toISOString().split('T')[0];
+    const inicioSemStr=dataLocal(inicioSemana);
+    const inicioSemAntStr=dataLocal(inicioSemAnt);
     const fimSemAntStr=inicioSemStr;
 
     // Só o que foi pago entra no faturamento (ver foiPago em agendamentos.js)
@@ -854,7 +854,7 @@ async function carregarFaturamento(){
 
     // Gráfico últimos 7 dias
     const dias7=[];
-    for(let i=6;i>=0;i--){const d=new Date(hoje);d.setDate(hoje.getDate()-i);dias7.push(d.toISOString().split('T')[0]);}
+    for(let i=6;i>=0;i--){const d=new Date(hoje);d.setDate(hoje.getDate()-i);dias7.push(dataLocal(d));}
     const vals7=dias7.map(d=>
         pagos.filter(a=>a.data===d).reduce((s,a)=>s+Number(a.preco||0),0)
         + todasVendasFat.filter(v=>v.data===d).reduce((s,v)=>s+Number(v.total||0),0)
@@ -1562,7 +1562,7 @@ async function carregarResumoGestao(){
 
     // ══ 3. MAPA DE CALOR — HORÁRIOS DE PICO ══
     const trintaDiasAtras=new Date(hoje);trintaDiasAtras.setDate(trintaDiasAtras.getDate()-30);
-    const trintaDiasStr=trintaDiasAtras.toISOString().split('T')[0];
+    const trintaDiasStr=dataLocal(trintaDiasAtras);
     const ultimos30=todos.filter(a=>a.status!=='cancelado'&&a.data>=trintaDiasStr);
     const diasSemanaLabel=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     const faixasHora=['06-09','09-12','12-15','15-18','18-21','21-24'];

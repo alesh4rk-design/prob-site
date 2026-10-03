@@ -32,7 +32,7 @@ async function coletarDadosBackup(){
 }
 
 function nomeArquivoBackup(){
-    const dataStr = new Date().toISOString().slice(0,10);
+    const dataStr = dataLocal(new Date());
     const nomeSlug = (barbeiroData.nome||'barbearia').toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
     return `backup-prob-${nomeSlug||'barbearia'}-${dataStr}.json`;

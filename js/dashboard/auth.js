@@ -202,7 +202,7 @@ async function initFuncionarioMode(bId, funcId){
     }
 
     // Load func agendamentos
-    const hoje=new Date().toISOString().split('T')[0];
+    const hoje=dataLocal(new Date());
     const mesAtual=hoje.slice(0,7);
     const qf=query(collection(db,'agendamentos'),where('barbeiroId','==',bId));
     let fs;try{fs=await getDocs(qf);}catch(e){fs={forEach:()=>{}};}
@@ -281,8 +281,8 @@ async function initFuncionarioMode(bId, funcId){
     const diaSemAtual=agoraDate.getDay()||7; // 1=segunda...7=domingo
     const inicioSemana=new Date(agoraDate);inicioSemana.setDate(agoraDate.getDate()-diaSemAtual+1);
     const fimSemana=new Date(inicioSemana);fimSemana.setDate(fimSemana.getDate()+6);
-    const inicioSemanaStr=inicioSemana.toISOString().split('T')[0];
-    const fimSemanaStr=fimSemana.toISOString().split('T')[0];
+    const inicioSemanaStr=dataLocal(inicioSemana);
+    const fimSemanaStr=dataLocal(fimSemana);
 
     const concHoje=deHoje.filter(a=>a.status==='concluido');
     // Ganho conta só os cortes já pagos pelo cliente (ver foiPago)
@@ -329,7 +329,7 @@ async function initFuncionarioMode(bId, funcId){
     const fHoje=new Date();
     for(let i=0;i<7;i++){
         const d=new Date(fHoje);d.setDate(fHoje.getDate()+i);
-        const key=d.toISOString().split('T')[0];
+        const key=dataLocal(d);
         const chip=document.createElement('div');
         chip.className='date-chip'+(i===0?' active':'');
         chip.textContent=i===0?'Hoje':key.slice(5);
@@ -505,7 +505,7 @@ async function renderFuncHours(bId,funcNome,data,meus){
     const diaSem=new Date(data+'T12:00:00').getDay();
     const func=funcData[diaSem]||{aberto:true,inicio:'08:00',fim:'18:00'};
 
-    const agora=new Date();const isHoje=data===new Date().toISOString().split('T')[0];
+    const agora=new Date();const isHoje=data===dataLocal(new Date());
     const agoraMin=isHoje?agora.getHours()*60+agora.getMinutes():0;
 
     if(!func.aberto){

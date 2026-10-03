@@ -93,7 +93,7 @@ function initHorarios(){
     const hoje=new Date();
     for(let i=0;i<7;i++){
         const d=new Date(hoje);d.setDate(hoje.getDate()+i);
-        const key=d.toISOString().split('T')[0];
+        const key=dataLocal(d);
         const chip=document.createElement('div');
         chip.className='date-chip'+(key===selectedDate?' active':'');
         chip.textContent=i===0?'Hoje':fmtDate(d);

@@ -184,7 +184,7 @@ function renderPromocoes(promos){
         return;
     }
     const icones={simples:'🏷️',pacote:'📦',desconto:'💰',fidelidade:'⭐',cupom:'🎟️'};
-    const hoje = new Date().toISOString().split('T')[0];
+    const hoje = dataLocal(new Date());
     cont.innerHTML = promos.map(p=>{
         // Verifica se está dentro do período
         let ativaNoPeriodo = p.ativo;
