@@ -120,12 +120,41 @@ function renderHistoricoCortes(){
                 ${a.barbeiro?`<span class="appt-barber-tag">✂️ ${escapeHtml(a.barbeiro)}</span>`:''}
                 <span class="badge ${pago?'badge-ok':'badge-pend'}">${forma}</span>
             </div>
-            <span class="appt-price">${desc}R$${Number(a.preco||0).toFixed(0)}</span>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.35rem">
+                <span class="appt-price">${desc}R$${Number(a.preco||0).toFixed(0)}</span>
+                <button type="button" class="btn-del" data-hist-apagar="${a.id}" title="Apagar este corte do histórico" style="padding:.25rem .5rem;font-size:.68rem">🗑 Apagar</button>
+            </div>
         </div>`;
     }).join('')+(lista.length>mostrados.length
         ? `<button id="hist-ver-mais" style="width:100%;margin-top:.8rem;padding:.65rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer">Ver mais (${lista.length-mostrados.length} restantes)</button>` : '');
+    cont.querySelectorAll('[data-hist-apagar]').forEach(btn=>{
+        btn.addEventListener('click',(e)=>{ e.stopPropagation(); apagarCorteHistorico(btn.dataset.histApagar); });
+    });
     const mais=document.getElementById('hist-ver-mais');
     if(mais) mais.addEventListener('click',()=>{ histLimite+=100; renderHistoricoCortes(); });
+}
+
+// Apaga de vez um corte do histórico (ex: lançado por engano, teste). Some do
+// faturamento, dos gráficos e das comissões. O contador de cortes do cliente e
+// da fidelidade NÃO volta atrás (esses são ajustados pela aba Clientes).
+async function apagarCorteHistorico(id){
+    const a=(typeof ultimaListaAppts!=='undefined'?ultimaListaAppts:[]).find(x=>x.id===id);
+    if(!a) return;
+    const resumo=`${a.clienteNome||'Cliente'} · ${a.corte||'serviço'} · R$${Number(a.preco||0).toFixed(2)} · ${fmtDataBR(a.data)} ${a.hora||''}`;
+    if(!(await perguntarSimNao(`Apagar este corte do histórico?\n\n${resumo}\n\nEle sai do faturamento, dos relatórios e da comissão. Não dá pra desfazer.`))) return;
+    if(!(await perguntarSimNao(`Confirma mesmo? Apagar de vez: ${resumo}`))) return;
+    try{
+        await deleteDoc(doc(db,'agendamentos',id));
+        // Cópia pública do horário (só existe pra agendamentos de hoje em diante)
+        if(a.publicoId){ try{ await deleteDoc(doc(db,'horariosOcupados',a.publicoId)); }catch(e){} }
+        ultimaListaAppts=ultimaListaAppts.filter(x=>x.id!==id); // atualiza na hora (o snapshot confirma depois)
+        toast('🗑 Corte apagado do histórico');
+        renderHistoricoCortes();
+        if(typeof carregarResumoGestao==='function') carregarResumoGestao();
+        if(typeof carregarGanhos==='function') carregarGanhos();
+    }catch(e){
+        toast('Erro ao apagar: '+e.message,'var(--red)');
+    }
 }
 
 function initHistorico(){

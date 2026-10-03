@@ -455,7 +455,7 @@
     <!-- ══ Pergunta Sim/Não (ex: "atendimento já concluído?" após o comprovante) ══ -->
     <div id="modal-pergunta-simnao" style="display:none;position:fixed;inset:0;z-index:530;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:1.2rem">
         <div style="background:var(--card2);border:1.5px solid var(--border);border-radius:14px;max-width:340px;width:100%;padding:1.3rem;text-align:center">
-            <div id="pergunta-simnao-texto" style="font-size:.92rem;font-weight:700;margin-bottom:1.1rem">—</div>
+            <div id="pergunta-simnao-texto" style="font-size:.92rem;font-weight:700;margin-bottom:1.1rem;white-space:pre-line">—</div>
             <div style="display:flex;gap:.6rem">
                 <button id="btn-pergunta-nao" style="flex:1;padding:.65rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;font-weight:700;cursor:pointer">Não</button>
                 <button id="btn-pergunta-sim" class="btn-add" style="flex:1;margin:0">Sim</button>
@@ -1653,7 +1653,7 @@
     <!-- TAB Histórico de Cortes (só do dono) -->
     <div class="tab-content" id="tab-historico">
         <div class="section-title" style="margin-bottom:.6rem">📜 Histórico de Cortes</div>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Todos os cortes concluídos da barbearia, de cada barbeiro e seus. Não entram aqui os cortes do barbeiro que só aluga a cadeira (ele usa o próprio sistema). Toque num corte para editar, registrar pagamento ou chamar no WhatsApp.</p>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Todos os cortes concluídos da barbearia, de cada barbeiro e seus. Não entram aqui os cortes do barbeiro que só aluga a cadeira (ele usa o próprio sistema). Toque num corte para editar, registrar pagamento ou chamar no WhatsApp; use 🗑 Apagar para tirar um corte do histórico.</p>
 
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem">
             <button type="button" data-hist-periodo="hoje" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">Hoje</button><button type="button" data-hist-periodo="7" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">7 dias</button><button type="button" data-hist-periodo="30" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--blue);border-radius:20px;color:var(--blue);font-size:.78rem;font-weight:600;cursor:pointer">30 dias</button><button type="button" data-hist-periodo="mes" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">Este mês</button><button type="button" data-hist-periodo="tudo" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">Tudo</button><button type="button" data-hist-periodo="custom" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">📅 Período</button>
@@ -3252,7 +3252,7 @@ async function initDash(){
 <script defer src="js/dashboard/promocoes.js?v=20261003c"></script>
 <script defer src="js/dashboard/clientes.js?v=20261003c"></script>
 <script defer src="js/dashboard/publico.js?v=20261003b"></script>
-<script defer src="js/dashboard/historico.js?v=20261003a"></script>
+<script defer src="js/dashboard/historico.js?v=20261003b"></script>
 <script defer src="js/dashboard/agendamentos.js?v=20261003f"></script>
 <script defer src="js/dashboard/horarios.js?v=20261003e"></script>
 <script defer src="js/dashboard/financeiro.js?v=20261003f"></script>
