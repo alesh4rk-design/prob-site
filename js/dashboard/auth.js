@@ -145,6 +145,7 @@ async function initFuncionarioMode(bId, funcId){
                 <div class="fat-kpi green"><div class="fat-kpi-val" id="func-ganho-semana">R$0</div><div class="fat-kpi-lbl">Ganho na semana</div></div>
                 <div class="fat-kpi" style="border-color:rgba(192,160,96,.35)"><div class="fat-kpi-val" id="func-ganho-mes" style="color:#c0a060">R$0</div><div class="fat-kpi-lbl">Ganho no mês</div></div>
             </div>
+            <div id="func-a-receber" style="display:none;font-size:.75rem;color:var(--yellow);margin:-.3rem 0 .8rem;padding:.5rem .7rem;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.25);border-radius:8px;text-align:center"></div>
             <p style="font-size:.7rem;color:var(--muted);margin-bottom:1rem;text-align:center">📅 Semana: <span id="func-periodo-semana"></span></p>
             <div class="section-title">Histórico</div>
             <div class="card" id="func-historico"></div>
@@ -284,10 +285,12 @@ async function initFuncionarioMode(bId, funcId){
     const fimSemanaStr=fimSemana.toISOString().split('T')[0];
 
     const concHoje=deHoje.filter(a=>a.status==='concluido');
-    const concSemana=meus.filter(a=>a.status==='concluido'&&a.data>=inicioSemanaStr&&a.data<=fimSemanaStr);
-    const concMes=meus.filter(a=>a.status==='concluido'&&a.data&&a.data.startsWith(mesAtual));
+    // Ganho conta só os cortes já pagos pelo cliente (ver foiPago)
+    const concSemana=meus.filter(a=>a.status==='concluido'&&foiPago(a)&&a.data>=inicioSemanaStr&&a.data<=fimSemanaStr);
+    const concMes=meus.filter(a=>a.status==='concluido'&&foiPago(a)&&a.data&&a.data.startsWith(mesAtual));
+    const aReceberMesFunc=meus.filter(a=>a.status==='concluido'&&!foiPago(a)&&a.data&&a.data.startsWith(mesAtual));
 
-    const ganhoHoje=concHoje.reduce((s,a)=>s+Number(a.preco||0)*pct/100,0);
+    const ganhoHoje=concHoje.filter(foiPago).reduce((s,a)=>s+Number(a.preco||0)*pct/100,0);
     const fatSemana=concSemana.reduce((s,a)=>s+Number(a.preco||0),0);
     const ganhoSemana=fatSemana*pct/100;
     const ganhoMes=concMes.reduce((s,a)=>s+Number(a.preco||0)*pct/100,0);
@@ -296,6 +299,12 @@ async function initFuncionarioMode(bId, funcId){
     document.getElementById('func-ganho-hoje').textContent='R$'+ganhoHoje.toFixed(2);
     document.getElementById('func-ganho-semana').textContent='R$'+ganhoSemana.toFixed(2);
     document.getElementById('func-ganho-mes').textContent='R$'+ganhoMes.toFixed(2);
+    const elFuncAReceber=document.getElementById('func-a-receber');
+    if(elFuncAReceber){
+        const v=aReceberMesFunc.reduce((s,a)=>s+Number(a.preco||0)*pct/100,0);
+        elFuncAReceber.style.display=aReceberMesFunc.length?'block':'none';
+        elFuncAReceber.textContent=`⏳ + R$${v.toFixed(2)} de ${aReceberMesFunc.length} corte${aReceberMesFunc.length>1?'s':''} que o cliente ainda não pagou (entra quando o pagamento for registrado)`;
+    }
 
     const fmtDataBR=(d)=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
     document.getElementById('func-periodo-semana').textContent=`${fmtDataBR(inicioSemana)} a ${fmtDataBR(fimSemana)} (seg-dom)`;
@@ -305,7 +314,7 @@ async function initFuncionarioMode(bId, funcId){
     document.getElementById('func-historico').innerHTML=diasComCorte.length
         ?diasComCorte.map(d=>{
             const cortesD=meus.filter(a=>a.status==='concluido'&&a.data===d);
-            const totalD=cortesD.reduce((s,a)=>s+Number(a.preco||0),0);
+            const totalD=cortesD.filter(foiPago).reduce((s,a)=>s+Number(a.preco||0),0);
             const ganhoD=totalD*pct/100;
             return `<div class="rank-item">
                 <div class="rank-info"><div class="rank-nome">${d}</div><div style="font-size:.72rem;color:var(--muted)">${cortesD.length} corte${cortesD.length>1?'s':''}</div></div>

@@ -312,12 +312,14 @@ function initInsumos(){
 
 // Registra um gasto com insumo — alimenta o cartão "Gastos com Insumos"
 // na aba Gestão da Barbearia (financeiro.js), reduzindo o lucro líquido.
-async function registrarGastoInsumo(insumoId, insumoNome, quantidade, custoTotal){
+async function registrarGastoInsumo(insumoId, insumoNome, quantidade, custoTotal, dataCompra){
     if(!custoTotal || custoTotal<=0) return; // custo é opcional
     try{
         await addDoc(collection(db,'barbeiros',barbeiroData.uid,'gastosInsumos'), {
             insumoId, insumoNome, quantidade, custoTotal,
-            data: fmtHoje(),
+            // Data da compra informada no cadastro (antes ficava sempre a de hoje,
+            // e a compra caía no mês errado no resumo de gastos)
+            data: dataCompra || fmtHoje(),
             criadoEm: new Date().toISOString()
         });
     }catch(e){ console.error('registrarGastoInsumo:', e); }
@@ -343,7 +345,7 @@ async function adicionarInsumo(){
     try{
         if(existente){
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',existente.id), {quantidade:increment(qtd)});
-            await registrarGastoInsumo(existente.id, existente.nome, qtd, custo);
+            await registrarGastoInsumo(existente.id, existente.nome, qtd, custo, dataEntrada);
             await registrarMovimentoInsumo(existente.id, existente.nome, 'entrada', qtd, 'Reposição', dataEntrada);
             toast(`✓ +${qtd} ${unidade} adicionado(s) a "${existente.nome}"${custo?' — gasto registrado':''}`);
         } else {
@@ -351,7 +353,7 @@ async function adicionarInsumo(){
                 nome, unidade, quantidade:qtd, quantidadeMinima:qtdMinima,
                 criadoEm: new Date().toISOString()
             });
-            await registrarGastoInsumo(novoRef.id, nome, qtd, custo);
+            await registrarGastoInsumo(novoRef.id, nome, qtd, custo, dataEntrada);
             await registrarMovimentoInsumo(novoRef.id, nome, 'entrada', qtd, 'Cadastro inicial', dataEntrada);
             toast('✓ Insumo cadastrado!'+(custo?' Gasto registrado.':''));
         }
@@ -360,6 +362,26 @@ async function adicionarInsumo(){
         $('insumo-card-intro').style.display='block';
     }catch(e){ toast('Erro ao cadastrar: '+e.message,'var(--red)'); }
     btn.disabled = false;
+}
+
+// Pergunta a data da compra na reposição rápida. Aceita dd/mm ou dd/mm/aaaa;
+// vazio = hoje. Devolve YYYY-MM-DD, ou null se a pessoa cancelar.
+function pedirDataCompra(nome){
+    for(;;){
+        const r = prompt(`Quando comprou "${nome}"? (dd/mm ou dd/mm/aaaa — deixe em branco para hoje)`, '');
+        if(r===null) return null;
+        const t = r.trim();
+        if(!t) return fmtHoje();
+        const m = t.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+        if(m){
+            const ano = m[3] ? (m[3].length===2 ? 2000+Number(m[3]) : Number(m[3])) : new Date().getFullYear();
+            const d = new Date(ano, Number(m[2])-1, Number(m[1]));
+            if(d.getDate()===Number(m[1]) && d.getMonth()===Number(m[2])-1){
+                return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            }
+        }
+        alert('Data inválida. Use por exemplo 25/09 ou 25/09/2026.');
+    }
 }
 
 const UNIDADE_ABREV = {unidade:'un', pacote:'pct', caixa:'cx', litro:'L', ml:'ml', kg:'kg', g:'g', rolo:'rl'};
@@ -381,7 +403,7 @@ function renderInsumos(){
         const ultimaEntrada = movimentosInsumosCache.find(m=>m.insumoId===i.id && m.tipo==='entrada');
         const ultimaSaida = movimentosInsumosCache.find(m=>m.insumoId===i.id && m.tipo==='saida');
         let datasHtml = '';
-        if(ultimaEntrada) datasHtml += `<span style="color:var(--green)">↓ entrou ${fmtDataMovimento(ultimaEntrada.data)}</span>`;
+        if(ultimaEntrada) datasHtml += `<span style="color:var(--green)">↓ comprado em ${fmtDataMovimento(ultimaEntrada.data)}</span>`;
         if(ultimaSaida) datasHtml += `${ultimaEntrada?' · ':''}<span style="color:var(--red)">↑ saiu ${fmtDataMovimento(ultimaSaida.data)}</span>`;
         return `<div class="service-item" style="flex-wrap:wrap;${baixo?'border-color:rgba(255,75,43,.4)':''}">
             <div style="flex:1;min-width:140px">
@@ -407,9 +429,11 @@ function renderInsumos(){
             if(!qtd || isNaN(n) || n<=0) return;
             const custoStr = prompt(`Quanto custou esse lote de "${item.nome}"? (R$, deixe em branco se não quiser registrar)`, '');
             const custo = custoStr ? parseFloat(custoStr) : null;
+            const dataCompra = pedirDataCompra(item.nome);
+            if(dataCompra===null) return;
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',item.id), {quantidade:increment(n)});
-            await registrarGastoInsumo(item.id, item.nome, n, custo);
-            await registrarMovimentoInsumo(item.id, item.nome, 'entrada', n, 'Reposição');
+            await registrarGastoInsumo(item.id, item.nome, n, custo, dataCompra);
+            await registrarMovimentoInsumo(item.id, item.nome, 'entrada', n, 'Reposição', dataCompra);
             toast(`✓ +${n} adicionado(s) a "${item.nome}"${custo?' — gasto registrado':''}`);
         });
     });
@@ -719,7 +743,7 @@ function renderProdutos(){
         const ultimaEntrada = movimentosEstoqueCache.find(m=>m.produtoId===p.id && m.tipo==='entrada');
         const ultimaSaida = movimentosEstoqueCache.find(m=>m.produtoId===p.id && m.tipo==='saida');
         let datasHtml = '';
-        if(ultimaEntrada) datasHtml += `<span style="color:var(--green)">↓ entrou ${fmtDataMovimento(ultimaEntrada.data)}</span>`;
+        if(ultimaEntrada) datasHtml += `<span style="color:var(--green)">↓ comprado em ${fmtDataMovimento(ultimaEntrada.data)}</span>`;
         if(ultimaSaida) datasHtml += `${ultimaEntrada?' · ':''}<span style="color:var(--red)">↑ saiu ${fmtDataMovimento(ultimaSaida.data)}</span>`;
 
         return `<div class="service-item" style="flex-wrap:wrap;${baixo?'border-color:rgba(255,75,43,.4)':''}">
@@ -744,8 +768,10 @@ function renderProdutos(){
             const qtd = prompt('Quantas unidades chegaram?','10');
             const n = parseInt(qtd);
             if(!qtd || isNaN(n) || n<=0) return;
+            const dataCompra = pedirDataCompra(produto?.nome||'o produto');
+            if(dataCompra===null) return;
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',btn.dataset.addEstoque),{estoque:increment(n)});
-            await registrarMovimentoEstoque(btn.dataset.addEstoque, produto?.nome||'', 'entrada', n, 'Reposição de estoque');
+            await registrarMovimentoEstoque(btn.dataset.addEstoque, produto?.nome||'', 'entrada', n, 'Reposição de estoque', dataCompra);
             toast(`✓ +${n} unidades adicionadas`);
         });
     });

@@ -363,7 +363,9 @@ async function carregarGanhos(){
     let snap;try{snap=await getDocs(q);}catch(e){return;}
 
     const todos=[];snap.forEach(d=>todos.push(d.data()));
-    const concluidos=todos.filter(a=>a.status==='concluido');
+    const concluidosTodos=todos.filter(a=>a.status==='concluido');
+    // Comissão só sobre o que o cliente já pagou; o resto fica como "a receber"
+    const concluidos=concluidosTodos.filter(foiPago);
     concluidosCache = concluidos;
     ganhosCarregados = true;
 
@@ -425,6 +427,10 @@ async function carregarGanhos(){
 
     renderGanhos($('ganhos-hoje'), concluidos.filter(a=>a.data===hoje), 'hoje', false);
     renderGanhos($('ganhos-mes'),  concluidos.filter(a=>a.data&&a.data.startsWith(mesAtual)), 'este mês', true);
+    const naoPagosMes=concluidosTodos.filter(a=>!foiPago(a)&&a.data&&a.data.startsWith(mesAtual));
+    if(naoPagosMes.length){
+        $('ganhos-mes').insertAdjacentHTML('beforeend',`<div style="font-size:.75rem;color:var(--yellow);margin-top:.4rem;padding:.5rem .7rem;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.25);border-radius:8px">⏳ ${naoPagosMes.length} corte${naoPagosMes.length>1?'s':''} concluído${naoPagosMes.length>1?'s':''} ainda sem pagamento (R$${somaPreco(naoPagosMes).toFixed(2)}) — não entram no faturamento nem na comissão até o pagamento ser registrado.</div>`);
+    }
     renderPagamentoComissoes();
     if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
 }

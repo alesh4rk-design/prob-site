@@ -17,6 +17,13 @@ let unsubFila=null;
 
 // Serviços com múltipla escolha (Fila e Agendamento Presencial usam o
 // mesmo padrão) — desenha os checkboxes e mantém o total sempre atualizado.
+// Corte concluído só vira dinheiro quando tem forma de pagamento de verdade.
+// "Ainda não pagou" (pendente) ou concluído sem forma registrada = ainda
+// não entrou no caixa (mesma regra da aba Cobrança). Faturamento, lucro e
+// comissões usam só os pagos; o resto aparece como "a receber".
+function foiPago(a){ return !!(a && a.formaPagamento && a.formaPagamento!=='pendente'); }
+function somaPreco(lista){ return lista.reduce((s,a)=>s+Number(a.preco||0),0); }
+
 function renderChecklistCortes(containerId, totalId){
     const cont = document.getElementById(containerId);
     const cortes = barbeiroData.cortes||[];
@@ -757,7 +764,7 @@ function carregarAgendamentos(){
 
         $('stat-hoje').textContent=deHoje.filter(a=>a.status!=='cancelado').length;
         $('stat-semana').textContent=todos.filter(a=>a.data>=hoje&&a.status!=='cancelado').length;
-        const receita=deHoje.filter(a=>a.status==='concluido').reduce((s,a)=>s+Number(a.preco||0),0);
+        const receita=somaPreco(deHoje.filter(a=>a.status==='concluido'&&foiPago(a)));
         $('stat-receita').textContent='R$'+receita.toFixed(0);
         $('stat-cancelados').textContent=deHoje.filter(a=>a.status==='cancelado').length;
 
@@ -875,7 +882,7 @@ function fmtDataExtenso(dataStr){
 // Mesmo padrão visual usado no Pro'Bronze, adaptado pras cores do Pro'B.
 let comprovanteAtual = null; // { blob, clienteWhatsapp, nomeArquivo }
 
-const ROTULO_FORMA_PAGAMENTO = { dinheiro:'Dinheiro', pix:'Pix', debito:'Débito', credito:'Crédito', nao_informado:'Não informado' };
+const ROTULO_FORMA_PAGAMENTO = { dinheiro:'Dinheiro', pix:'Pix', debito:'Débito', credito:'Crédito', nao_informado:'Não informado', pendente:'Ainda não pago (pendente)' };
 
 // Marca "Pro'B" colorida (Pro em azul, ' em verde, B em branco), desenhada
 // terminando em rightX — usada nos comprovantes, reposicionada num canto

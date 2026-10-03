@@ -316,8 +316,10 @@ async function exportarExcel(){
         const concluidos=todos.filter(a=>a.status==='concluido');
         const cancelados=todos.filter(a=>a.status==='cancelado');
         const pendentes=todos.filter(a=>a.status!=='concluido'&&a.status!=='cancelado');
-        const totalServicosExcel=concluidos.reduce((s,a)=>s+Number(a.preco||0),0);
-        const ticketMedio=concluidos.length?totalServicosExcel/concluidos.length:0;
+        const concluidosPagos=concluidos.filter(foiPago);
+        const totalServicosExcel=somaPreco(concluidosPagos);
+        const aReceberExcel=somaPreco(concluidos.filter(a=>!foiPago(a)));
+        const ticketMedio=concluidosPagos.length?totalServicosExcel/concluidosPagos.length:0;
 
         // Vendas de produtos do período
         let vendasExcel=[];
@@ -353,6 +355,7 @@ async function exportarExcel(){
             ['Faturamento total (R$)',totalFaturado.toFixed(2)],
             ['  · Faturamento de serviços (R$)',totalServicosExcel.toFixed(2)],
             ['  · Faturamento de produtos (R$)',totalProdutosExcel.toFixed(2)],
+            ['A receber — concluídos ainda não pagos (R$)',aReceberExcel.toFixed(2)],
             ['Ticket médio de serviço (R$)',ticketMedio.toFixed(2)],
             ['Gastos fixos mensais (R$)',totalGastosFixos().toFixed(2)],
         ];
@@ -481,7 +484,9 @@ async function exportarPDF(){
         let todos=[];snap.forEach(d=>todos.push(d.data()));
 
         const todosPeriodo=todos.filter(a=>a.data>=periodo.inicioStr&&a.data<=periodo.fimStr);
-        const concP=todosPeriodo.filter(a=>a.status==='concluido');
+        const concPTodos=todosPeriodo.filter(a=>a.status==='concluido');
+        const concP=concPTodos.filter(foiPago);
+        const aReceberPdf=somaPreco(concPTodos.filter(a=>!foiPago(a)));
         const cancP=todosPeriodo.filter(a=>a.status==='cancelado');
         const pendP=todosPeriodo.filter(a=>a.status!=='concluido'&&a.status!=='cancelado');
         const totalServicos=concP.reduce((s,a)=>s+Number(a.preco||0),0);
@@ -513,7 +518,7 @@ async function exportarPDF(){
         const dias7=[];
         for(let i=6;i>=0;i--){const d=new Date(hoje);d.setDate(hoje.getDate()-i);dias7.push(d.toISOString().split('T')[0]);}
         const nomes7=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-        const concTodos=todos.filter(a=>a.status==='concluido');
+        const concTodos=todos.filter(a=>a.status==='concluido'&&foiPago(a));
         const vals7=dias7.map(d=>
             concTodos.filter(a=>a.data===d).reduce((s,a)=>s+Number(a.preco||0),0)
             + vendasPdf.filter(v=>v.data===d).reduce((s,v)=>s+Number(v.total||0),0)
@@ -620,7 +625,7 @@ async function exportarPDF(){
         kpiCard(M+3*(kpiW+4),y,kpiW,20,'Lucro líquido','R$'+lucroLiquido.toFixed(0),lucroLiquido>=0?GREEN:RED);
         y+=26;
 
-        kpiCard(M,y,kpiW,18,'Cortes concluídos',String(concP.length),NAVY);
+        kpiCard(M,y,kpiW,18,'Cortes concluídos',String(concPTodos.length),NAVY);
         kpiCard(M+kpiW+4,y,kpiW,18,'Ticket médio','R$'+ticketMedio.toFixed(0),NAVY);
         kpiCard(M+2*(kpiW+4),y,kpiW,18,'Cancelamentos',pctCancel+'%',pctCancel>15?RED:NAVY);
         kpiCard(M+3*(kpiW+4),y,kpiW,18,'Pendentes',String(pendP.length),NAVY);
@@ -629,7 +634,7 @@ async function exportarPDF(){
         kpiCard(M,y,kpiW,18,'Receita serviços','R$'+totalServicos.toFixed(0),NAVY);
         kpiCard(M+kpiW+4,y,kpiW,18,'Receita produtos','R$'+totalProdutos.toFixed(0),BLUE_DARK);
         kpiCard(M+2*(kpiW+4),y,kpiW,18,'Produtos vendidos',String(vendasPeriodo.reduce((s,v)=>s+Number(v.quantidade||0),0)),NAVY);
-        kpiCard(M+3*(kpiW+4),y,kpiW,18,'Nº de vendas',String(vendasPeriodo.length),NAVY);
+        kpiCard(M+3*(kpiW+4),y,kpiW,18,'A receber (não pagos)','R$'+aReceberPdf.toFixed(0),aReceberPdf>0?RED:NAVY);
         y+=26;
 
         y=sectionTitle('Faturamento — últimos 7 dias',y);
@@ -787,9 +792,11 @@ async function carregarFaturamento(){
     const inicioSemAntStr=inicioSemAnt.toISOString().split('T')[0];
     const fimSemAntStr=inicioSemStr;
 
-    const daSemana=conc.filter(a=>a.data>=inicioSemStr&&a.data<=hojeStr);
-    const doMes=conc.filter(a=>a.data&&a.data.startsWith(mesAtual));
-    const semAnt=conc.filter(a=>a.data>=inicioSemAntStr&&a.data<fimSemAntStr);
+    // Só o que foi pago entra no faturamento (ver foiPago em agendamentos.js)
+    const pagos=conc.filter(foiPago);
+    const daSemana=pagos.filter(a=>a.data>=inicioSemStr&&a.data<=hojeStr);
+    const doMes=pagos.filter(a=>a.data&&a.data.startsWith(mesAtual));
+    const semAnt=pagos.filter(a=>a.data>=inicioSemAntStr&&a.data<fimSemAntStr);
 
     // Vendas de produtos — soma no faturamento junto com os serviços
     let todasVendasFat=[];
@@ -842,14 +849,14 @@ async function carregarFaturamento(){
         <div class="compare-col">
             <div class="compare-title">Semana Anterior</div>
             <div class="compare-val">R$${totalSemAnt.toFixed(0)}</div>
-            <div class="compare-delta" style="color:var(--muted)">${semAnt.length} cortes</div>
+            <div class="compare-delta" style="color:var(--muted)">${semAnt.length} cortes pagos</div>
         </div>`;
 
     // Gráfico últimos 7 dias
     const dias7=[];
     for(let i=6;i>=0;i--){const d=new Date(hoje);d.setDate(hoje.getDate()-i);dias7.push(d.toISOString().split('T')[0]);}
     const vals7=dias7.map(d=>
-        conc.filter(a=>a.data===d).reduce((s,a)=>s+Number(a.preco||0),0)
+        pagos.filter(a=>a.data===d).reduce((s,a)=>s+Number(a.preco||0),0)
         + todasVendasFat.filter(v=>v.data===d).reduce((s,v)=>s+Number(v.total||0),0)
     );
     const max7=Math.max(...vals7,1);
@@ -870,7 +877,7 @@ async function carregarFaturamento(){
         const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
         meses6.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
     }
-    const valsM=meses6.map(m=>conc.filter(a=>a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0));
+    const valsM=meses6.map(m=>pagos.filter(a=>a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0));
     const maxM=Math.max(...valsM,1);
     const nomesM=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
     // "chart-mensal" não existe mais no HTML atual (sobrou desse elemento só
@@ -1315,7 +1322,10 @@ async function carregarResumoGestao(){
     const q=query(collection(db,'agendamentos'),where('barbeiroId','==',barbeiroData.uid));
     let snap;try{snap=await getDocs(q);}catch(e){return;}
     const todos=[];snap.forEach(d=>todos.push({id:d.id,...d.data()}));
-    const concMes=todos.filter(a=>a.status==='concluido'&&a.data&&a.data.startsWith(mesAtual));
+    const concMesTodos=todos.filter(a=>a.status==='concluido'&&a.data&&a.data.startsWith(mesAtual));
+    // Receita, comissões e lucro contam só o que foi pago; o resto é "a receber"
+    const concMes=concMesTodos.filter(foiPago);
+    const aReceberMes=somaPreco(concMesTodos.filter(a=>!foiPago(a)));
 
     const receitaServicosMes=concMes.reduce((s,a)=>s+Number(a.preco||0),0);
 
@@ -1355,6 +1365,8 @@ async function carregarResumoGestao(){
     const elComissoes=document.getElementById('gest-comissoes');
     const elLucro=document.getElementById('gest-lucro');
     if(elReceita)elReceita.textContent='R$'+receitaServicosMes.toFixed(0);
+    const elAReceber=document.getElementById('gest-a-receber');
+    if(elAReceber)elAReceber.textContent='R$'+aReceberMes.toFixed(0);
     if(elReceitaProdutos)elReceitaProdutos.textContent='R$'+receitaProdutosMes.toFixed(0);
     if(elDespesas)elDespesas.textContent='R$'+totalGastos.toFixed(0);
     if(elGastosInsumos)elGastosInsumos.textContent='R$'+totalGastosInsumosMes.toFixed(0);
@@ -1471,7 +1483,7 @@ async function carregarResumoGestao(){
     }
     const nomesM=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
     const receitasPorMes=meses6.map(m=>{
-        const servicos=todos.filter(a=>a.status==='concluido'&&a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0);
+        const servicos=todos.filter(a=>a.status==='concluido'&&foiPago(a)&&a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0);
         const produtos=todasVendas.filter(v=>v.data&&v.data.startsWith(m)).reduce((s,v)=>s+Number(v.total||0),0);
         return servicos+produtos;
     });
@@ -1585,7 +1597,7 @@ async function carregarResumoGestao(){
     // ══ 4. COMPARATIVO MÊS A MÊS ══
     const mesAnteriorDate=new Date(hoje.getFullYear(),hoje.getMonth()-1,1);
     const mesAnteriorStr=`${mesAnteriorDate.getFullYear()}-${String(mesAnteriorDate.getMonth()+1).padStart(2,'0')}`;
-    const concMesAnterior=todos.filter(a=>a.status==='concluido'&&a.data&&a.data.startsWith(mesAnteriorStr));
+    const concMesAnterior=todos.filter(a=>a.status==='concluido'&&foiPago(a)&&a.data&&a.data.startsWith(mesAnteriorStr));
     const receitaMesAnterior=concMesAnterior.reduce((s,a)=>s+Number(a.preco||0),0);
     const deltaMes=receitaMes-receitaMesAnterior;
     const deltaMesPct=receitaMesAnterior>0?Math.round((deltaMes/receitaMesAnterior)*100):(receitaMes>0?100:0);
