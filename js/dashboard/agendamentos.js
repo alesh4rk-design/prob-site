@@ -409,7 +409,6 @@ async function confirmarPresencial(){
 
     if(!nome){toast('Informe o nome do cliente','var(--red)');return;}
     if(!selecao){toast('Selecione pelo menos um serviço','var(--red)');return;}
-    if(isNaN(valorDigitado)&&!selecaoMarcada&&!agEditando){toast('Informe o valor','var(--red)');return;}
     if(equipe.length>0&&!barbeiroNome){toast('Selecione o barbeiro','var(--red)');return;}
     if(!data||!hora){toast('Selecione data e horário','var(--red)');return;}
 
