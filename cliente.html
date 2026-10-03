@@ -1216,7 +1216,9 @@ if(!window.__meusAgendBound){
 }
 
 function aplicarPersonalizacao(data) {
-    barbeiroInfo = data;
+    // Barbeiro independente (aluga a cadeira e usa o próprio sistema) não
+    // aparece para escolher nesta barbearia
+    barbeiroInfo = {...data, equipe:(data.equipe||[]).filter(b=>!b.independente)};
     const p = barbeiroInfo.personalizacao || {};
     const nomeExibido = (p.nomeCliente || barbeiroInfo.nome || 'Barbearia').toUpperCase();
     const coresPorLetra = p.coresPorLetra || {};

@@ -13,6 +13,8 @@
 // Registros antigos (antes desse campo existir) não tinham "atende"
 // salvo, então cai no padrão por tipo pra não sumir barbeiro nenhum.
 function atendeClientes(membro){
+    // Independente: só paga o aluguel da cadeira, atende pelo próprio sistema
+    if(membro.independente) return false;
     if(membro.atende!=null) return !!membro.atende;
     return membro.tipo!=='recepcionista';
 }
@@ -191,7 +193,7 @@ function descricaoPagamentoBarbeiro(m){
     const partes = [];
     if(m.cadeiraTipo!=='pct') partes.push(`aluguel <b style="color:var(--yellow)">R$${Number(m.aluguel||0).toFixed(2)}/${per}</b>`);
     if(m.cadeiraTipo!=='fixo') partes.push(`<b style="color:var(--yellow)">${m.pctDono||0}%</b> de cada corte pro dono`);
-    return `🪑 Aluga a cadeira: ${partes.join(' + ')}`;
+    return m.independente ? `🪑 Independente (usa o próprio sistema): ${partes.join(' + ')} · não aparece nos agendamentos` : `🪑 Aluga a cadeira: ${partes.join(' + ')}`;
 }
 // Quantas vezes o aluguel vence dentro de um mês (pro lucro do mês)
 function vezesAluguelNoMes(cfg, mesStr){
@@ -322,10 +324,11 @@ function renderEquipe(){
                         <select data-cadeira-tipo="${i}" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none">
                             <option value="misto" ${b.cadeiraTipo==='misto'||!b.cadeiraTipo?'selected':''}>Aluguel fixo + % dos cortes</option>
                             <option value="pct" ${b.cadeiraTipo==='pct'?'selected':''}>Só % dos cortes</option>
-                            <option value="fixo" ${b.cadeiraTipo==='fixo'?'selected':''}>Só aluguel fixo</option>
+                            <option value="fixo" ${b.cadeiraTipo==='fixo'?'selected':''}>Só aluguel fixo — independente (usa o próprio sistema)</option>
                         </select></div>
                     <div class="input-group" data-campo-aluguel="${i}" style="margin-bottom:.6rem;${b.cadeiraTipo==='pct'?'display:none':''}"><label>Valor do aluguel (R$ por período)</label>
                         <input type="number" data-aluguel="${i}" value="${b.aluguel||''}" min="0" step="10" placeholder="Ex: 300" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none"></div>
+                    <div data-aviso-independente="${i}" style="${b.cadeiraTipo==='fixo'?'':'display:none;'}font-size:.72rem;color:var(--yellow);margin:0 0 .6rem;padding:.5rem .6rem;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.25);border-radius:8px">⚠️ Barbeiro independente: <b>não aparece</b> nas opções de agendamento, fila e presencial desta barbearia e os cortes dele <b>não entram</b> no seu faturamento. Ele usa o próprio sistema Pro'B, como se fosse outro dono. Aqui fica só o controle do aluguel: no dia combinado aparece o valor que ele te deve, e você marca "Recebi dele".</div>
                     <div class="input-group" data-campo-pctdono="${i}" style="margin-bottom:.6rem;${b.cadeiraTipo==='fixo'?'display:none':''}"><label>% de cada corte que vai pro dono</label>
                         <input type="number" data-pct-dono="${i}" value="${b.pctDono||''}" min="0" max="100" step="5" placeholder="Ex: 10" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none"></div>
                     <div style="display:flex;gap:.5rem;margin-bottom:.6rem">
@@ -379,6 +382,7 @@ function renderEquipe(){
             const i=sel.dataset.cadeiraTipo;
             q1('data-campo-aluguel',i).style.display = sel.value==='pct'?'none':'block';
             q1('data-campo-pctdono',i).style.display = sel.value==='fixo'?'none':'block';
+            q1('data-aviso-independente',i).style.display = sel.value==='fixo'?'block':'none';
         });
     });
     container.querySelectorAll('[data-salvar-pagto]').forEach(btn=>{
@@ -411,6 +415,12 @@ function renderEquipe(){
             dados.pct=pctDoBarbeiro({...membro,...dados});
             await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',membro.id),dados,{merge:true});
             Object.assign(membro,dados);
+            // Marca pública (sem valores): esconde o barbeiro independente da tela do cliente
+            const independente = modelo==='cadeira' && dados.cadeiraTipo==='fixo';
+            if(!!membro.independente !== independente){
+                membro.independente = independente;
+                await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
+            }
             toast(`✓ Forma de pagamento de ${membro.nome} salva`);
             renderEquipe();
             carregarGanhos();
@@ -682,7 +692,8 @@ function renderPagamentoComissoes(){
         // Aluguel de cadeira sai do repasse; se o barbeiro faturou menos que o
         // aluguel, o valor fica negativo = ele deve a diferença ao dono
         const aluguel = aluguelDoBarbeiro(b);
-        const valor = Math.round((dados.ganho - aluguel)*100)/100;
+        // Independente: os cortes são do sistema dele — deve só o aluguel
+        const valor = b.independente ? -aluguel : Math.round((dados.ganho - aluguel)*100)/100;
         const ehCadeira = b.modelo==='cadeira';
         const deve = valor<0;
         const pago = pagamentosComissaoCache.find(p=>p.equipeId===b.id && p.periodo===periodo.id);
@@ -715,7 +726,8 @@ function renderPagamentoComissoes(){
                        </div>`}
             </div>
             <div style="font-size:.85rem;color:var(--muted)">${ehCadeira?(deve?'Aluguel a receber dele':'Repasse ao barbeiro'):'Comissão'} ${periodo.label} (vence ${periodo.vencimento.toLocaleDateString('pt-BR')}): <strong style="color:${deve?'var(--yellow)':'var(--text)'}">R$${Math.abs(valor).toFixed(2)}</strong>${pago&&pago.formaPagamento?` · ${ROTULO_FORMA_PAGAMENTO_COMISSAO[pago.formaPagamento]||pago.formaPagamento}`:''}</div>
-            ${ehCadeira?`<div style="font-size:.72rem;color:var(--muted)">Cortes pagos no período: R$${dados.total.toFixed(2)} (${dados.cortes}) · parte do dono (${b.pctDono||0}%): −R$${(dados.total-dados.ganho).toFixed(2)}${aluguel?` · aluguel da cadeira: −R$${aluguel.toFixed(2)}`:''}${deve?` → <b style="color:var(--yellow)">${escapeHtml(b.nome)} deve R$${Math.abs(valor).toFixed(2)} ao dono</b>`:''}</div>`:''}
+            ${b.independente?`<div style="font-size:.72rem;color:var(--muted)">🪑 Barbeiro independente — aluguel fixo da cadeira, combinado para ${periodo.vencimento.toLocaleDateString('pt-BR')}</div>`:''}
+            ${ehCadeira&&!b.independente?`<div style="font-size:.72rem;color:var(--muted)">Cortes pagos no período: R$${dados.total.toFixed(2)} (${dados.cortes}) · parte do dono (${b.pctDono||0}%): −R$${(dados.total-dados.ganho).toFixed(2)}${aluguel?` · aluguel da cadeira: −R$${aluguel.toFixed(2)}`:''}${deve?` → <b style="color:var(--yellow)">${escapeHtml(b.nome)} deve R$${Math.abs(valor).toFixed(2)} ao dono</b>`:''}</div>`:''}
 
             <div style="display:flex;align-items:flex-end;gap:.5rem;flex-wrap:wrap;padding-top:.4rem;border-top:1px dashed var(--border)">
                 <div class="input-group" style="margin-bottom:0;min-width:110px">
