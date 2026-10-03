@@ -72,6 +72,11 @@ function atualizarCentralAvisos(){
         });
     }
 
+    // Despesas com data de vencimento (aba Gestão): atrasadas ou que vencem hoje/amanhã
+    if(typeof avisosDespesas==='function'){
+        try{ avisosDespesas().forEach(a=>avisos.push(a)); }catch(e){ console.error('avisosDespesas:',e); }
+    }
+
     const visiveis = avisos.filter(a=>!avisosDispensados.has(a.id));
 
     if(!visiveis.length){

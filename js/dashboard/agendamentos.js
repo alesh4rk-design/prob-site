@@ -54,6 +54,10 @@ function atualizarTotalChecklist(containerId, totalId){
     const marcados = document.querySelectorAll(`#${containerId} .checklist-corte:checked`);
     const total = Array.from(marcados).reduce((s,c)=>s+Number(c.dataset.preco||0),0);
     document.getElementById(totalId).textContent = `Total: R$${total.toFixed(2).replace('.',',')}`;
+    if(containerId==='esq-corte-lista'){
+        const campo=document.getElementById('esq-preco');
+        if(campo) campo.value = total ? total.toFixed(2) : '';
+    }
 }
 
 // Junta os serviços marcados num nome só ("Corte + Barba") e soma o preço —
@@ -393,6 +397,7 @@ async function confirmarPresencial(){
 
     if(!nome){toast('Informe o nome do cliente','var(--red)');return;}
     if(!selecao){toast('Selecione pelo menos um serviço','var(--red)');return;}
+    if(isNaN(valorDigitado)&&!selecaoMarcada&&!agEditando){toast('Informe o valor','var(--red)');return;}
     if(equipe.length>0&&!barbeiroNome){toast('Selecione o barbeiro','var(--red)');return;}
     if(!data||!hora){toast('Selecione data e horário','var(--red)');return;}
 
@@ -445,44 +450,96 @@ async function confirmarPresencial(){
 // mas ninguém lançou no sistema na hora. Ao contrário do agendamento
 // presencial, entra direto como "concluido" — não precisa passar pelo
 // fluxo de aguardar/concluir, já que o corte já foi feito de verdade.
-function initEsquecido(){
-    const btnAbrir=document.getElementById('btn-abrir-esquecido');
+let esqEditandoId=null; // id do atendimento sendo editado (null = lançando um novo)
+
+function preencherEquipeEsquecido(barbeiroSelecionado){
+    const equipe=(barbeiroData.equipe||[]).filter(atendeClientes);
+    const eqWrap=document.getElementById('esq-equipe-wrap');
+    const eqSel=document.getElementById('esq-barbeiro');
+    if(equipe.length>0){
+        eqWrap.style.display='block';
+        const nomes=equipe.map(b=>b.nome);
+        // Barbeiro do atendimento que saiu da equipe continua aparecendo na edição
+        if(barbeiroSelecionado && !nomes.includes(barbeiroSelecionado)) nomes.push(barbeiroSelecionado);
+        eqSel.innerHTML='<option value="">Selecione...</option>'+
+            nomes.map(n=>`<option value="${escAttr(n)}">${escapeHtml(n)}</option>`).join('');
+        eqSel.value=barbeiroSelecionado||'';
+    } else {
+        eqWrap.style.display='none';
+    }
+}
+
+// Abre o modal para lançar um corte esquecido (editarId vazio) ou para
+// editar um atendimento já lançado/concluído (editarId = id do agendamento).
+function abrirModalEsquecido(editarId){
     const modal=document.getElementById('modal-esquecido');
-    if(!btnAbrir||!modal)return;
+    if(!modal)return;
+    const ag=editarId?ultimaListaAppts.find(a=>a.id===editarId):null;
+    esqEditandoId=ag?ag.id:null;
 
-    btnAbrir.addEventListener('click',()=>{
-        renderChecklistCortes('esq-corte-lista','esq-corte-total');
+    renderChecklistCortes('esq-corte-lista','esq-corte-total');
+    const hoje=fmtHoje();
+    const dataEl=document.getElementById('esq-data');
+    dataEl.max=ag&&ag.data>hoje?ag.data:hoje; // não faz sentido lançar um esquecido "do futuro"
 
-        const equipe=(barbeiroData.equipe||[]).filter(atendeClientes);
-        const eqWrap=document.getElementById('esq-equipe-wrap');
-        const eqSel=document.getElementById('esq-barbeiro');
-        if(equipe.length>0){
-            eqWrap.style.display='block';
-            eqSel.innerHTML='<option value="">Selecione...</option>'+
-                equipe.map(b=>`<option value="${b.nome}">${b.nome}</option>`).join('');
-        } else {
-            eqWrap.style.display='none';
-        }
-
-        const hoje=fmtHoje();
-        document.getElementById('esq-data').value=hoje;
-        document.getElementById('esq-data').max=hoje; // não faz sentido lançar um esquecido "do futuro"
+    if(ag){
+        // Marca no checklist os serviços do atendimento (combos são "A + B")
+        const nomes=(ag.corte||'').split(' + ').map(n=>n.trim());
+        const cortes=barbeiroData.cortes||[];
+        document.querySelectorAll('#esq-corte-lista .checklist-corte').forEach(chk=>{
+            const c=cortes[Number(chk.dataset.idx)];
+            chk.checked=!!c&&nomes.includes(c.nome);
+        });
+        atualizarTotalChecklist('esq-corte-lista','esq-corte-total');
+        // O valor salvo manda (preço do serviço pode ter mudado depois, ou ter tido desconto)
+        document.getElementById('esq-preco').value=Number(ag.preco||0).toFixed(2);
+        document.getElementById('esq-nome').value=ag.clienteNome||'';
+        document.getElementById('esq-wpp').value=ag.clienteWhatsapp||'';
+        dataEl.value=ag.data||hoje;
+        document.getElementById('esq-hora').value=ag.hora||'';
+        document.getElementById('esq-forma-pagamento').value=ag.formaPagamento||'';
+        preencherEquipeEsquecido(ag.barbeiro||'');
+        document.getElementById('esq-titulo').textContent='✏️ Editar atendimento';
+        document.getElementById('esq-descricao').textContent='Corrija o serviço, o valor, o dia ou a forma de pagamento. O atendimento continua concluído.'+(ag.corte?` Serviço atual: ${ag.corte}.`:'');
+        document.getElementById('btn-confirmar-esquecido').textContent='Salvar alterações';
+    } else {
+        preencherEquipeEsquecido('');
+        dataEl.value=hoje;
         document.getElementById('esq-hora').value=new Date().toTimeString().slice(0,5);
         document.getElementById('esq-nome').value='';
         document.getElementById('esq-wpp').value='';
+        document.getElementById('esq-preco').value='';
         document.getElementById('esq-forma-pagamento').value='';
-        document.getElementById('esq-status-msg').textContent='';
+        document.getElementById('esq-titulo').textContent='🕐 Lançar Corte Esquecido';
+        document.getElementById('esq-descricao').textContent='Use quando um atendimento já aconteceu (e foi pago) mas ninguém registrou na hora. Ele entra direto como concluído.';
+        document.getElementById('btn-confirmar-esquecido').textContent='Lançar Atendimento';
+    }
+    document.getElementById('esq-status-msg').textContent='';
+    modal.style.display='flex';
+}
 
-        modal.style.display='flex';
+function initEsquecido(){
+    const modal=document.getElementById('modal-esquecido');
+    if(!modal)return;
+    // O botão existe na aba Agendamentos e na Fila de Espera
+    ['btn-abrir-esquecido','btn-abrir-esquecido-fila'].forEach(id=>{
+        const b=document.getElementById(id);
+        if(b) b.addEventListener('click',()=>abrirModalEsquecido(null));
     });
-
     document.getElementById('btn-confirmar-esquecido').addEventListener('click',confirmarEsquecido);
 }
 
 async function confirmarEsquecido(){
     const nome=document.getElementById('esq-nome').value.trim();
     const wpp=document.getElementById('esq-wpp').value.replace(/\D/g,'');
-    const selecao=getSelecaoCortes('esq-corte-lista');
+    const selecaoMarcada=getSelecaoCortes('esq-corte-lista');
+    const agEditando=esqEditandoId?ultimaListaAppts.find(a=>a.id===esqEditandoId):null;
+    // Na edição, se nenhum serviço do cadastro foi marcado (ex: serviço antigo
+    // que não existe mais), mantém o nome que o atendimento já tinha.
+    const nomeServico=selecaoMarcada?selecaoMarcada.nome:(agEditando?agEditando.corte:'');
+    const valorDigitado=parseFloat(document.getElementById('esq-preco').value);
+    const preco=(!isNaN(valorDigitado)&&valorDigitado>=0)?valorDigitado:(selecaoMarcada?selecaoMarcada.preco:Number(agEditando?.preco||0));
+    const selecao=nomeServico?{nome:nomeServico,preco}:null;
     const equipe=barbeiroData.equipe||[];
     const barbeiroNome=equipe.length>0?document.getElementById('esq-barbeiro').value:'';
     const data=document.getElementById('esq-data').value;
@@ -497,32 +554,49 @@ async function confirmarEsquecido(){
     if(!formaPagamento){toast('Selecione a forma de pagamento','var(--red)');return;}
 
     const btn=document.getElementById('btn-confirmar-esquecido');
+    const textoBotao=agEditando?'Salvar alterações':'Lançar Atendimento';
     btn.disabled=true;btn.textContent='Salvando...';
 
     try{
-        await addDoc(collection(db,'agendamentos'),{
-            barbeiroId:barbeiroData.uid,
-            clienteNome:nome,
-            clienteWhatsapp:wpp||'',
-            corte:selecao.nome,
-            preco:selecao.preco,
-            barbeiro:barbeiroNome,
-            data,hora,
-            status:'concluido',
-            origem:'esquecido',
-            formaPagamento,
-            criadoEm:new Date().toISOString()
-        });
-
-        registrarClienteConcluido(barbeiroData.uid, nome, wpp, selecao.nome);
-        toast('✓ Atendimento lançado!');
+        if(agEditando){
+            // Edição de atendimento já existente: só corrige os dados, não mexe
+            // no status nem recontabiliza o cliente/fidelidade.
+            await updateDoc(doc(db,'agendamentos',agEditando.id),{
+                clienteNome:nome,
+                clienteWhatsapp:wpp||'',
+                corte:selecao.nome,
+                preco:selecao.preco,
+                barbeiro:barbeiroNome,
+                data,hora,
+                formaPagamento,
+                editadoEm:new Date().toISOString()
+            });
+            toast('✓ Atendimento atualizado!');
+        } else {
+            await addDoc(collection(db,'agendamentos'),{
+                barbeiroId:barbeiroData.uid,
+                clienteNome:nome,
+                clienteWhatsapp:wpp||'',
+                corte:selecao.nome,
+                preco:selecao.preco,
+                barbeiro:barbeiroNome,
+                data,hora,
+                status:'concluido',
+                origem:'esquecido',
+                formaPagamento,
+                criadoEm:new Date().toISOString()
+            });
+            registrarClienteConcluido(barbeiroData.uid, nome, wpp, selecao.nome);
+            toast('✓ Atendimento lançado!');
+        }
+        esqEditandoId=null;
         document.getElementById('modal-esquecido').style.display='none';
     }catch(e){
         statusMsg.textContent='Erro ao salvar: '+e.message;
         statusMsg.style.color='var(--red)';
         toast('Erro ao salvar: '+e.message,'var(--red)');
     }
-    btn.disabled=false;btn.textContent='Lançar Atendimento';
+    btn.disabled=false;btn.textContent=textoBotao;
 }
 
 // Cache de promoções vinculadas a cliente (simples/pacote/desconto/
@@ -670,6 +744,10 @@ function carregarAgendamentos(){
         // Cancelados pelo próprio cliente (tela "Meus Agendamentos") — o
         // dono precisa saber, já que não foi ele quem cancelou.
         const canceladosPeloCliente = todos.filter(a=>a.status==='cancelado' && a.canceladoPor==='cliente');
+        const limite=new Date();limite.setDate(limite.getDate()-7);
+        const limiteStr=limite.getFullYear()+'-'+String(limite.getMonth()+1).padStart(2,'0')+'-'+String(limite.getDate()).padStart(2,'0');
+        const concluidosRecentes = todos.filter(a=>a.status==='concluido' && a.data<hoje && a.data>=limiteStr)
+            .sort((a,b)=>(b.data+b.hora).localeCompare(a.data+a.hora));
         ultimosAgendamentos = {deHoje, proximos, pagtoPendente, canceladosPeloCliente};
         // Cache completo (não filtrado) usado pelo modal de ações do cliente
         // (desconto, forma de pagamento) — precisa ter TODOS os agendamentos,
@@ -685,6 +763,8 @@ function carregarAgendamentos(){
 
         renderAppts($('lista-agendamentos'),deHoje,'Nenhum agendamento hoje ainda.');
         renderAppts($('lista-proximos'),proximos,'Nenhum agendamento futuro.');
+        const elRecentes=$('lista-concluidos-recentes');
+        if(elRecentes) renderAppts(elRecentes,concluidosRecentes,'Nenhum atendimento concluído nos últimos 7 dias.');
 
         renderPagtoPendente('pagto-pendente-wrap','pagto-pendente-badge','lista-pagto-pendente-agendamentos',pagtoPendente);
         renderPagtoPendente('pagto-pendente-wrap-fila','pagto-pendente-badge-fila','lista-pagto-pendente-fila',pagtoPendente);
@@ -976,6 +1056,7 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
     $('ac-secao-pagamento').style.display = temVinculo ? '' : 'none';
 
     if(!temVinculo){
+        const be = $('ac-btn-editar-atendimento'); if(be) be.style.display = 'none';
         $('ac-status-badge').style.display = 'none';
         $('ac-btn-concluir').style.display = 'none';
         $('ac-btn-cancelar').style.display = 'none';
@@ -1000,6 +1081,9 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
     }
 
     const badge = $('ac-status-badge');
+    // Editar atendimento: só do dono e só de atendimento já concluído
+    const btnEditar = $('ac-btn-editar-atendimento');
+    if(btnEditar) btnEditar.style.display = (!temFila && acClienteAtual.status==='concluido' && !window.__funcionarioMode) ? 'block' : 'none';
     if(temFila){
         // Fila: "Concluir/Cancelar" viram "Atender/Remover"
         badge.style.display = 'none';
@@ -1113,6 +1197,13 @@ function perguntarSimNao(mensagem){
 function initAcoesClienteExtras(){
     $('btn-fechar-acoes-cliente').addEventListener('click', ()=>{
         $('modal-acoes-cliente').style.display = 'none';
+    });
+
+    $('ac-btn-editar-atendimento').addEventListener('click', ()=>{
+        const id = acClienteAtual.agendamentoId;
+        if(!id) return;
+        $('modal-acoes-cliente').style.display = 'none';
+        abrirModalEsquecido(id);
     });
 
     $('ac-copiar-wpp').addEventListener('click', ()=>{

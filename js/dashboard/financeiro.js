@@ -923,31 +923,62 @@ async function carregarFaturamento(){
 // ── continuação: Gestão da Barbearia (gastos, lucro) ──
 
 // ══ GESTÃO — GASTOS FIXOS ══
-const CATEGORIA_ICONS={Aluguel:'🏠',Energia:'⚡',Água:'💧',Internet:'📶',Produtos:'🧴',Manutenção:'🔧',Outros:'📦'};
+const CATEGORIA_ICONS={Aluguel:'🏠',Energia:'⚡',Água:'💧',Internet:'📶',Produtos:'🧴',Equipamento:'🪒',Manutenção:'🔧',Outros:'📦'};
+const DIAS_SEMANA=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+const TIPO_LABEL={fixo:'🔁 fixo (mensal)',semanal:'📆 semanal',parcelado:'📅 parcelado',unico:'📌 único'};
 
 let gastoTipoSelecionado='fixo';
+let gastoEditandoId=null;
+
+// Datas sempre no fuso do aparelho (toISOString usa UTC e, no Brasil, vira
+// o dia/mês seguinte depois das 21h).
+function ymdLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function mesLocal(d){return ymdLocal(d||new Date()).slice(0,7);}
+function fmtDiaMes(ymd){const [,m,d]=ymd.split('-');return d+'/'+m;}
+function moedaBR(v){return 'R$'+Number(v||0).toFixed(2).replace('.',',');}
+
+function mostrarCamposTipoGasto(){
+    const t=gastoTipoSelecionado;
+    document.getElementById('gasto-parcelas-wrap').style.display=t==='parcelado'?'block':'none';
+    document.getElementById('gasto-venc-mes-wrap').style.display=(t==='fixo'||t==='parcelado')?'block':'none';
+    document.getElementById('gasto-venc-semana-wrap').style.display=t==='semanal'?'block':'none';
+    document.getElementById('gasto-venc-data-wrap').style.display=t==='unico'?'block':'none';
+}
+
+function selecionarTipoGasto(tipo){
+    gastoTipoSelecionado=tipo;
+    document.querySelectorAll('.gasto-tipo-btn').forEach(b=>{
+        const ativo=b.dataset.tipo===tipo;
+        b.classList.toggle('active',ativo);
+        b.style.borderColor=ativo?'var(--blue)':'var(--border)';
+        b.style.color=ativo?'var(--blue)':'var(--muted)';
+    });
+    mostrarCamposTipoGasto();
+}
+
+function limparFormGasto(){
+    gastoEditandoId=null;
+    ['gasto-nome','gasto-valor','gasto-parcelas','gasto-dia-mes','gasto-data-venc'].forEach(id=>{document.getElementById(id).value='';});
+    document.getElementById('gasto-dia-semana').value='1';
+    document.getElementById('btn-add-gasto').textContent='+ Adicionar Gasto';
+    document.getElementById('btn-cancelar-edicao-gasto').style.display='none';
+    selecionarTipoGasto('fixo');
+}
 
 function initGestao(){
     renderGastos();
 
     document.querySelectorAll('.gasto-tipo-btn').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-            document.querySelectorAll('.gasto-tipo-btn').forEach(b=>{
-                b.classList.remove('active');
-                b.style.borderColor='var(--border)';b.style.color='var(--muted)';
-            });
-            btn.classList.add('active');
-            btn.style.borderColor='var(--blue)';btn.style.color='var(--blue)';
-            gastoTipoSelecionado=btn.dataset.tipo;
-            document.getElementById('gasto-parcelas-wrap').style.display=gastoTipoSelecionado==='parcelado'?'block':'none';
-        });
+        btn.addEventListener('click',()=>selecionarTipoGasto(btn.dataset.tipo));
     });
+    mostrarCamposTipoGasto();
 
     const btnAdd=document.getElementById('btn-add-gasto');
     if(btnAdd && !btnAdd.dataset.bound){
         btnAdd.dataset.bound='1';
         btnAdd.addEventListener('click',adicionarGasto);
         document.getElementById('gasto-valor').addEventListener('keypress',e=>{if(e.key==='Enter')adicionarGasto();});
+        document.getElementById('btn-cancelar-edicao-gasto').addEventListener('click',limparFormGasto);
     }
 
     carregarResumoGestao();
@@ -961,25 +992,61 @@ async function adicionarGasto(){
     if(!nome){toast('Informe o nome do gasto','var(--red)');return;}
     if(!valor||valor<=0){toast('Informe um valor válido','var(--red)');return;}
 
-    const mesInicioAtual=new Date().toISOString().slice(0,7); // YYYY-MM
-    const novoGasto={id:Date.now().toString(),nome,categoria,valor,tipo:gastoTipoSelecionado,mesInicio:mesInicioAtual};
+    const tipo=gastoTipoSelecionado;
+    const novo={nome,categoria,valor,tipo};
 
-    if(gastoTipoSelecionado==='parcelado'){
+    if(tipo==='parcelado'){
         const parcelas=parseInt(document.getElementById('gasto-parcelas').value);
         if(!parcelas||parcelas<1){toast('Informe o número de parcelas','var(--red)');return;}
-        novoGasto.parcelas=parcelas;
+        novo.parcelas=parcelas;
+    }
+    if(tipo==='fixo'||tipo==='parcelado'){
+        const dia=parseInt(document.getElementById('gasto-dia-mes').value);
+        if(document.getElementById('gasto-dia-mes').value!==''&&(!dia||dia<1||dia>31)){toast('O dia do vencimento deve ser de 1 a 31','var(--red)');return;}
+        if(dia)novo.diaVencimento=dia;
+    }
+    if(tipo==='semanal') novo.diaSemana=Number(document.getElementById('gasto-dia-semana').value);
+    if(tipo==='unico'){
+        const dt=document.getElementById('gasto-data-venc').value;
+        if(dt){novo.dataVencimento=dt;novo.mesInicio=dt.slice(0,7);}
     }
 
     barbeiroData.gastosFixos=barbeiroData.gastosFixos||[];
-    barbeiroData.gastosFixos.push(novoGasto);
+    if(gastoEditandoId){
+        const idx=barbeiroData.gastosFixos.findIndex(g=>g.id===gastoEditandoId);
+        if(idx<0){limparFormGasto();return;}
+        const antigo=barbeiroData.gastosFixos[idx];
+        // Mantém o que não é editado aqui (quando começou, o que já foi pago)
+        barbeiroData.gastosFixos[idx]={...novo,id:antigo.id,mesInicio:novo.mesInicio||antigo.mesInicio,pagos:antigo.pagos||{}};
+    } else {
+        novo.id=Date.now().toString();
+        novo.mesInicio=novo.mesInicio||mesLocal();
+        barbeiroData.gastosFixos.push(novo);
+    }
     await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{gastosFixos:barbeiroData.gastosFixos});
 
-    document.getElementById('gasto-nome').value='';
-    document.getElementById('gasto-valor').value='';
-    document.getElementById('gasto-parcelas').value='';
-    toast('✓ Gasto adicionado!');
+    toast(gastoEditandoId?'✓ Gasto atualizado!':'✓ Gasto adicionado!');
+    limparFormGasto();
     renderGastos();
     carregarResumoGestao();
+}
+
+function editarGasto(id){
+    const g=(barbeiroData.gastosFixos||[]).find(x=>x.id===id);
+    if(!g)return;
+    gastoEditandoId=id;
+    document.getElementById('gasto-nome').value=g.nome||'';
+    document.getElementById('gasto-categoria').value=g.categoria||'Outros';
+    document.getElementById('gasto-valor').value=g.valor||'';
+    document.getElementById('gasto-parcelas').value=g.parcelas||'';
+    document.getElementById('gasto-dia-mes').value=g.diaVencimento||'';
+    document.getElementById('gasto-dia-semana').value=g.diaSemana!=null?String(g.diaSemana):'1';
+    document.getElementById('gasto-data-venc').value=g.dataVencimento||'';
+    selecionarTipoGasto(g.tipo||'fixo');
+    document.getElementById('btn-add-gasto').textContent='💾 Salvar alterações';
+    document.getElementById('btn-cancelar-edicao-gasto').style.display='block';
+    document.getElementById('gasto-nome').scrollIntoView({behavior:'smooth',block:'center'});
+    document.getElementById('gasto-nome').focus();
 }
 
 // Calcula quantas parcelas já passaram desde o início (1-indexed) e quantas faltam
@@ -991,60 +1058,6 @@ function statusParcela(gasto){
     const parcelaAtual=mesesPassados+1; // parcela 1 no mês de início
     const ativa=parcelaAtual>=1 && parcelaAtual<=gasto.parcelas;
     return {parcelaAtual,total:gasto.parcelas,ativa};
-}
-
-function renderGastos(){
-    const lista=barbeiroData.gastosFixos||[];
-    const cont=document.getElementById('lista-gastos');
-    if(!cont)return;
-    if(!lista.length){cont.innerHTML='<div class="empty-state"><div class="icon">💼</div>Nenhum gasto cadastrado ainda.</div>';return;}
-
-    const mesAtualStr=new Date().toISOString().slice(0,7);
-
-    cont.innerHTML=lista.map((g,i)=>{
-        const sp=statusParcela(g);
-        let parcelaInfo='';
-        let tipoLabel='🔁 fixo';
-
-        if(g.tipo==='unico'){
-            tipoLabel='📌 único';
-            if(g.mesInicio===mesAtualStr){
-                parcelaInfo=`<span class="gasto-parcela-tag">📌 Só este mês</span>`;
-            } else {
-                parcelaInfo=`<span class="gasto-parcela-tag" style="background:rgba(122,159,181,.1);border-color:rgba(122,159,181,.3);color:var(--muted)">Lançado em ${g.mesInicio}</span>`;
-            }
-        } else if(sp){
-            tipoLabel='📅 parcelado';
-            if(sp.ativa){
-                parcelaInfo=`<span class="gasto-parcela-tag">📅 Parcela ${sp.parcelaAtual}/${sp.total}</span>`;
-            } else if(sp.parcelaAtual>sp.total){
-                parcelaInfo=`<span class="gasto-parcela-tag" style="background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.25);color:var(--green)">✓ Quitado</span>`;
-            } else {
-                parcelaInfo=`<span class="gasto-parcela-tag">📅 Inicia em ${g.mesInicio}</span>`;
-            }
-        }
-
-        return `<div class="gasto-item">
-            <div class="gasto-cat">${CATEGORIA_ICONS[g.categoria]||'📦'}</div>
-            <div class="gasto-info">
-                <div class="gasto-nome">${g.nome}</div>
-                <div class="gasto-cat-label">${g.categoria} · ${tipoLabel}</div>
-                ${parcelaInfo}
-            </div>
-            <div class="gasto-valor">R$${Number(g.valor).toFixed(2)}</div>
-            <button class="btn-del" data-idx="${i}">Remover</button>
-        </div>`;
-    }).join('');
-
-    cont.querySelectorAll('.btn-del').forEach(btn=>{
-        btn.addEventListener('click',async()=>{
-            barbeiroData.gastosFixos.splice(Number(btn.dataset.idx),1);
-            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{gastosFixos:barbeiroData.gastosFixos});
-            renderGastos();
-            carregarResumoGestao();
-            toast('Gasto removido');
-        });
-    });
 }
 
 // Compara dois meses no formato YYYY-MM: retorna true se mesA é igual ou posterior a mesB
@@ -1065,26 +1078,238 @@ function gastoAtivoNoMes(g,mesStr){
         const parcelaNoMes=mesesPassados+1;
         return parcelaNoMes>=1 && parcelaNoMes<=g.parcelas;
     }
-    // fixo: ativo a partir do mês de início, para sempre
+    // fixo e semanal: ativos a partir do mês de início, para sempre
     return mesIgualOuApos(mesStr,inicio);
+}
+
+// Quantas vezes o dia da semana cai dentro do mês (4 ou 5)
+function contarDiaSemanaNoMes(diaSemana,mesStr){
+    const [a,m]=mesStr.split('-').map(Number);
+    const ultimo=new Date(a,m,0).getDate();
+    let n=0;
+    for(let d=1;d<=ultimo;d++) if(new Date(a,m-1,d).getDay()===Number(diaSemana)) n++;
+    return n;
+}
+
+// Quanto o gasto pesa num mês: semanal vale (valor × semanas do mês)
+function valorGastoNoMes(g,mesStr){
+    if(!gastoAtivoNoMes(g,mesStr))return 0;
+    const v=Number(g.valor||0);
+    if(g.tipo==='semanal') return v*contarDiaSemanaNoMes(g.diaSemana!=null?g.diaSemana:1,mesStr);
+    return v;
 }
 
 // Total de gastos ATIVOS no mês atual
 function totalGastosFixos(){
-    const lista=barbeiroData.gastosFixos||[];
-    const mesAtualStr=new Date().toISOString().slice(0,7);
-    return lista.reduce((s,g)=>gastoAtivoNoMes(g,mesAtualStr)?s+Number(g.valor||0):s,0);
+    return totalGastosNoMes(mesLocal());
 }
 
 // Total de gastos de um mês específico (para o gráfico/histórico)
 function totalGastosNoMes(mesStr){
     const lista=barbeiroData.gastosFixos||[];
-    return lista.reduce((s,g)=>gastoAtivoNoMes(g,mesStr)?s+Number(g.valor||0):s,0);
+    return lista.reduce((s,g)=>s+valorGastoNoMes(g,mesStr),0);
+}
+
+// ── Datas de pagamento ──
+// Datas (YYYY-MM-DD) em que o gasto vence entre `de` e `ate` (inclusive).
+function ocorrenciasGasto(g,de,ate){
+    const out=[];
+    const deStr=ymdLocal(de), ateStr=ymdLocal(ate);
+    if(g.tipo==='unico'){
+        if(g.dataVencimento && g.dataVencimento>=deStr && g.dataVencimento<=ateStr) out.push(g.dataVencimento);
+        return out;
+    }
+    if(g.tipo==='semanal'){
+        if(g.diaSemana==null)return out;
+        for(let d=new Date(de);d<=ate;d.setDate(d.getDate()+1)){
+            if(d.getDay()===Number(g.diaSemana) && gastoAtivoNoMes(g,mesLocal(d))) out.push(ymdLocal(d));
+        }
+        return out;
+    }
+    if(!g.diaVencimento)return out;
+    for(let a=de.getFullYear(),m=de.getMonth();a<ate.getFullYear()||(a===ate.getFullYear()&&m<=ate.getMonth());){
+        const dia=Math.min(Number(g.diaVencimento),new Date(a,m+1,0).getDate());
+        const ymd=a+'-'+String(m+1).padStart(2,'0')+'-'+String(dia).padStart(2,'0');
+        if(ymd>=deStr && ymd<=ateStr && gastoAtivoNoMes(g,ymd.slice(0,7))) out.push(ymd);
+        m++; if(m>11){m=0;a++;}
+    }
+    return out;
+}
+
+// Pagamentos ainda não marcados como pagos: os que já venceram (até 60
+// dias atrás, e só depois que o gasto foi cadastrado) e os dos próximos
+// `dias` dias.
+function pagamentosPendentes(g,dias){
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const hojeStr=ymdLocal(hoje);
+    let de=new Date(hoje);de.setDate(de.getDate()-60);
+    if(g.tipo!=='unico'){
+        const criado=new Date(Number(g.id));
+        if(!isNaN(criado)){criado.setHours(0,0,0,0);if(criado>de)de=criado;}
+    }
+    const ate=new Date(hoje);ate.setDate(ate.getDate()+dias);
+    const pagos=g.pagos||{};
+    return ocorrenciasGasto(g,de,ate).filter(o=>!pagos[o]).map(data=>({data,atrasado:data<hojeStr,hoje:data===hojeStr}));
+}
+
+function rotuloDias(ymd){
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const [a,m,d]=ymd.split('-').map(Number);
+    const dif=Math.round((new Date(a,m-1,d)-hoje)/86400000);
+    if(dif===0)return 'hoje';
+    if(dif===1)return 'amanhã';
+    if(dif===-1)return 'ontem';
+    return dif<0?`há ${-dif} dias`:`em ${dif} dias`;
+}
+
+function textoVencimentoGasto(g){
+    if(g.tipo==='semanal') return g.diaSemana!=null?`toda ${DIAS_SEMANA[g.diaSemana]}`:'';
+    if(g.tipo==='unico') return g.dataVencimento?`vence em ${fmtDiaMes(g.dataVencimento)}`:'';
+    return g.diaVencimento?`vence todo dia ${g.diaVencimento}`:'';
+}
+
+async function marcarGastoPago(id,data,pago){
+    const g=(barbeiroData.gastosFixos||[]).find(x=>x.id===id);
+    if(!g)return;
+    g.pagos=g.pagos||{};
+    if(pago) g.pagos[data]=true; else delete g.pagos[data];
+    await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{gastosFixos:barbeiroData.gastosFixos});
+    toast(pago?'✓ Pagamento registrado':'Pagamento desmarcado');
+    renderGastos();
+    if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
+}
+
+// Avisos pro sino: pagamento de despesa vencido ou que vence hoje/amanhã
+function avisosDespesas(){
+    const out=[];
+    (barbeiroData.gastosFixos||[]).forEach(g=>{
+        pagamentosPendentes(g,1).forEach(p=>{
+            out.push({
+                id:`despesa-${g.id}-${p.data}`,
+                texto:`${p.atrasado?'⚠️ Pagamento atrasado':'💸 Pagamento '+rotuloDias(p.data)}: ${g.nome} (${moedaBR(g.valor)}) · ${fmtDiaMes(p.data)}`,
+                tab:'gestao'
+            });
+        });
+    });
+    return out;
+}
+
+function renderProximosPagamentos(){
+    const cont=document.getElementById('proximos-pagamentos');
+    if(!cont)return;
+    const itens=[];
+    (barbeiroData.gastosFixos||[]).forEach(g=>{
+        pagamentosPendentes(g,14).forEach(p=>itens.push({g,...p}));
+    });
+    itens.sort((a,b)=>a.data.localeCompare(b.data));
+    if(!itens.length){
+        cont.innerHTML='<div class="empty-state" style="padding:1rem 0"><div class="icon">📅</div>Nenhum pagamento com data nos próximos 14 dias. Informe o dia de vencimento nos gastos para acompanhar aqui.</div>';
+        return;
+    }
+    const total=itens.reduce((s,i)=>s+Number(i.g.valor||0),0);
+    cont.innerHTML=itens.slice(0,40).map((i,k)=>{
+        const cor=i.atrasado?'var(--red)':i.hoje?'var(--yellow)':'var(--blue)';
+        const rot=i.atrasado?`⚠️ Atrasado · venceu ${rotuloDias(i.data)}`:i.hoje?'⏰ Vence hoje':`Vence ${rotuloDias(i.data)}`;
+        return `<div style="display:flex;align-items:center;gap:.6rem;padding:.55rem 0;${k>0?'border-top:1px solid var(--border)':''}">
+            <div style="min-width:46px;text-align:center;font-family:'Courier New',monospace;font-weight:800;color:${cor};font-size:.85rem">${fmtDiaMes(i.data)}</div>
+            <div style="flex:1;min-width:0">
+                <div style="font-size:.85rem;font-weight:700">${escapeHtml(i.g.nome)}</div>
+                <div style="font-size:.7rem;color:${cor}">${rot}</div>
+            </div>
+            <div style="font-family:'Courier New',monospace;font-weight:700;font-size:.85rem">${moedaBR(i.g.valor)}</div>
+            <button class="btn-pagar-gasto" data-id="${i.g.id}" data-data="${i.data}" style="padding:.4rem .6rem;background:rgba(0,255,136,.1);border:1.5px solid var(--green);border-radius:8px;color:var(--green);font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap">✓ Paguei</button>
+        </div>`;
+    }).join('')+`<div style="border-top:1px solid var(--border);margin-top:.4rem;padding-top:.5rem;font-size:.75rem;color:var(--muted);text-align:right">A pagar nos próximos 14 dias (e atrasados): <b style="color:var(--text)">${moedaBR(total)}</b></div>`;
+    cont.querySelectorAll('.btn-pagar-gasto').forEach(b=>b.addEventListener('click',()=>marcarGastoPago(b.dataset.id,b.dataset.data,true)));
+}
+
+function renderGastos(){
+    renderProximosPagamentos();
+    const lista=barbeiroData.gastosFixos||[];
+    const cont=document.getElementById('lista-gastos');
+    if(!cont)return;
+    if(!lista.length){cont.innerHTML='<div class="empty-state"><div class="icon">💼</div>Nenhum gasto cadastrado ainda.</div>';return;}
+
+    const mesAtualStr=mesLocal();
+
+    cont.innerHTML=lista.map((g,i)=>{
+        const sp=statusParcela(g);
+        let parcelaInfo='';
+        let tipoLabel=TIPO_LABEL[g.tipo]||TIPO_LABEL.fixo;
+
+        if(g.tipo==='unico'){
+            if(g.mesInicio===mesAtualStr){
+                parcelaInfo=`<span class="gasto-parcela-tag">📌 Só este mês</span>`;
+            } else {
+                parcelaInfo=`<span class="gasto-parcela-tag" style="background:rgba(122,159,181,.1);border-color:rgba(122,159,181,.3);color:var(--muted)">Lançado em ${g.mesInicio}</span>`;
+            }
+        } else if(g.tipo==='semanal'){
+            parcelaInfo=`<span class="gasto-parcela-tag">📆 ${moedaBR(valorGastoNoMes(g,mesAtualStr))} neste mês (${contarDiaSemanaNoMes(g.diaSemana!=null?g.diaSemana:1,mesAtualStr)} semanas)</span>`;
+        } else if(sp){
+            if(sp.ativa){
+                parcelaInfo=`<span class="gasto-parcela-tag">📅 Parcela ${sp.parcelaAtual}/${sp.total}</span>`;
+            } else if(sp.parcelaAtual>sp.total){
+                parcelaInfo=`<span class="gasto-parcela-tag" style="background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.25);color:var(--green)">✓ Quitado</span>`;
+            } else {
+                parcelaInfo=`<span class="gasto-parcela-tag">📅 Inicia em ${g.mesInicio}</span>`;
+            }
+        }
+
+        // Data de vencimento: o que vence e quando é o próximo pagamento
+        const venc=textoVencimentoGasto(g);
+        const pend=pagamentosPendentes(g,45);
+        const prox=pend[0];
+        let vencHtml='';
+        let btnPagar='';
+        if(venc){
+            let status='';
+            if(prox){
+                const cor=prox.atrasado?'var(--red)':prox.hoje?'var(--yellow)':'var(--muted)';
+                const txt=prox.atrasado?`⚠️ Atrasado desde ${fmtDiaMes(prox.data)}`:prox.hoje?'⏰ Vence hoje':`próximo: ${fmtDiaMes(prox.data)} (${rotuloDias(prox.data)})`;
+                status=` · <span style="color:${cor};font-weight:700">${txt}</span>`;
+                btnPagar=`<button class="btn-pagar-gasto" data-id="${g.id}" data-data="${prox.data}" style="padding:.35rem .55rem;background:rgba(0,255,136,.1);border:1.5px solid var(--green);border-radius:8px;color:var(--green);font-size:.7rem;font-weight:700;cursor:pointer;white-space:nowrap">✓ Paguei</button>`;
+            }
+            vencHtml=`<div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">📅 ${venc}${status}</div>`;
+        } else if(g.tipo!=='parcelado'||sp){
+            vencHtml=`<div style="font-size:.7rem;color:var(--muted);margin-top:.2rem;opacity:.8">📅 Sem data de vencimento — toque em Editar para informar</div>`;
+        }
+
+        return `<div class="gasto-item">
+            <div class="gasto-cat">${CATEGORIA_ICONS[g.categoria]||'📦'}</div>
+            <div class="gasto-info">
+                <div class="gasto-nome">${escapeHtml(g.nome)}</div>
+                <div class="gasto-cat-label">${g.categoria} · ${tipoLabel}</div>
+                ${parcelaInfo}
+                ${vencHtml}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.35rem">
+                <div class="gasto-valor">${moedaBR(g.valor)}${g.tipo==='semanal'?'<span style="font-size:.65rem;color:var(--muted)">/sem</span>':''}</div>
+                <div style="display:flex;gap:.35rem;flex-wrap:wrap;justify-content:flex-end">
+                    ${btnPagar}
+                    <button class="btn-del btn-editar-gasto" data-id="${g.id}" style="color:var(--blue);border-color:var(--blue)">✏️ Editar</button>
+                    <button class="btn-del" data-idx="${i}">Remover</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    cont.querySelectorAll('.btn-editar-gasto').forEach(b=>b.addEventListener('click',()=>editarGasto(b.dataset.id)));
+    cont.querySelectorAll('.btn-pagar-gasto').forEach(b=>b.addEventListener('click',()=>marcarGastoPago(b.dataset.id,b.dataset.data,true)));
+    cont.querySelectorAll('.btn-del[data-idx]').forEach(btn=>{
+        btn.addEventListener('click',async()=>{
+            barbeiroData.gastosFixos.splice(Number(btn.dataset.idx),1);
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{gastosFixos:barbeiroData.gastosFixos});
+            if(gastoEditandoId&&!barbeiroData.gastosFixos.some(g=>g.id===gastoEditandoId))limparFormGasto();
+            renderGastos();
+            carregarResumoGestao();
+            toast('Gasto removido');
+        });
+    });
 }
 
 async function carregarResumoGestao(){
     const hoje=new Date();
-    const mesAtual=hoje.toISOString().slice(0,7);
+    const mesAtual=mesLocal(hoje);
     const totalGastos=totalGastosFixos();
 
     const q=query(collection(db,'agendamentos'),where('barbeiroId','==',barbeiroData.uid));
