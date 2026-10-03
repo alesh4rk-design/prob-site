@@ -109,6 +109,9 @@ async function renderLinksEquipe(){
 
     container.innerHTML = equipe.map(b => {
         const authInfo = authDocs[b.id];
+        if(b.independente){
+            return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;font-size:.8rem;color:var(--muted)">🪑 <b style="color:var(--text)">${escapeHtml(b.nome)}</b> aluga a cadeira e usa o próprio sistema Pro'B — não recebe acesso ao seu painel nem aos seus clientes.</div>`;
+        }
         const cargo = b.tipo==='recepcionista'?'Recepcionista':'Barbeiro';
 
         if(!authInfo){
@@ -420,6 +423,13 @@ function renderEquipe(){
             if(!!membro.independente !== independente){
                 membro.independente = independente;
                 await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
+                // Independente não acessa o painel nem os clientes do dono
+                try{
+                    const ref=doc(db,'barbeiros',barbeiroData.uid,'equipeAuth',membro.id);
+                    const a=await getDoc(ref);
+                    if(a.exists()) await updateDoc(ref,{ativo:!independente});
+                }catch(e){ console.error('acesso independente:',e); }
+                if(typeof renderLinksEquipe==='function') renderLinksEquipe();
             }
             toast(`✓ Forma de pagamento de ${membro.nome} salva`);
             renderEquipe();
@@ -476,15 +486,47 @@ function renderEquipe(){
 function initEquipeExtras(){
 $('eq-tipo').addEventListener('change',function(){
     const ehRecep = this.value==='recepcionista';
-    $('eq-pct-wrap').style.display = ehRecep?'none':'block';
+    const ehAluguel = this.value==='aluguel';
+    $('eq-pct-wrap').style.display = (ehRecep||ehAluguel)?'none':'block';
+    $('eq-aluguel-wrap').style.display = ehAluguel?'block':'none';
     // Barbeiro sempre corta cabelo — a opção só faz sentido pra
     // recepcionista, que às vezes também atende em alguns casos.
     $('eq-atende-wrap').style.display = ehRecep?'flex':'none';
     if(!ehRecep) $('eq-atende').checked=false;
 });
 
+// Dia da cobrança do aluguel muda conforme o período
+$('eq-aluguel-freq').addEventListener('change',function(){
+    const lbl=$('eq-aluguel-dia-label'), inp=$('eq-aluguel-dia');
+    if(this.value==='semanal'){ lbl.textContent='Dia da semana (0=dom … 6=sáb)'; inp.min=0; inp.max=6; inp.value=1; }
+    else if(this.value==='quinzenal'){ lbl.textContent='Dia base (1-15)'; inp.min=1; inp.max=15; inp.value=5; }
+    else { lbl.textContent='Dia do mês'; inp.min=1; inp.max=28; inp.value=5; }
+});
+
 $('btn-add-barbeiro').addEventListener('click',async()=>{
     const nome=$('eq-nome').value.trim();
+    if($('eq-tipo').value==='aluguel'){
+        // Barbeiro independente que só paga o aluguel da cadeira
+        const aluguel=Number($('eq-aluguel').value);
+        const freq=$('eq-aluguel-freq').value;
+        let dia=parseInt($('eq-aluguel-dia').value);
+        if(!nome){toast('Informe o nome','var(--red)');return;}
+        if(!(aluguel>0)){toast('Informe o valor do aluguel','var(--red)');return;}
+        if(isNaN(dia)) dia = freq==='semanal'?1:5;
+        dia = freq==='semanal'?Math.min(Math.max(dia,0),6):freq==='quinzenal'?Math.min(Math.max(dia,1),15):Math.min(Math.max(dia,1),28);
+        const wppA=($('eq-wpp')?.value||'').replace(/\D/g,'');
+        barbeiroData.equipe=barbeiroData.equipe||[];
+        const idA=Date.now().toString();
+        const dadosA={modelo:'cadeira',cadeiraTipo:'fixo',aluguel,pctDono:0,pct:100,freqComissao:freq,diaComissao:dia};
+        barbeiroData.equipe.push({id:idA,nome,tipo:'barbeiro',atende:false,independente:true,wpp:wppA||null,criadoEm:new Date().toISOString(),...dadosA});
+        comissaoConfigCache[idA]={freq,dia};
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
+        await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',idA),dadosA);
+        $('eq-nome').value='';$('eq-aluguel').value='';if($('eq-wpp'))$('eq-wpp').value='';
+        renderEquipe();carregarGanhos();if(typeof renderLinksEquipe==='function')renderLinksEquipe();
+        toast('🪑 Barbeiro que aluga a cadeira adicionado!');
+        return;
+    }
     const tipo=$('eq-tipo').value;
     const pct=tipo==='recepcionista'?0:(Number($('eq-pct').value)||50);
     const atende = tipo==='barbeiro' ? true : $('eq-atende').checked;

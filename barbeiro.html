@@ -759,11 +759,23 @@
                 <select id="eq-tipo" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
                     <option value="barbeiro">✂️ Barbeiro — corta cabelo, tem comissão e vê só a própria agenda</option>
                     <option value="recepcionista">🗒️ Recepcionista — organiza a casa toda, sem ver valores nem links</option>
+                    <option value="aluguel">🪑 Barbeiro que aluga a cadeira — usa o próprio sistema e só paga o aluguel</option>
                 </select>
             </div>
             <div class="form-row">
                 <div class="input-group"><label>Nome</label><input type="text" id="eq-nome" placeholder="Ex: João da Navalha"></div>
                 <div class="input-group" id="eq-pct-wrap" style="max-width:130px"><label>% por corte</label><input type="number" id="eq-pct" placeholder="50" min="0" max="100" step="5"></div>
+            </div>
+            <div id="eq-aluguel-wrap" style="display:none">
+                <div class="form-row">
+                    <div class="input-group"><label>Valor do aluguel (R$)</label><input type="number" id="eq-aluguel" placeholder="Ex: 300" min="0" step="10"></div>
+                    <div class="input-group"><label>Cobrança</label>
+                        <select id="eq-aluguel-freq" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none">
+                            <option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal" selected>Mensal</option>
+                        </select></div>
+                    <div class="input-group"><label id="eq-aluguel-dia-label">Dia do mês</label><input type="number" id="eq-aluguel-dia" value="5" min="1" max="28"></div>
+                </div>
+                <p style="font-size:.72rem;color:var(--muted);margin:0 0 .85rem">Ele não aparece nos agendamentos da sua barbearia e os cortes dele não entram no seu faturamento — ele usa o próprio sistema Pro'B. Aqui fica só o controle do aluguel: no dia combinado aparece o valor que ele deve e você marca "Recebi dele".</p>
             </div>
             <div class="input-group"><label>WhatsApp (opcional — pra mandar o comprovante quando pagar a comissão)</label><input type="text" id="eq-wpp" placeholder="(21) 96619-0515"></div>
             <label id="eq-atende-wrap" style="display:none;align-items:center;gap:.5rem;font-size:.82rem;color:var(--text);margin-bottom:.85rem;cursor:pointer">
@@ -3205,7 +3217,7 @@ async function initDash(){
 <script defer src="js/dashboard/novidades.js?v=20260729e"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003f"></script>
 <script defer src="js/dashboard/tour.js?v=20260727o"></script>
-<script defer src="js/dashboard/equipe.js?v=20261003h"></script>
+<script defer src="js/dashboard/equipe.js?v=20261003i"></script>
 <script defer src="js/dashboard/promocoes.js?v=20261003c"></script>
 <script defer src="js/dashboard/clientes.js?v=20261003c"></script>
 <script defer src="js/dashboard/publico.js?v=20261003b"></script>
