@@ -51,11 +51,56 @@ function histPreencherBarbeiros(cortes){
 
 function fmtDataBR(ymd){ const [y,m,d]=(ymd||'').split('-'); return d?`${d}/${m}/${y}`:''; }
 
+// Cortes antigos lançados sem barbeiro (antes de ele existir na equipe):
+// oferece passar todos de uma vez pro nome de um barbeiro (normalmente o dono).
+function histRenderSemBarbeiro(todos){
+    const box=document.getElementById('hist-sem-barbeiro');
+    if(!box) return;
+    const semBarbeiro=todos.filter(a=>!a.barbeiro);
+    const candidatos=(barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista' && !b.independente);
+    if(!semBarbeiro.length || !candidatos.length){ box.style.display='none'; box.innerHTML=''; return; }
+    const dono=candidatos.find(b=>b.dono);
+    const antes=document.getElementById('hist-sem-barbeiro-sel');
+    const escolhido=(antes&&antes.value)||(dono?dono.nome:candidatos[0].nome);
+    const total=semBarbeiro.reduce((s,a)=>s+Number(a.preco||0),0);
+    box.innerHTML=`<div style="font-size:.85rem;font-weight:700;margin-bottom:.3rem">⚠️ ${semBarbeiro.length} corte${semBarbeiro.length>1?'s':''} sem barbeiro (R$${total.toFixed(2).replace('.',',')})</div>
+        <div style="font-size:.76rem;color:var(--muted);margin-bottom:.6rem">Foram lançados antes de o barbeiro estar na equipe. Passe todos para o nome dele (os valores e datas não mudam), ou apague um a um na lista abaixo.</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <select id="hist-sem-barbeiro-sel" style="flex:1;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.55rem .7rem;color:var(--text);font-size:.85rem;outline:none">
+                ${candidatos.map(b=>`<option value="${escapeHtml(b.nome)}" ${b.nome===escolhido?'selected':''}>${escapeHtml(b.nome)}${b.dono?' (dono)':''}</option>`).join('')}
+            </select>
+            <button type="button" id="hist-sem-barbeiro-btn" class="btn-save" style="padding:.55rem .9rem;font-size:.8rem">Passar todos para ele</button>
+        </div>`;
+    box.style.display='block';
+    document.getElementById('hist-sem-barbeiro-btn').addEventListener('click',()=>passarSemBarbeiro(document.getElementById('hist-sem-barbeiro-sel').value));
+}
+
+async function passarSemBarbeiro(nome){
+    const alvo=histCortes().filter(a=>!a.barbeiro);
+    if(!nome || !alvo.length) return;
+    if(!(await perguntarSimNao(`Passar ${alvo.length} corte(s) sem barbeiro para ${nome}?\n\nSó o campo "barbeiro" muda. Valores, datas e pagamentos continuam iguais.`))) return;
+    try{
+        for(let i=0;i<alvo.length;i+=400){
+            const lote=writeBatch(db);
+            alvo.slice(i,i+400).forEach(a=>lote.update(doc(db,'agendamentos',a.id),{barbeiro:nome}));
+            await lote.commit();
+        }
+        alvo.forEach(a=>{ a.barbeiro=nome; }); // atualiza na hora (o snapshot confirma depois)
+        toast(`✓ ${alvo.length} corte(s) passados para ${nome}`);
+        renderHistoricoCortes();
+        if(typeof carregarGanhos==='function') carregarGanhos();
+        if(typeof carregarResumoGestao==='function') carregarResumoGestao();
+    }catch(e){
+        toast('Erro ao atualizar: '+e.message,'var(--red)');
+    }
+}
+
 function renderHistoricoCortes(){
     const cont=document.getElementById('hist-lista');
     if(!cont) return;
     const todos=histCortes();
     histPreencherBarbeiros(todos);
+    histRenderSemBarbeiro(todos);
 
     const {ini,fim}=histIntervalo();
     const barb=(document.getElementById('hist-barbeiro')||{}).value||'';
