@@ -109,6 +109,9 @@ async function renderLinksEquipe(){
 
     container.innerHTML = equipe.map(b => {
         const authInfo = authDocs[b.id];
+        if(b.dono){
+            return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;font-size:.8rem;color:var(--muted)">👑 <b style="color:var(--text)">${escapeHtml(b.nome)}</b> é você — já entra pela sua conta de dono, não precisa de link.</div>`;
+        }
         if(b.independente){
             return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem;font-size:.8rem;color:var(--muted)">🪑 <b style="color:var(--text)">${escapeHtml(b.nome)}</b> aluga a cadeira e usa o próprio sistema Pro'B — não recebe acesso ao seu painel nem aos seus clientes.</div>`;
         }
@@ -292,7 +295,9 @@ function renderEquipe(){
 
     container.innerHTML=lista.map((b,i)=>{
         const ehRecep = b.tipo==='recepcionista';
-        const badge = ehRecep
+        const badge = b.dono
+            ? `<span style="font-size:.65rem;background:rgba(245,166,35,.12);color:var(--yellow);border:1px solid rgba(245,166,35,.3);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">👑 Dono</span>`
+            : ehRecep
             ? `<span style="font-size:.65rem;background:rgba(0,212,255,.12);color:var(--blue);border:1px solid rgba(0,212,255,.3);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">🗒️ Recepcionista</span>`
             : `<span style="font-size:.65rem;background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.25);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">✂️ Barbeiro</span>`;
         const recepAtende = ehRecep && atendeClientes(b);
@@ -300,18 +305,18 @@ function renderEquipe(){
             ? `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">Organiza agendamentos, fila e clientes${recepAtende?' · <span style="color:var(--green)">✂️ também corta cabelo</span>':''}</div>`
             : (modoLeitura
                 ? ''
-                : `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">${descricaoPagamentoBarbeiro(b)}</div>`);
+                : `<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">${b.dono?'Aparece pro cliente escolher · os cortes ficam inteiros com a barbearia (sem comissão)':descricaoPagamentoBarbeiro(b)}</div>`);
 
         const acoes = modoLeitura ? '' : `
             <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
-                ${ehRecep?'':`<button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-editar-pagto="${i}">💰 Forma de pagamento</button>`}
+                ${(ehRecep||b.dono)?'':`<button class="btn-save" style="padding:.3rem .7rem;font-size:.72rem" data-editar-pagto="${i}">💰 Forma de pagamento</button>`}
                 ${ehRecep?`<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-toggle-atende="${i}">${recepAtende?'✂️ Também corta: Sim':'✂️ Também corta: Não'}</button>`:''}
-                <button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-trocar-tipo="${i}" title="Trocar entre Barbeiro e Recepcionista">🔄 ${ehRecep?'Virar Barbeiro':'Virar Recepcionista'}</button>
+                ${b.dono?'':`<button class="btn-edit" style="padding:.3rem .7rem;font-size:.72rem" data-trocar-tipo="${i}" title="Trocar entre Barbeiro e Recepcionista">🔄 ${ehRecep?'Virar Barbeiro':'Virar Recepcionista'}</button>`}
                 <button class="btn-del" data-idx="${i}">Remover</button>
             </div>`;
 
         const cfgB = comissaoConfigCache[b.id] || {freq:'mensal', dia:5};
-        const editor = (ehRecep||modoLeitura) ? '' : `
+        const editor = (ehRecep||modoLeitura||b.dono) ? '' : `
             <div data-editor-pagto="${i}" style="display:none;width:100%;margin-top:.6rem;padding:.75rem;background:var(--card2);border:1px dashed var(--border);border-radius:10px">
                 <div class="input-group" style="margin-bottom:.6rem"><label>Como esse barbeiro trabalha?</label>
                     <select data-modelo="${i}" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none">
@@ -487,7 +492,8 @@ function initEquipeExtras(){
 $('eq-tipo').addEventListener('change',function(){
     const ehRecep = this.value==='recepcionista';
     const ehAluguel = this.value==='aluguel';
-    $('eq-pct-wrap').style.display = (ehRecep||ehAluguel)?'none':'block';
+    const ehDono = this.value==='dono';
+    $('eq-pct-wrap').style.display = (ehRecep||ehAluguel||ehDono)?'none':'block';
     $('eq-aluguel-wrap').style.display = ehAluguel?'block':'none';
     // Barbeiro sempre corta cabelo — a opção só faz sentido pra
     // recepcionista, que às vezes também atende em alguns casos.
@@ -505,6 +511,21 @@ $('eq-aluguel-freq').addEventListener('change',function(){
 
 $('btn-add-barbeiro').addEventListener('click',async()=>{
     const nome=$('eq-nome').value.trim();
+    if($('eq-tipo').value==='dono'){
+        // O próprio dono na lista, só pra aparecer pro cliente escolher.
+        // 0% de comissão: os cortes dele ficam inteiros com a barbearia.
+        if(!nome){toast('Informe o seu nome como o cliente vai ver','var(--red)');return;}
+        if((barbeiroData.equipe||[]).some(b=>b.dono)){toast('Você já está na equipe','var(--red)');return;}
+        barbeiroData.equipe=barbeiroData.equipe||[];
+        const idD=Date.now().toString();
+        barbeiroData.equipe.push({id:idD,nome,tipo:'barbeiro',atende:true,dono:true,criadoEm:new Date().toISOString(),pct:0,pctComissao:0,modelo:'comissao'});
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{equipe:equipeSemComissao()});
+        await setDoc(doc(db,'barbeiros',barbeiroData.uid,'comissoes',idD),{pct:0,pctComissao:0,modelo:'comissao'});
+        $('eq-nome').value='';
+        renderEquipe();carregarGanhos();if(typeof renderLinksEquipe==='function')renderLinksEquipe();
+        toast('👑 Você foi adicionado à equipe!');
+        return;
+    }
     if($('eq-tipo').value==='aluguel'){
         // Barbeiro independente que só paga o aluguel da cadeira
         const aluguel=Number($('eq-aluguel').value);
@@ -715,7 +736,7 @@ function renderPagamentoComissoes(){
     if(!cont) return;
     if(window.__recepcionista) return;
 
-    const equipe=(barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista');
+    const equipe=(barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista' && !b.dono);
     if(!equipe.length){
         cont.innerHTML='<div class="empty-state"><div class="icon">💸</div>Cadastre barbeiros com comissão primeiro.</div>';
         return;

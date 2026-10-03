@@ -56,7 +56,7 @@ function atualizarCentralAvisos(){
     // (semanal/quinzenal/mensal), definido em Equipe → Pagamento de Comissões.
     if(typeof periodoComissao==='function' && typeof comissaoConfigCache!=='undefined'){
         const hojeZero=new Date(); hojeZero.setHours(0,0,0,0);
-        (barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista').forEach(b=>{
+        (barbeiroData.equipe||[]).filter(b=>b.tipo!=='recepcionista' && !b.dono).forEach(b=>{
             const cfg = comissaoConfigCache[b.id] || {freq:'mensal', dia:5};
             const periodo = periodoComissao(cfg.freq, cfg.dia);
             if(periodo.vencimento>hojeZero) return;
