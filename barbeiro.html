@@ -347,6 +347,7 @@
         <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Pessoas</div>
         <div class="tab" data-tab="equipe">👥 Equipe</div>
         <div class="tab" data-tab="clientes">🧑 Clientes</div>
+        <div class="tab" data-tab="historico">📜 Histórico de Cortes</div>
         <div class="tab" data-tab="visual">📱 Tela Cliente</div>
         <div class="tab" data-tab="painel-chamada">📺 Painel de Chamada</div>
 
@@ -1649,6 +1650,34 @@
     </div>
 
 <!-- ════════ TAB COBRANÇA ════════ -->
+    <!-- TAB Histórico de Cortes (só do dono) -->
+    <div class="tab-content" id="tab-historico">
+        <div class="section-title" style="margin-bottom:.6rem">📜 Histórico de Cortes</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Todos os cortes concluídos da barbearia, de cada barbeiro e seus. Não entram aqui os cortes do barbeiro que só aluga a cadeira (ele usa o próprio sistema). Toque num corte para editar, registrar pagamento ou chamar no WhatsApp.</p>
+
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem">
+            <button type="button" data-hist-periodo="hoje" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">Hoje</button><button type="button" data-hist-periodo="7" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">7 dias</button><button type="button" data-hist-periodo="30" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--blue);border-radius:20px;color:var(--blue);font-size:.78rem;font-weight:600;cursor:pointer">30 dias</button><button type="button" data-hist-periodo="mes" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">Este mês</button><button type="button" data-hist-periodo="tudo" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">Tudo</button><button type="button" data-hist-periodo="custom" style="padding:.45rem .8rem;background:transparent;border:1.5px solid var(--border);border-radius:20px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer">📅 Período</button>
+        </div>
+        <div id="hist-custom-wrap" style="display:none;gap:.6rem;margin-bottom:.7rem">
+            <div class="input-group" style="flex:1;margin-bottom:0"><label>De</label><input type="date" id="hist-data-ini"></div>
+            <div class="input-group" style="flex:1;margin-bottom:0"><label>Até</label><input type="date" id="hist-data-fim"></div>
+        </div>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem">
+            <select id="hist-barbeiro" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;flex:1;min-width:150px"><option value="">Todos os barbeiros</option></select>
+            <input type="search" id="hist-busca" placeholder="Buscar cliente ou serviço" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;flex:1;min-width:150px">
+        </div>
+
+        <div class="fat-kpis" style="margin-bottom:.8rem">
+            <div class="fat-kpi"><div class="fat-kpi-val" id="hist-kpi-qtd">0</div><div class="fat-kpi-lbl">Cortes</div></div>
+            <div class="fat-kpi green"><div class="fat-kpi-val" id="hist-kpi-total">R$0</div><div class="fat-kpi-lbl">Faturado (pago)</div></div>
+            <div class="fat-kpi"><div class="fat-kpi-val" id="hist-kpi-ticket">R$0</div><div class="fat-kpi-lbl">Ticket médio</div></div>
+            <div class="fat-kpi" style="border-color:rgba(245,166,35,.3)"><div class="fat-kpi-val" id="hist-kpi-areceber" style="color:var(--yellow)">R$0</div><div class="fat-kpi-lbl">⏳ A receber</div></div>
+        </div>
+        <div id="hist-por-barbeiro" class="card" style="display:none;margin-bottom:1rem;padding:.6rem 1rem"></div>
+
+        <div id="hist-lista"><div class="empty-state"><div class="icon">✂️</div>Carregando...</div></div>
+    </div>
+
     <div class="tab-content" id="tab-cobranca">
         <div class="section-title" style="margin-bottom:.6rem">💰 Cobrança</div>
         <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Toda vez que você marcar um atendimento como "⏳ Ainda não pagou", ele cai aqui — é o valor que os clientes ainda te devem.</p>
@@ -3032,6 +3061,7 @@ async function initDash(){
                 }
             }
             if(tab.dataset.tab==='clientes'){ carregarClientes(); carregarAvisos1h(); }
+            if(tab.dataset.tab==='historico' && typeof initHistorico==='function'){ initHistorico(); renderHistoricoCortes(); }
             if(tab.dataset.tab==='tutoriais') renderTopicosAjuda('lista-topicos-tutoriais');
         });
     });
@@ -3222,7 +3252,8 @@ async function initDash(){
 <script defer src="js/dashboard/promocoes.js?v=20261003c"></script>
 <script defer src="js/dashboard/clientes.js?v=20261003c"></script>
 <script defer src="js/dashboard/publico.js?v=20261003b"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20261003e"></script>
+<script defer src="js/dashboard/historico.js?v=20261003a"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20261003f"></script>
 <script defer src="js/dashboard/horarios.js?v=20261003e"></script>
 <script defer src="js/dashboard/financeiro.js?v=20261003f"></script>
 <script defer src="js/dashboard/auth.js?v=20261003f"></script>

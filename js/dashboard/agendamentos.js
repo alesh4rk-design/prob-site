@@ -785,6 +785,8 @@ function carregarAgendamentos(){
         ultimaListaAppts = todos;
         // Cópia pública sem dados pessoais (ver publico.js)
         if(typeof sincronizarHorariosPublicos==='function') sincronizarHorariosPublicos(todos);
+        // Aba Histórico de Cortes acompanha as mudanças (só se já foi aberta)
+        if(window.__historicoBound && typeof renderHistoricoCortes==='function') renderHistoricoCortes();
 
         $('stat-hoje').textContent=deHoje.filter(a=>a.status!=='cancelado').length;
         $('stat-semana').textContent=todos.filter(a=>a.data>=hoje&&a.status!=='cancelado').length;
