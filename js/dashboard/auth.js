@@ -257,6 +257,7 @@ async function initFuncionarioMode(bId, funcId){
                 btn.disabled=true;btn.textContent='...';
                 const item=lista.find(a=>a.id===btn.dataset.id);
                 await updateDoc(doc(db,'agendamentos',btn.dataset.id),{status:'concluido'});
+                if(item) await espelharAgendamento(item.id,{...item,status:'concluido'});
                 if(item) registrarClienteConcluido(bId, item.clienteNome, item.clienteWhatsapp, item.corte);
                 toast('Corte concluído! ✓');
                 location.reload();
@@ -267,6 +268,8 @@ async function initFuncionarioMode(bId, funcId){
                 if(!confirm('Marcar como cancelado?'))return;
                 btn.disabled=true;btn.textContent='...';
                 await updateDoc(doc(db,'agendamentos',btn.dataset.id),{status:'cancelado'});
+                const itemC=lista.find(a=>a.id===btn.dataset.id);
+                if(itemC) await espelharAgendamento(itemC.id,{...itemC,status:'cancelado'});
                 toast('Agendamento cancelado','var(--red)');
                 location.reload();
             });
@@ -377,7 +380,7 @@ function initFilaFuncionario(bId,funcNome,bData){
                 // Fila compartilhada: quem chegou sem pedir alguém específico
                 // fica sem "barbeiro" travado, disponível pra quem estiver
                 // livre atender primeiro — não só quem cadastrou.
-                await addDoc(collection(db,'fila'),{
+                const novaFila={
                     barbeiroId:bId,
                     clienteNome:nome,
                     clienteWhatsapp:wpp,
@@ -387,7 +390,9 @@ function initFilaFuncionario(bId,funcNome,bData){
                     status:'aguardando',
                     criadoEm:new Date().toISOString(),
                     origem:'painel-funcionario'
-                });
+                };
+                const novaRef=await addDoc(collection(db,'fila'),novaFila);
+                espelharFila(novaRef.id,novaFila);
                 document.getElementById('func-fila-nome').value='';
                 if(wppEl)wppEl.value='';
                 document.getElementById('func-fila-corte').value='';
@@ -454,20 +459,28 @@ function renderFilaFuncionario(lista,bId){
         btn.addEventListener('click',async()=>{
             btn.disabled=true;
             const item=lista.find(l=>l.id===btn.dataset.id);
-            await addDoc(collection(db,'agendamentos'),{
+            // Leva WhatsApp, forma de pagamento e desconto já registrados na fila
+            // (antes ficavam pra trás e o corte aparecia como não pago)
+            const novoAg={
                 barbeiroId:bId,
                 clienteNome:item.clienteNome,
-                clienteWhatsapp:'',
+                clienteWhatsapp:item.clienteWhatsapp||'',
                 corte:item.corte||'Corte (fila)',
                 preco:item.preco||0,
+                ...(item.precoOriginal!=null?{precoOriginal:item.precoOriginal}:{}),
                 barbeiro:funcNome,
                 data:fmtHoje(),
                 hora:new Date().toTimeString().slice(0,5),
+                duracao:duracaoAtendimento(item),
                 status:'concluido',
                 origem:'fila',
+                ...(item.formaPagamento?{formaPagamento:item.formaPagamento}:{}),
                 criadoEm:new Date().toISOString()
-            });
+            };
+            const novoRef=await addDoc(collection(db,'agendamentos'),novoAg);
             await updateDoc(doc(db,'fila',btn.dataset.id),{status:'atendido',atendidoEm:new Date().toISOString()});
+            espelharAgendamento(novoRef.id,novoAg);
+            espelharFila(item.id,{...item,status:'atendido'});
             registrarClienteConcluido(bId, item.clienteNome, item.clienteWhatsapp, item.corte||'Corte (fila)');
             toast('✓ Atendimento concluído!');
         });
@@ -477,6 +490,8 @@ function renderFilaFuncionario(lista,bId){
             if(!confirm('Remover da fila?'))return;
             btn.disabled=true;
             await updateDoc(doc(db,'fila',btn.dataset.id),{status:'removido'});
+            const itemR=lista.find(l=>l.id===btn.dataset.id);
+            if(itemR) espelharFila(itemR.id,{...itemR,status:'removido'});
             toast('Removido da fila');
         });
     });
@@ -486,7 +501,6 @@ async function renderFuncHours(bId,funcNome,data,meus){
     const grid=document.getElementById('func-hours-grid');
     grid.innerHTML='<div style="color:var(--muted);font-size:.8rem">Carregando...</div>';
 
-    const ocupados=new Set(meus.filter(a=>a.data===data&&a.status!=='cancelado').map(a=>a.hora));
 
     // Bloqueios do DONO (somente leitura para o funcionário)
     const bRefDono=doc(db,'barbeiros',bId,'bloqueios',data);
@@ -502,6 +516,9 @@ async function renderFuncHours(bId,funcNome,data,meus){
     // Funcionamento configurado pelo dono
     const fSnap=await getDoc(doc(db,'barbeiros',bId,'config','funcionamento'));
     const funcData=fSnap.exists()?fSnap.data():{};
+    const intervalosFunc=intervalosOcupados(
+        meus.filter(a=>a.data===data&&a.status!=='cancelado'&&a.origem!=='cobranca-manual').map(a=>({hora:a.hora,duracao:duracaoAtendimento(a)})),
+        [], funcData.intervalo||30);
     const diaSem=new Date(data+'T12:00:00').getDay();
     const func=funcData[diaSem]||{aberto:true,inicio:'08:00',fim:'18:00'};
 
@@ -522,7 +539,7 @@ async function renderFuncHours(bId,funcNome,data,meus){
     grid.innerHTML=slots.map(hora=>{
         const min=horaParaMin(hora);
         const passado=isHoje&&min<=agoraMin;
-        const ocp=ocupados.has(hora);
+        const ocp=horarioCoberto(min,intervalosFunc);
         const bloqDono=bloqueadosDono.includes(hora); // bloqueado pelo dono — não pode alterar
         const bloqFunc=bloqueadosFunc.includes(hora); // bloqueado pelo próprio func
         let cls,title='';

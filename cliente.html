@@ -914,6 +914,70 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const auth = getAuth(app);
 
+// ── Privacidade: a tela pública não lê mais os agendamentos/fila (que têm
+// nome completo e WhatsApp de todo mundo). Lê só a cópia enxuta
+// horariosOcupados / filaPublica (primeiro nome, sem telefone) — ver
+// js/dashboard/publico.js no painel do barbeiro.
+function nomeCurtoPublico(nome){
+    const partes=(nome||'Cliente').trim().split(/\s+/).filter(Boolean);
+    if(!partes.length) return 'Cliente';
+    return partes[0]+(partes.length>1?' '+partes[partes.length-1][0].toUpperCase()+'.':'');
+}
+// Duração: um horário só serve se o atendimento inteiro couber sem encostar
+// em outro já marcado nem num horário bloqueado, e terminar até o fechamento.
+function intervalosOcupados(ocupados, bloqueios, intervaloMin){
+    const lista=(ocupados||[]).map(o=>{const ini=horaParaMin(o.hora);return {ini,fim:ini+(Number(o.duracao)||intervaloMin)};});
+    (bloqueios||[]).forEach(h=>{const ini=horaParaMin(h);lista.push({ini,fim:ini+intervaloMin});});
+    return lista;
+}
+function horarioCabe(slotMin, duracaoNova, intervalos, fimMin){
+    if(slotMin+duracaoNova>fimMin) return false;
+    return !intervalos.some(o=>slotMin<o.fim && o.ini<slotMin+duracaoNova);
+}
+function duracaoPorNomeCorte(corte){
+    const cortes = barbeiroInfo.cortes || [];
+    let total = 0;
+    String(corte||'').split(' + ').forEach(n=>{ const c = cortes.find(x=>x.nome===n.trim()); if(c) total += Number(c.duracao||30); });
+    return total || 30;
+}
+async function buscarOcupadosDoDia(data){
+    const equipe = barbeiroInfo.equipe || [];
+    const filtrarBarbeiro = (b) => !(equipe.length > 0 && barbeiroCortador && b !== barbeiroCortador);
+    const mapa = {};
+    // Cópia pública (regras novas)
+    try{
+        const snap = await getDocs(query(collection(db,'horariosOcupados'), where('barbeiroId','==',barbeiroId), where('data','==',data)));
+        snap.forEach(d=>{
+            const h=d.data();
+            if(h.status==='cancelado' || !filtrarBarbeiro(h.barbeiro)) return; // cancelado libera o horário
+            mapa[h.hora+'|'+(h.barbeiro||'')] = {hora:h.hora, duracao:Number(h.duracao)||30};
+        });
+    }catch(e){ /* regras antigas ainda publicadas: segue com a lista completa abaixo */ }
+    // Lista completa — só funciona enquanto as regras antigas (leitura pública)
+    // estiverem publicadas; com as novas é negada e fica só a cópia pública.
+    try{
+        const snap = await getDocs(query(collection(db,'agendamentos'), where('barbeiroId','==',barbeiroId), where('data','==',data)));
+        snap.forEach(d=>{
+            const a=d.data();
+            if(a.status==='cancelado' || a.origem==='cobranca-manual' || !filtrarBarbeiro(a.barbeiro)) return;
+            const k=a.hora+'|'+(a.barbeiro||'');
+            if(!mapa[k]) mapa[k] = {hora:a.hora, duracao:Number(a.duracao)||duracaoPorNomeCorte(a.corte)};
+        });
+    }catch(e){}
+    return Object.values(mapa);
+}
+// Agendamentos feitos neste aparelho — é assim que quem agenda como
+// convidado (sem login) vê e cancela os próprios horários.
+function chaveMeusLocais(){ return 'prob_meus_agend_'+barbeiroId; }
+function lerMeusLocais(){ try{ return JSON.parse(localStorage.getItem(chaveMeusLocais())||'[]'); }catch(e){ return []; } }
+function salvarMeuLocal(item){
+    try{
+        const lista=lerMeusLocais().filter(x=>x.id!==item.id);
+        lista.push(item);
+        localStorage.setItem(chaveMeusLocais(), JSON.stringify(lista.slice(-30)));
+    }catch(e){}
+}
+
 function escapeHtml(str){
     return String(str??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
@@ -1072,10 +1136,26 @@ async function abrirMeusAgendamentos(){
     contHist.innerHTML = '<div class="loading">Carregando</div>';
 
     try{
-        const q = query(collection(db,'agendamentos'), where('barbeiroId','==',barbeiroId), where('clienteWhatsapp','==',clienteWpp));
-        const snap = await getDocs(q);
+        // Com login: os agendamentos dessa conta. Sem login (convidado): os
+        // que foram feitos neste aparelho, com a situação lida da cópia pública.
         const todos = [];
-        snap.forEach(d=>todos.push({id:d.id, ...d.data()}));
+        if(clienteUid){
+            const q = query(collection(db,'agendamentos'), where('barbeiroId','==',barbeiroId), where('clienteUid','==',clienteUid));
+            const snap = await getDocs(q);
+            snap.forEach(d=>todos.push({id:d.id, ...d.data()}));
+        }
+        const hojeStr = dataLocal(new Date());
+        for(const l of lerMeusLocais()){
+            if(todos.some(t=>t.id===l.id)) continue;
+            let status = l.data < hojeStr ? 'concluido' : 'cancelado';
+            if(l.publicoId){
+                try{
+                    const pub = await getDoc(doc(db,'horariosOcupados',l.publicoId));
+                    if(pub.exists()) status = pub.data().status || 'pendente';
+                }catch(e){}
+            }
+            todos.push({...l, status});
+        }
 
         const agora = new Date();
         const proximos = todos
@@ -1104,6 +1184,10 @@ async function abrirMeusAgendamentos(){
                 btn.disabled = true; btn.textContent = 'Cancelando...';
                 try{
                     await updateDoc(doc(db,'agendamentos',btn.dataset.cancelarAgend), {status:'cancelado', canceladoPor:'cliente', canceladoEm:new Date().toISOString()});
+                    const agCanc = todos.find(t=>t.id===btn.dataset.cancelarAgend);
+                    if(agCanc && agCanc.publicoId){
+                        try{ await updateDoc(doc(db,'horariosOcupados',agCanc.publicoId), {status:'cancelado'}); }catch(e){ console.error(e); }
+                    }
                     toast('Agendamento cancelado.');
                     abrirMeusAgendamentos();
                 }catch(e){
@@ -1743,10 +1827,15 @@ function abrirVerFila(){
     lista.innerHTML = '<div class="loading">Carregando fila</div>';
 
     if(unsubFilaPublica) unsubFilaPublica();
-    const q = query(collection(db,'fila'), where('barbeiroId','==',barbeiroId), where('status','==','aguardando'));
+    const q = query(collection(db,'filaPublica'), where('barbeiroId','==',barbeiroId), where('status','==','aguardando'));
+    let itensFilaCompleta = null; // só existe enquanto as regras antigas estiverem publicadas
+    getDocs(query(collection(db,'fila'), where('barbeiroId','==',barbeiroId), where('status','==','aguardando')))
+        .then(sn=>{ itensFilaCompleta=[]; sn.forEach(d=>{ const f=d.data(); itensFilaCompleta.push({...f, nome:f.clienteNome}); }); })
+        .catch(()=>{});
     unsubFilaPublica = onSnapshot(q, snap => {
         let itens = [];
         snap.forEach(d => itens.push(d.data()));
+        if(!itens.length && itensFilaCompleta && itensFilaCompleta.length) itens = itensFilaCompleta;
         itens.sort((a,b) => new Date(a.criadoEm) - new Date(b.criadoEm));
 
         if(!itens.length){
@@ -1757,7 +1846,7 @@ function abrirVerFila(){
         lista.innerHTML = itens.map((item, i) => {
             const minutos = Math.max(0, Math.floor((new Date() - new Date(item.criadoEm)) / 60000));
             const tempoStr = minutos < 1 ? 'agora mesmo' : minutos < 60 ? `há ${minutos}min` : `há ${Math.floor(minutos/60)}h${minutos%60}min`;
-            const primeiroNome = (item.clienteNome || 'Cliente').split(' ')[0];
+            const primeiroNome = escapeHtml((item.nome || 'Cliente').split(' ')[0]);
             return `<div style="display:flex;align-items:center;gap:.75rem;padding:.7rem 0;${i>0?'border-top:1px solid var(--border)':''}">
                 <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,212,255,.1);border:1.5px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:var(--blue);flex-shrink:0">${i+1}º</div>
                 <div style="flex:1;min-width:0">
@@ -1980,19 +2069,8 @@ async function renderHours(data) {
     // Agendamentos filtrados por barbeiro da equipe (se escolhido)
     // Se a barbearia tem equipe e cliente escolheu um barbeiro,
     // só bloqueia os horários daquele barbeiro específico
-    const q = query(collection(db,'agendamentos'), where('barbeiroId','==',barbeiroId), where('data','==',data));
-    let snap; try { snap = await getDocs(q); } catch(e) { snap = {forEach:()=>{}}; }
-    const ocupados = new Set();
-    snap.forEach(d => {
-        const ag = d.data();
-        if(ag.status === 'cancelado') return; // cancelado libera o horário
-        const equipe = barbeiroInfo.equipe || [];
-        if (equipe.length > 0 && barbeiroCortador) {
-            if (ag.barbeiro === barbeiroCortador) ocupados.add(ag.hora);
-        } else {
-            ocupados.add(ag.hora);
-        }
-    });
+    let ocupadosDia = [];
+    try { ocupadosDia = await buscarOcupadosDoDia(data); } catch(e) { console.error('horariosOcupados:', e); }
 
     // Bloqueios — também por barbeiro se houver equipe
     const equipe = barbeiroInfo.equipe || [];
@@ -2024,7 +2102,12 @@ async function renderHours(data) {
         slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
     }
 
-    const disponiveis = slots.filter(s => !ocupados.has(s) && !bloqueados.includes(s) && !(isHoje && horaParaMin(s)<=agoraMin));
+    // Cada horário só serve se o(s) serviço(s) escolhido(s) couberem inteiros
+    const duracaoNova = (getCorteEscolhido()||{}).duracao || intervaloMin;
+    const intervalos = intervalosOcupados(ocupadosDia, bloqueados, intervaloMin);
+    const naoCabe = new Set(slots.filter(s => !horarioCabe(horaParaMin(s), duracaoNova, intervalos, fimMin)));
+    const ocupados = naoCabe;
+    const disponiveis = slots.filter(s => !naoCabe.has(s) && !(isHoje && horaParaMin(s)<=agoraMin));
     if (!disponiveis.length) {
         grid.innerHTML = '<div class="empty-state">Sem horários disponíveis neste dia.</div>';
         return;
@@ -2086,7 +2169,18 @@ async function entrarNaFila() {
     btn.disabled = true;
 
     try {
+        const pubFilaRef = doc(collection(db,'filaPublica'));
+        const criadoEmFila = new Date().toISOString();
+        await setDoc(pubFilaRef, {
+            barbeiroId,
+            nome: nomeCurtoPublico(clienteNome),
+            corte: corteEscolhido.nome,
+            barbeiro: barbeiroCortador || '',
+            status: 'aguardando',
+            criadoEm: criadoEmFila
+        }).catch(e=>console.warn('cópia pública da fila:', e.message));
         await addDoc(collection(db,'fila'), {
+            publicoId: pubFilaRef.id,
             barbeiroId,
             clienteNome,
             clienteWhatsapp: clienteWpp || '',
@@ -2096,7 +2190,7 @@ async function entrarNaFila() {
             corte: corteEscolhido.nome,
             preco: corteEscolhido.preco,
             status: 'aguardando',
-            criadoEm: new Date().toISOString(),
+            criadoEm: criadoEmFila,
             origem: 'cliente'
         });
         await marcarPromoUsadaSeAplicavel();
@@ -2145,7 +2239,33 @@ async function confirmarAgendamento() {
     btn.disabled = true;
 
     try {
-        await addDoc(collection(db,'agendamentos'), {
+        // Confere de novo se o horário ainda cabe (outra pessoa pode ter
+        // agendado enquanto esta escolhia)
+        const fSnapConf = await getDoc(doc(db,'barbeiros',barbeiroId,'config','funcionamento'));
+        const intervaloConf = (fSnapConf.exists() && fSnapConf.data().intervalo) || 30;
+        const ocupadosAgora = await buscarOcupadosDoDia(dataEscolhida);
+        if(!horarioCabe(horaParaMin(horaEscolhida), corteEscolhido.duracao, intervalosOcupados(ocupadosAgora, [], intervaloConf), 24*60)){
+            toast('Esse horário acabou de ser ocupado. Escolha outro, por favor.');
+            btn.textContent = 'Confirmar Agendamento →';
+            btn.disabled = true; // volta a liberar quando escolher outro horário
+            horaEscolhida = '';
+            renderHours(dataEscolhida);
+            return;
+        }
+
+        // Cópia pública (sem telefone) primeiro, pra ninguém mais pegar o horário
+        const pubRef = doc(collection(db,'horariosOcupados'));
+        await setDoc(pubRef, {
+            barbeiroId,
+            data: dataEscolhida,
+            hora: horaEscolhida,
+            duracao: corteEscolhido.duracao,
+            barbeiro: barbeiroCortador || '',
+            status: 'pendente',
+            nome: nomeCurtoPublico(clienteNome),
+            corte: corteEscolhido.nome
+        }).catch(e=>console.warn('cópia pública do horário:', e.message));
+        const agRef = await addDoc(collection(db,'agendamentos'), {
             barbeiroId,
             clienteNome,
             clienteWhatsapp: clienteWpp,
@@ -2156,9 +2276,12 @@ async function confirmarAgendamento() {
             barbeiro: barbeiroCortador || '',
             data:   dataEscolhida,
             hora:   horaEscolhida,
+            duracao: corteEscolhido.duracao,
+            publicoId: pubRef.id,
             status: 'pendente',
             criadoEm: new Date().toISOString()
         });
+        salvarMeuLocal({ id: agRef.id, publicoId: pubRef.id, corte: corteEscolhido.nome, preco: corteEscolhido.preco, data: dataEscolhida, hora: horaEscolhida });
         await marcarPromoUsadaSeAplicavel();
 
         // Preenche ticket

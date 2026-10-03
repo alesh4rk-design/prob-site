@@ -137,13 +137,16 @@ async function renderHours(){
     // Agendamentos filtrados por barbeiro se selecionado
     const q=query(collection(db,'agendamentos'),where('barbeiroId','==',barbeiroData.uid),where('data','==',selectedDate));
     let agendSnap;try{agendSnap=await getDocs(q);}catch(e){agendSnap={forEach:()=>{}};}
-    const horasOcupadas=new Set();
+    // Cada atendimento ocupa o tempo inteiro dele (Corte + Barba de 1h ocupa
+    // 10:00 e 10:30), não só o horário em que começa
+    const ocupadosDia=[];
     agendSnap.forEach(d=>{
         const ag=d.data();
-        if(ag.status==='cancelado')return; // cancelado libera o horário
-        if(barbSel) { if(ag.barbeiro===barbSel) horasOcupadas.add(ag.hora); }
-        else horasOcupadas.add(ag.hora);
+        if(ag.status==='cancelado'||ag.origem==='cobranca-manual')return; // cancelado libera o horário
+        if(barbSel && ag.barbeiro!==barbSel)return;
+        ocupadosDia.push({hora:ag.hora,duracao:duracaoAtendimento(ag)});
     });
+    const intervalosDia=intervalosOcupados(ocupadosDia,[],intervaloMin);
 
     // Bloqueios por barbeiro ou geral
     const bloqKey = barbSel ? `${selectedDate}_${barbSel}` : selectedDate;
@@ -159,7 +162,7 @@ async function renderHours(){
     grid.innerHTML=slots.map(hora=>{
         const min=horaParaMin(hora);
         const passado=isHoje&&min<=agoraMin;
-        const ocupado=horasOcupadas.has(hora);
+        const ocupado=horarioCoberto(min,intervalosDia);
         const bloq=bloqueados.includes(hora);
         const cls=passado?'passado':ocupado?'ocupado':bloq?'bloqueado':'livre';
         return `<div class="hour-slot ${cls}" data-hora="${hora}" data-status="${cls}">${hora}</div>`;

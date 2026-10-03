@@ -8,6 +8,13 @@ service cloud.firestore {
     function isOwner(bId) {
       return request.auth != null && request.auth.uid == bId;
     }
+    // Membro da equipe logado (conta criada pelo convite), ativo e dessa barbearia
+    function isStaff(bId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/funcionarios/$(request.auth.uid))
+        && get(/databases/$(database)/documents/funcionarios/$(request.auth.uid)).data.bId == bId
+        && get(/databases/$(database)/documents/barbeiros/$(bId)/equipeAuth/$(get(/databases/$(database)/documents/funcionarios/$(request.auth.uid)).data.equipeId)).data.ativo == true;
+    }
 
     // ── Configurações globais do sistema (PIX, WhatsApp, preço padrão) ──
     match /config/{doc} {
@@ -49,11 +56,13 @@ service cloud.firestore {
                           && request.resource.data.usosFeitos == (resource.data.usosFeitos || 0) + 1);
       }
       match /fidelidade/{doc} {
-        allow read: if true;
+        // Tem o WhatsApp do cliente no id — só a barbearia lê
+        allow read: if isOwner(bId) || isAdmin() || isStaff(bId);
         allow write: if isOwner(bId) || isAdmin();
       }
       match /clientes/{doc} {
-        allow read: if true;
+        // Nome e WhatsApp de todos os clientes — só a barbearia lê (antes era público)
+        allow read: if isOwner(bId) || isAdmin() || isStaff(bId);
         // Criado/atualizado tanto pelo dono quanto pelo modo funcionário (sem
         // login próprio) sempre que um corte é concluído — por isso não exige
         // auth, só valida o formato dos campos. Delete é ação separada (não
@@ -183,9 +192,12 @@ service cloud.firestore {
 
     // ── Agendamentos ──
     match /agendamentos/{id} {
-      // Leitura pública: necessária p/ cliente.html conferir horários livres,
-      // painel-chamada.html (TV sem login) e o modo funcionário (sem login próprio).
-      allow read: if true;
+      // Tem nome completo e WhatsApp: só o dono, a equipe logada e o próprio
+      // cliente (agendamentos feitos com a conta dele) leem. A tela pública e
+      // a TV leem a cópia sem dados pessoais em /horariosOcupados.
+      allow read: if isOwner(resource.data.barbeiroId) || isAdmin()
+                  || isStaff(resource.data.barbeiroId)
+                  || (request.auth != null && resource.data.clienteUid == request.auth.uid);
 
       // Criação: exige o formato correto de um agendamento válido — exceto
       // pro próprio dono, que também pode restaurar um backup (registro com
@@ -210,9 +222,16 @@ service cloud.firestore {
       // canceladoPor/canceladoEm: gravados quando o próprio cliente cancela
       // (tela "Meus Agendamentos"), pra o dono saber que não foi ele quem
       // cancelou e poder notificar pela Central de Avisos.
+      // Equipe: as mesmas ações de antes (concluir, pagamento, desconto...).
+      // Cliente: só cancelar o próprio agendamento.
       allow update: if isOwner(resource.data.barbeiroId) || isAdmin()
-                    || (request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['status','formaPagamento','avisoEnviado','preco','precoOriginal','canceladoPor','canceladoEm'])
+                    || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','canceladoPor','canceladoEm'])
+                        && request.resource.data.status == 'cancelado'
+                        && request.resource.data.canceladoPor == 'cliente'
+                        && (resource.data.get('clienteUid', '') == '' || (request.auth != null && resource.data.clienteUid == request.auth.uid)))
+                    || (isStaff(resource.data.barbeiroId)
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['status','formaPagamento','avisoEnviado','preco','precoOriginal','canceladoPor','canceladoEm','publicoId'])
                     && request.resource.data.status in ['pendente','concluido','cancelado']
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['formaPagamento'])
                         || request.resource.data.formaPagamento in ['dinheiro','pix','debito','credito','pendente'])
@@ -227,7 +246,9 @@ service cloud.firestore {
 
     // ── Fila de espera ──
     match /fila/{id} {
-      allow read: if true;
+      // Nome e WhatsApp de quem está na fila: só o dono e a equipe logada.
+      // A tela pública e a TV leem /filaPublica.
+      allow read: if isOwner(resource.data.barbeiroId) || isAdmin() || isStaff(resource.data.barbeiroId);
 
       allow create: if isOwner(request.resource.data.barbeiroId) || isAdmin()
                     || (request.resource.data.keys().hasAll(['barbeiroId','clienteNome','status'])
@@ -239,8 +260,9 @@ service cloud.firestore {
       // pagamento registrada antes de atender e ajuste de preço (desconto).
       // O dono pode editar a própria fila livremente (ex: restaurar backup).
       allow update: if isOwner(resource.data.barbeiroId) || isAdmin()
-                    || (request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['status','atendidoEm','formaPagamento','preco','precoOriginal'])
+                    || (isStaff(resource.data.barbeiroId)
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['status','atendidoEm','formaPagamento','preco','precoOriginal','publicoId'])
                     && request.resource.data.status in ['aguardando','atendido','removido']
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['formaPagamento'])
                         || request.resource.data.formaPagamento in ['dinheiro','pix','debito','credito','pendente'])
@@ -249,6 +271,38 @@ service cloud.firestore {
 
       // Mesma lógica dos agendamentos: o dono pode apagar a própria fila.
       allow delete: if isOwner(resource.data.barbeiroId) || isAdmin();
+    }
+
+    // ── Cópias públicas (sem telefone, só primeiro nome) ──
+    // Usadas pela tela do cliente (horários livres, ver fila) e pela TV.
+    // Mantidas pelo painel do dono/equipe (js/dashboard/publico.js) e
+    // criadas pelo próprio cliente ao agendar/entrar na fila.
+    match /horariosOcupados/{id} {
+      allow read: if true;
+      allow create: if isOwner(request.resource.data.barbeiroId) || isAdmin() || isStaff(request.resource.data.barbeiroId)
+                    || (request.resource.data.keys().hasOnly(['barbeiroId','data','hora','duracao','barbeiro','status','nome','corte'])
+                        && request.resource.data.barbeiroId is string
+                        && request.resource.data.data is string && request.resource.data.data.size() == 10
+                        && request.resource.data.hora is string && request.resource.data.hora.size() == 5
+                        && request.resource.data.duracao is number && request.resource.data.duracao > 0 && request.resource.data.duracao <= 600
+                        && request.resource.data.status == 'pendente'
+                        && request.resource.data.nome is string && request.resource.data.nome.size() < 40
+                        && request.resource.data.corte is string && request.resource.data.corte.size() < 100);
+      // Cliente que cancela pela tela "Meus Agendamentos" libera o horário
+      allow update: if isOwner(resource.data.barbeiroId) || isAdmin() || isStaff(resource.data.barbeiroId)
+                    || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                        && request.resource.data.status == 'cancelado');
+      allow delete: if isOwner(resource.data.barbeiroId) || isAdmin() || isStaff(resource.data.barbeiroId);
+    }
+    match /filaPublica/{id} {
+      allow read: if true;
+      allow create: if isOwner(request.resource.data.barbeiroId) || isAdmin() || isStaff(request.resource.data.barbeiroId)
+                    || (request.resource.data.keys().hasOnly(['barbeiroId','nome','corte','barbeiro','status','criadoEm'])
+                        && request.resource.data.barbeiroId is string
+                        && request.resource.data.status == 'aguardando'
+                        && request.resource.data.nome is string && request.resource.data.nome.size() < 40
+                        && request.resource.data.corte is string && request.resource.data.corte.size() < 100);
+      allow update, delete: if isOwner(resource.data.barbeiroId) || isAdmin() || isStaff(resource.data.barbeiroId);
     }
 
   }

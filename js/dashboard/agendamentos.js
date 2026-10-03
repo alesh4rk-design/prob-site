@@ -61,6 +61,7 @@ function atualizarTotalChecklist(containerId, totalId){
     const marcados = document.querySelectorAll(`#${containerId} .checklist-corte:checked`);
     const total = Array.from(marcados).reduce((s,c)=>s+Number(c.dataset.preco||0),0);
     document.getElementById(totalId).textContent = `Total: R$${total.toFixed(2).replace('.',',')}`;
+    if(containerId==='pres-corte-lista' && typeof carregarHorasPresencial==='function') carregarHorasPresencial();
     if(containerId==='esq-corte-lista'){
         const campo=document.getElementById('esq-preco');
         if(campo) campo.value = total ? total.toFixed(2) : '';
@@ -77,7 +78,8 @@ function getSelecaoCortes(containerId){
     const selecionados = marcados.map(chk=>cortes[Number(chk.dataset.idx)]).filter(Boolean);
     return {
         nome: selecionados.map(c=>c.nome).join(' + '),
-        preco: selecionados.reduce((s,c)=>s+Number(c.preco||0),0)
+        preco: selecionados.reduce((s,c)=>s+Number(c.preco||0),0),
+        duracao: selecionados.reduce((s,c)=>s+Number(c.duracao||30),0)
     };
 }
 
@@ -171,6 +173,7 @@ function carregarFila(){
         snap.forEach(d=>lista.push({id:d.id,...d.data()}));
         lista.sort((a,b)=>new Date(a.criadoEm)-new Date(b.criadoEm));
         ultimaListaFila=lista;
+        if(typeof sincronizarFilaPublica==='function') sincronizarFilaPublica(lista);
         renderFila(lista);
     },e=>console.error('Erro fila:',e));
 }
@@ -212,7 +215,7 @@ async function atenderFila(filaId){
 
     // Cria agendamento concluído para contar no faturamento — carrega o
     // WhatsApp e a forma de pagamento que já tinham sido registrados na fila
-    await addDoc(collection(db,'agendamentos'),{
+    const novoAg={
         barbeiroId:barbeiroData.uid,
         clienteNome:item.clienteNome,
         clienteWhatsapp:item.clienteWhatsapp||'',
@@ -222,12 +225,16 @@ async function atenderFila(filaId){
         barbeiro:item.barbeiro||'',
         data:fmtHoje(),
         hora:new Date().toTimeString().slice(0,5),
+        duracao:duracaoAtendimento(item),
         status:'concluido',
         origem:'fila',
         ...(item.formaPagamento?{formaPagamento:item.formaPagamento}:{}),
         criadoEm:new Date().toISOString()
-    });
+    };
+    const novoRef=await addDoc(collection(db,'agendamentos'),novoAg);
     await updateDoc(doc(db,'fila',filaId),{status:'atendido',atendidoEm:new Date().toISOString()});
+    espelharAgendamento(novoRef.id,novoAg);
+    espelharFila(filaId,{...item,status:'atendido'});
     registrarClienteConcluido(barbeiroData.uid, item.clienteNome, item.clienteWhatsapp, item.corte||'Corte (fila)');
     toast('✓ Atendimento concluído!');
     $('modal-acoes-cliente').style.display = 'none';
@@ -246,6 +253,8 @@ async function atenderFila(filaId){
 async function removerFila(filaId){
     if(!confirm('Remover da fila?')) return false;
     await updateDoc(doc(db,'fila',filaId),{status:'removido'});
+    const itemRem=ultimaListaFila.find(l=>l.id===filaId);
+    if(itemRem) espelharFila(filaId,{...itemRem,status:'removido'});
     toast('Removido da fila');
     return true;
 }
@@ -359,15 +368,14 @@ async function carregarHorasPresencial(){
     // Busca agendamentos do dia
     const q=query(collection(db,'agendamentos'),where('barbeiroId','==',barbeiroData.uid),where('data','==',data));
     let snap;try{snap=await getDocs(q);}catch(e){snap={forEach:()=>{}};}
-    const ocupadas=new Set();
+    const ocupados=[];
     snap.forEach(d=>{
         const ag=d.data();
-        if(ag.status==='cancelado')return;
-        if(barbSel){if(ag.barbeiro===barbSel)ocupadas.add(ag.hora);}
-        else ocupadas.add(ag.hora);
+        if(ag.status==='cancelado'||ag.origem==='cobranca-manual')return;
+        if(barbSel && ag.barbeiro!==barbSel)return;
+        ocupados.push({hora:ag.hora,duracao:duracaoAtendimento(ag)});
     });
 
-    // Bloqueios
     // Bloqueios gerais da barbearia valem para todos os barbeiros
     const bGeral=await getDoc(doc(db,'barbeiros',barbeiroData.uid,'bloqueios',data));
     const bloqueadas=bGeral.exists()?[...(bGeral.data().horas||[])]:[];
@@ -381,8 +389,12 @@ async function carregarHorasPresencial(){
     const agoraMin=isHoje?agora.getHours()*60+agora.getMinutes():0;
 
     const slots=gerarSlots(iniMin,fimMin,intervaloMin);
-
-    const disponiveis=slots.filter(s=>!ocupadas.has(s)&&!bloqueadas.includes(s)&&!(isHoje&&horaParaMin(s)<=agoraMin));
+    // Duração dos serviços marcados (ou um intervalo, se nada marcado ainda):
+    // o horário só aparece se o atendimento inteiro couber sem encostar em outro
+    const selDur=getSelecaoCortes('pres-corte-lista');
+    const duracaoNova=selDur?selDur.duracao:intervaloMin;
+    const intervalos=intervalosOcupados(ocupados,bloqueadas,intervaloMin);
+    const disponiveis=slots.filter(s=>{const m=horaParaMin(s);return !(isHoje&&m<=agoraMin)&&horarioCabe(m,duracaoNova,intervalos,fimMin);});
 
     if(!disponiveis.length){
         horaSel.innerHTML='<option value="">Sem horários livres</option>';
@@ -419,14 +431,15 @@ async function confirmarPresencial(){
         // Verifica novamente se o horário ainda está livre (evita conflito)
         const q=query(collection(db,'agendamentos'),where('barbeiroId','==',barbeiroData.uid),where('data','==',data));
         const snap=await getDocs(q);
-        let ocupado=false;
+        const ocupadosAgora=[];
         snap.forEach(d=>{
             const ag=d.data();
-            if(ag.status==='cancelado')return;
-            if(ag.hora!==hora)return;
-            if(barbeiroNome){if(ag.barbeiro===barbeiroNome)ocupado=true;}
-            else ocupado=true;
+            if(ag.status==='cancelado'||ag.origem==='cobranca-manual')return;
+            if(barbeiroNome && ag.barbeiro!==barbeiroNome)return;
+            ocupadosAgora.push({hora:ag.hora,duracao:duracaoAtendimento(ag)});
         });
+        // Encosta em outro atendimento considerando a duração dos dois?
+        const ocupado=!horarioCabe(horaParaMin(hora),selecao.duracao,intervalosOcupados(ocupadosAgora,[],intervaloMin),24*60);
         if(ocupado){
             statusMsg.textContent='⚠️ Esse horário acabou de ser ocupado. Escolha outro.';
             statusMsg.style.color='var(--red)';
@@ -443,6 +456,7 @@ async function confirmarPresencial(){
             preco:selecao.preco,
             barbeiro:barbeiroNome,
             data,hora,
+            duracao:selecao.duracao,
             status:'pendente',
             origem:'presencial',
             criadoEm:new Date().toISOString()
@@ -580,6 +594,7 @@ async function confirmarEsquecido(){
                 barbeiro:barbeiroNome,
                 data,hora,
                 formaPagamento,
+                duracao:selecaoMarcada?selecaoMarcada.duracao:duracaoAtendimento(agEditando),
                 // Valor corrigido à mão passa a ser o valor cheio (desconto antigo deixa de valer)
                 ...(Number(selecao.preco)!==Number(agEditando.preco)?{precoOriginal:null}:{}),
                 editadoEm:new Date().toISOString()
@@ -594,6 +609,7 @@ async function confirmarEsquecido(){
                 preco:selecao.preco,
                 barbeiro:barbeiroNome,
                 data,hora,
+                duracao:selecaoMarcada?selecaoMarcada.duracao:duracaoAtendimento({corte:selecao.nome}),
                 status:'concluido',
                 origem:'esquecido',
                 formaPagamento,
@@ -767,6 +783,8 @@ function carregarAgendamentos(){
         // não só os da lista que foi renderizada por último, senão um
         // cliente que não está em "aguardando pagamento" não é encontrado.
         ultimaListaAppts = todos;
+        // Cópia pública sem dados pessoais (ver publico.js)
+        if(typeof sincronizarHorariosPublicos==='function') sincronizarHorariosPublicos(todos);
 
         $('stat-hoje').textContent=deHoje.filter(a=>a.status!=='cancelado').length;
         $('stat-semana').textContent=todos.filter(a=>a.data>=hoje&&a.status!=='cancelado').length;
@@ -836,6 +854,7 @@ function renderAppts(container,lista,emptyMsg){
 async function concluirAgendamento(id){
     const item=ultimaListaAppts.find(a=>a.id===id);
     await updateDoc(doc(db,'agendamentos',id),{status:'concluido'});
+    if(item) espelharAgendamento(id,{...item,status:'concluido'});
     if(item) registrarClienteConcluido(barbeiroData.uid, item.clienteNome, item.clienteWhatsapp, item.corte);
     toast('Corte concluído! ✓');
     if(!window.__funcionarioMode) carregarAgendamentos();
@@ -864,6 +883,8 @@ async function concluirAgendamento(id){
 async function cancelarAgendamento(id){
     if(!confirm('Marcar como cancelado?')) return false;
     await updateDoc(doc(db,'agendamentos',id),{status:'cancelado'});
+    const itemCanc=ultimaListaAppts.find(a=>a.id===id);
+    if(itemCanc) await espelharAgendamento(id,{...itemCanc,status:'cancelado'});
     if(window.__funcionarioMode){ toast('Agendamento cancelado','var(--red)'); setTimeout(()=>location.reload(),600); return true; }
     carregarAgendamentos();
     toast('Agendamento cancelado','var(--red)');
