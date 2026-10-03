@@ -213,6 +213,18 @@ function aluguelCadeirasNoMes(mesStr){
 }
 window.pctDoBarbeiro=pctDoBarbeiro; window.aluguelDoBarbeiro=aluguelDoBarbeiro; window.aluguelCadeirasNoMes=aluguelCadeirasNoMes;
 
+// Campo do dia de cobrança conforme o período (mesmo formato do Pagamento de Comissões)
+function campoDiaCadeira(i,cfg){
+    const st='style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none"';
+    if(cfg.freq==='semanal'){
+        const opts=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'].map((n,k)=>`<option value="${k}" ${Number(cfg.dia)===k?'selected':''}>${n}</option>`).join('');
+        return `<label>Dia da semana</label><select data-dia-cadeira="${i}" ${st}>${opts}</select>`;
+    }
+    const max=cfg.freq==='quinzenal'?15:28;
+    const dia=Math.min(Math.max(Number(cfg.dia)||1,1),max);
+    return `<label>${cfg.freq==='quinzenal'?'Dia base (1-15)':'Dia do mês'}</label><input type="number" data-dia-cadeira="${i}" value="${dia}" min="1" max="${max}" step="1" ${st}>`;
+}
+
 function escutarComissoes(){
     if(window.__recepcionista || window.__comissoesListenerAtivo) return;
     window.__comissoesListenerAtivo = true;
@@ -262,7 +274,9 @@ async function migrarComissoesAntigas(){
 // Tira o campo "pct" antes de gravar o array "equipe" no doc público —
 // a comissão nunca deve ir parar lá (ver escutarComissoes acima).
 function equipeSemComissao(){
-    return (barbeiroData.equipe||[]).map(({pct, ...resto})=>resto);
+    // Combinado financeiro (comissão, aluguel de cadeira, período) fica só em
+    // comissoes/{id}, que é privado — nada disso pode ir pro doc público
+    return (barbeiroData.equipe||[]).map(({pct, pctComissao, modelo, cadeiraTipo, pctDono, aluguel, freqComissao, diaComissao, ...resto})=>resto);
 }
 
 function renderEquipe(){
@@ -291,6 +305,7 @@ function renderEquipe(){
                 <button class="btn-del" data-idx="${i}">Remover</button>
             </div>`;
 
+        const cfgB = comissaoConfigCache[b.id] || {freq:'mensal', dia:5};
         const editor = (ehRecep||modoLeitura) ? '' : `
             <div data-editor-pagto="${i}" style="display:none;width:100%;margin-top:.6rem;padding:.75rem;background:var(--card2);border:1px dashed var(--border);border-radius:10px">
                 <div class="input-group" style="margin-bottom:.6rem"><label>Como esse barbeiro trabalha?</label>
@@ -313,7 +328,16 @@ function renderEquipe(){
                         <input type="number" data-aluguel="${i}" value="${b.aluguel||''}" min="0" step="10" placeholder="Ex: 300" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none"></div>
                     <div class="input-group" data-campo-pctdono="${i}" style="margin-bottom:.6rem;${b.cadeiraTipo==='fixo'?'display:none':''}"><label>% de cada corte que vai pro dono</label>
                         <input type="number" data-pct-dono="${i}" value="${b.pctDono||''}" min="0" max="100" step="5" placeholder="Ex: 10" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none"></div>
-                    <p style="font-size:.7rem;color:var(--muted);margin:0 0 .6rem">O cliente paga no caixa da barbearia. No fim de cada período (semanal, quinzenal ou mensal — escolha em <b>Pagamento de Comissões</b>, logo abaixo), o sistema calcula o repasse: valor dos cortes − % do dono − aluguel. Se ele faturar menos que o aluguel, aparece quanto ele deve ao dono.</p>
+                    <div style="display:flex;gap:.5rem;margin-bottom:.6rem">
+                        <div class="input-group" style="flex:1;margin-bottom:0"><label>Cobrança</label>
+                            <select data-freq-cadeira="${i}" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.5rem .6rem;color:var(--text);font-size:.85rem;outline:none">
+                                <option value="semanal" ${cfgB.freq==='semanal'?'selected':''}>Semanal</option>
+                                <option value="quinzenal" ${cfgB.freq==='quinzenal'?'selected':''}>Quinzenal</option>
+                                <option value="mensal" ${cfgB.freq==='mensal'?'selected':''}>Mensal</option>
+                            </select></div>
+                        <div class="input-group" style="flex:1;margin-bottom:0" data-dia-cadeira-wrap="${i}">${campoDiaCadeira(i,cfgB)}</div>
+                    </div>
+                    <p style="font-size:.7rem;color:var(--muted);margin:0 0 .6rem">O cliente paga no caixa da barbearia. A cada período o sistema calcula o repasse (em <b>Pagamento de Comissões</b>, logo abaixo): valor dos cortes − % do dono − aluguel. Se ele faturar menos que o aluguel, aparece quanto ele deve ao dono.</p>
                 </div>
                 <button class="btn-save" style="width:100%;padding:.55rem" data-salvar-pagto="${i}">Salvar forma de pagamento</button>
             </div>`;
@@ -343,6 +367,13 @@ function renderEquipe(){
             q1('data-campos-cadeira',i).style.display = sel.value==='cadeira'?'block':'none';
         });
     });
+    container.querySelectorAll('[data-freq-cadeira]').forEach(sel=>{
+        sel.addEventListener('change',()=>{
+            const i=sel.dataset.freqCadeira;
+            const diaPadrao = sel.value==='semanal' ? 1 : 5;
+            q1('data-dia-cadeira-wrap',i).innerHTML=campoDiaCadeira(i,{freq:sel.value,dia:diaPadrao});
+        });
+    });
     container.querySelectorAll('[data-cadeira-tipo]').forEach(sel=>{
         sel.addEventListener('change',()=>{
             const i=sel.dataset.cadeiraTipo;
@@ -362,6 +393,15 @@ function renderEquipe(){
                 dados.pctDono=dados.cadeiraTipo==='fixo'?0:Number(q1('data-pct-dono',i).value||0);
                 if(dados.cadeiraTipo!=='pct' && !(dados.aluguel>0)){toast('Informe o valor do aluguel','var(--red)');return;}
                 if(dados.cadeiraTipo!=='fixo' && !(dados.pctDono>0 && dados.pctDono<=100)){toast('Informe a % do dono (1 a 100)','var(--red)');return;}
+                // Período da cobrança — o mesmo combinado de Pagamento de Comissões
+                const freq=q1('data-freq-cadeira',i).value;
+                let dia=parseInt(q1('data-dia-cadeira',i).value);
+                if(isNaN(dia)) dia = freq==='semanal'?1:5;
+                if(freq==='semanal') dia=Math.min(Math.max(dia,0),6);
+                else if(freq==='quinzenal') dia=Math.min(Math.max(dia,1),15);
+                else dia=Math.min(Math.max(dia,1),28);
+                dados.freqComissao=freq; dados.diaComissao=dia;
+                comissaoConfigCache[membro.id]={freq,dia};
             } else {
                 const p=Number(q1('data-pct-comissao',i).value);
                 if(isNaN(p)||p<0||p>100){toast('A % deve ser de 0 a 100','var(--red)');return;}
