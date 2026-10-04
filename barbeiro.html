@@ -1646,6 +1646,7 @@
             <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(255,140,66);display:inline-block"></span>15+ dias</div>
             <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:rgb(255,75,43);display:inline-block"></span>30+ dias (sumido)</div>
         </div>
+        <button type="button" id="btn-recalcular-clientes" style="width:100%;margin-bottom:.8rem;padding:.6rem;background:transparent;border:1.5px dashed var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer">🔄 Recalcular cortes e favoritos pelos atendimentos concluídos</button>
         <div id="lista-clientes-barb"><div class="empty-state"><div class="icon">👥</div>Nenhum cliente cadastrado ainda.</div></div>
     </div>
 
@@ -2275,7 +2276,13 @@ async function registrarClienteConcluido(bUid, nome, wpp, corte){
             ultimaVisita: new Date().toISOString()
         };
         if(corte){
-            dados['cortesFavoritos.'+corte.replace(/[.$#\[\]/]/g,'_')] = increment(1);
+            // Mapa aninhado (com setDoc+merge, "cortesFavoritos.X" virava um
+            // campo com ponto no nome e o favorito nunca aparecia)
+            // Combo "Corte + Barba" conta pra cada serviço
+            dados.cortesFavoritos = {};
+            corte.split(' + ').map(n=>n.trim()).filter(Boolean).forEach(n=>{
+                dados.cortesFavoritos[n.replace(/[.$#\[\]/]/g,'_')] = increment(1);
+            });
         }
         await setDoc(ref, dados, {merge:true});
         if(typeof window.registrarUsoAcordo==='function') window.registrarUsoAcordo(wppLimpo);
@@ -3251,10 +3258,10 @@ async function initDash(){
 <script defer src="js/dashboard/tour.js?v=20260727o"></script>
 <script defer src="js/dashboard/equipe.js?v=20261003k"></script>
 <script defer src="js/dashboard/promocoes.js?v=20261003c"></script>
-<script defer src="js/dashboard/clientes.js?v=20261003c"></script>
+<script defer src="js/dashboard/clientes.js?v=20261004a"></script>
 <script defer src="js/dashboard/publico.js?v=20261003b"></script>
-<script defer src="js/dashboard/historico.js?v=20261003m"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20261003n"></script>
+<script defer src="js/dashboard/historico.js?v=20261004a"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20261004a"></script>
 <script defer src="js/dashboard/horarios.js?v=20261003k"></script>
 <script defer src="js/dashboard/financeiro.js?v=20261003n"></script>
 <script defer src="js/dashboard/auth.js?v=20261003f"></script>

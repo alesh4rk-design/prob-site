@@ -38,9 +38,54 @@ async function salvarClienteManual(nome, wppBruto){
     }catch(e){ console.error('salvarClienteManual:',e); toast('Erro ao adicionar: '+e.message,'var(--red)'); return false; }
 }
 
+// Recalcula "cortes", "favorito" e "última visita" de cada cliente direto dos
+// atendimentos concluídos — corrige contagens infladas por lançamentos que
+// duplicaram (ou que foram apagados depois). Não cria nem apaga clientes.
+function chaveClienteDe(nome, wpp){
+    const w=(wpp||'').replace(/\D/g,'');
+    return w || ('semtel_' + (nome||'sem_nome').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'_'));
+}
+async function recalcularContagemClientes(){
+    if(!(await perguntarSimNao('Recalcular os cortes de todos os clientes pelos atendimentos concluídos?\n\nUse depois de apagar lançamentos duplicados. Cortes, favorito e última visita passam a bater com o histórico.'))) return;
+    const btn=$('btn-recalcular-clientes'); btn.disabled=true; btn.textContent='Recalculando...';
+    try{
+        const snap=await getDocs(query(collection(db,'agendamentos'),where('barbeiroId','==',barbeiroData.uid)));
+        const por={};
+        snap.forEach(d=>{
+            const a=d.data();
+            if(a.status!=='concluido' || a.origem==='cobranca-manual') return;
+            const k=chaveClienteDe(a.clienteNome,a.clienteWhatsapp);
+            if(!por[k]) por[k]={total:0,fav:{},ultima:''};
+            por[k].total++;
+            String(a.corte||'').split(' + ').map(n=>n.trim()).filter(Boolean).forEach(n=>{
+                const nn=n.replace(/[.$#\[\]/]/g,'_'); por[k].fav[nn]=(por[k].fav[nn]||0)+1;
+            });
+            const quando=(a.data||'')+'T'+(a.hora||'00:00')+':00';
+            if(quando>por[k].ultima) por[k].ultima=quando;
+        });
+        const clientesSnap=await getDocs(collection(db,'barbeiros',barbeiroData.uid,'clientes'));
+        let alterados=0, lote=writeBatch(db), noLote=0;
+        for(const d of clientesSnap.docs){
+            const r=por[d.id]||{total:0,fav:{},ultima:''};
+            const atual=d.data();
+            const dados={ totalCortes:r.total, cortesFavoritos:r.fav };
+            if(r.ultima) dados.ultimaVisita=new Date(r.ultima).toISOString();
+            if(atual.totalCortes===r.total && JSON.stringify(atual.cortesFavoritos||{})===JSON.stringify(r.fav)) continue;
+            lote.update(d.ref, dados); noLote++; alterados++;
+            if(noLote>=400){ await lote.commit(); lote=writeBatch(db); noLote=0; }
+        }
+        if(noLote) await lote.commit();
+        toast(alterados?`✓ ${alterados} cliente(s) corrigido(s)`:'✓ Tudo já estava certo');
+        carregarClientes();
+    }catch(e){ toast('Erro ao recalcular: '+e.message,'var(--red)'); }
+    btn.disabled=false; btn.textContent='🔄 Recalcular cortes e favoritos pelos atendimentos concluídos';
+}
+
 function initAddCliente(){
     if(window.__addClienteBound) return;
     window.__addClienteBound = true;
+    const btnRecalc=$('btn-recalcular-clientes');
+    if(btnRecalc) btnRecalc.addEventListener('click', recalcularContagemClientes);
 
     $('btn-add-cliente').addEventListener('click', async()=>{
         const nome = $('cli-add-nome').value.trim();
@@ -137,7 +182,9 @@ function renderClientes(lista){
 
     cont.innerHTML = lista.map(c=>{
         const ultimaVisita = c.ultimaVisita ? new Date(c.ultimaVisita).toLocaleDateString('pt-BR') : '—';
-        const favorito = c.cortesFavoritos ? Object.entries(c.cortesFavoritos).sort((a,b)=>b[1]-a[1])[0]?.[0] : '—';
+        const favMapa = {...(c.cortesFavoritos||{})};
+        Object.keys(c).forEach(k=>{ if(k.startsWith('cortesFavoritos.')){ const n=k.slice(16); favMapa[n]=(favMapa[n]||0)+Number(c[k]||0); } });
+        const favorito = Object.entries(favMapa).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—';
         const wppNum = (c.wpp||'').replace(/\D/g,'');
         const freq = c.totalCortes > 10 ? '🔥 VIP' : c.totalCortes > 5 ? '⭐ Frequente' : c.totalCortes > 1 ? '✅ Recorrente' : '🆕 Novo';
         const diasDesde = c.ultimaVisita ? Math.floor((new Date()-new Date(c.ultimaVisita))/(1000*60*60*24)) : 999;

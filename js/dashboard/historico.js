@@ -146,9 +146,18 @@ function renderHistoricoCortes(){
         cont.innerHTML='<div class="empty-state"><div class="icon">✂️</div>Nenhum corte concluído nesse período.</div>';
         return;
     }
+    // Lançamentos repetidos (mesmo cliente, serviço, dia, hora, valor e
+    // barbeiro): o primeiro fica normal, os outros ganham o aviso
+    const vistos=new Set(), duplicados=new Set();
+    [...lista].reverse().forEach(a=>{
+        const k=[String(a.clienteNome||'').trim().toLowerCase(),a.corte,a.data,a.hora,Number(a.preco||0),barbeiroDoCorte(a)].join('|');
+        if(vistos.has(k)) duplicados.add(a.id); else vistos.add(k);
+    });
+    const avisoDup = duplicados.size
+        ? `<div class="card" style="margin-bottom:.8rem;border-color:rgba(255,75,43,.4);background:rgba(255,75,43,.05);font-size:.8rem">⚠️ <b>${duplicados.size} lançamento${duplicados.size>1?'s':''} repetido${duplicados.size>1?'s':''}</b> nesse período (mesmo cliente, serviço, dia, hora e valor). Confira os marcados com "Repetido?" e apague os que sobraram. Depois, em <b>Clientes</b>, toque em "🔄 Recalcular cortes" pra acertar a contagem.</div>` : '';
     const mostrados=lista.slice(0,histLimite);
     let diaAnterior='';
-    cont.innerHTML=mostrados.map(a=>{
+    cont.innerHTML=avisoDup+mostrados.map(a=>{
         const cab = a.data!==diaAnterior
             ? `<div style="font-size:.72rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin:${diaAnterior?'1rem':'0'} 0 .4rem">${fmtDataBR(a.data)}${typeof fmtDataExtenso==='function'?'':''}</div>` : '';
         diaAnterior=a.data;
@@ -164,6 +173,7 @@ function renderHistoricoCortes(){
                 <span class="appt-corte">${escapeHtml(a.corte||'')}</span>
                 ${barbeiroDoCorte(a)?`<span class="appt-barber-tag">✂️ ${escapeHtml(barbeiroDoCorte(a))}</span>`:''}
                 <span class="badge ${pago?'badge-ok':'badge-pend'}">${forma}</span>
+                ${duplicados.has(a.id)?'<span class="badge badge-cancel">⚠️ Repetido?</span>':''}
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.35rem">
                 <span class="appt-price">${desc}R$${Number(a.preco||0).toFixed(0)}</span>

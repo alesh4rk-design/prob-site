@@ -24,6 +24,22 @@ let unsubFila=null;
 function foiPago(a){ return !!(a && a.formaPagamento && a.formaPagamento!=='pendente'); }
 function somaPreco(lista){ return lista.reduce((s,a)=>s+Number(a.preco||0),0); }
 
+// Evita salvar a mesma coisa duas vezes: se o painel reinicia (o login é
+// renovado em segundo plano no celular) o botão podia ficar com o clique
+// ligado 2x, e um toque duplo rápido também disparava 2 gravações.
+const __salvando = {};
+async function umaVezSo(chave, fn){
+    if(__salvando[chave]) return;
+    __salvando[chave] = true;
+    try{ return await fn(); }
+    finally{ setTimeout(()=>{ __salvando[chave] = false; }, 800); }
+}
+function ligarUmaVez(el, evento, fn){
+    if(!el || el.dataset['ligado_'+evento]) return;
+    el.dataset['ligado_'+evento] = '1';
+    el.addEventListener(evento, fn);
+}
+
 function renderChecklistCortes(containerId, totalId){
     const cont = document.getElementById(containerId);
     const cortes = barbeiroData.cortes||[];
@@ -125,7 +141,8 @@ function initFila(){
     carregarFila();
 }
 
-async function adicionarNaFila(){
+async function adicionarNaFila(){ return umaVezSo('fila', adicionarNaFilaReal); }
+async function adicionarNaFilaReal(){
     const nome=document.getElementById('fila-nome').value.trim();
     if(!nome){toast('Informe o nome do cliente','var(--red)');return;}
 
@@ -201,7 +218,8 @@ async function verificarConflitoAgendamento(barbeiroFiltro){
     }catch(e){return null;}
 }
 
-async function atenderFila(filaId){
+async function atenderFila(filaId){ return umaVezSo('atender-'+filaId, ()=>atenderFilaReal(filaId)); }
+async function atenderFilaReal(filaId){
     const item=ultimaListaFila.find(l=>l.id===filaId);
     if(!item) return;
 
@@ -308,6 +326,8 @@ function initPresencial(){
     const btnAbrir=document.getElementById('btn-abrir-presencial');
     const modal=document.getElementById('modal-presencial');
     if(!btnAbrir||!modal)return;
+    if(window.__presencialLigado) return; // initDash pode rodar de novo (login renovado)
+    window.__presencialLigado=true;
 
     btnAbrir.addEventListener('click',()=>{
         renderChecklistCortes('pres-corte-lista','pres-corte-total');
@@ -409,7 +429,8 @@ async function carregarHorasPresencial(){
     statusMsg.style.color='var(--green)';
 }
 
-async function confirmarPresencial(){
+async function confirmarPresencial(){ return umaVezSo('presencial', confirmarPresencialReal); }
+async function confirmarPresencialReal(){
     const nome=document.getElementById('pres-nome').value.trim();
     const wpp=document.getElementById('pres-wpp').value.replace(/\D/g,'');
     const selecao=getSelecaoCortes('pres-corte-lista');
@@ -548,13 +569,13 @@ function initEsquecido(){
     if(!modal)return;
     // O botão existe na aba Agendamentos e na Fila de Espera
     ['btn-abrir-esquecido','btn-abrir-esquecido-fila'].forEach(id=>{
-        const b=document.getElementById(id);
-        if(b) b.addEventListener('click',()=>abrirModalEsquecido(null));
+        ligarUmaVez(document.getElementById(id),'click',()=>abrirModalEsquecido(null));
     });
-    document.getElementById('btn-confirmar-esquecido').addEventListener('click',confirmarEsquecido);
+    ligarUmaVez(document.getElementById('btn-confirmar-esquecido'),'click',confirmarEsquecido);
 }
 
-async function confirmarEsquecido(){
+async function confirmarEsquecido(){ return umaVezSo('esquecido', confirmarEsquecidoReal); }
+async function confirmarEsquecidoReal(){
     const nome=document.getElementById('esq-nome').value.trim();
     const wpp=document.getElementById('esq-wpp').value.replace(/\D/g,'');
     const selecaoMarcada=getSelecaoCortes('esq-corte-lista');
@@ -1493,7 +1514,7 @@ function initAcoesClienteExtras(){
             $('cobranca-form-wrap').style.display = 'none';
             $('cobranca-card-intro').style.display = 'block';
         });
-        $('btn-add-cobranca').addEventListener('click', async()=>{
+        $('btn-add-cobranca').addEventListener('click', ()=>umaVezSo('cobranca', async()=>{
             const nome = $('cobranca-cliente-nome').value.trim();
             const wpp = $('cobranca-cliente-wpp').value.replace(/\D/g,'');
             const descricao = $('cobranca-descricao').value.trim();
@@ -1526,7 +1547,7 @@ function initAcoesClienteExtras(){
                 $('cobranca-card-intro').style.display = 'block';
             }catch(e){ toast('Erro ao criar cobrança: '+e.message,'var(--red)'); }
             btn.disabled = false;
-        });
+        }));
     }
 }
 
