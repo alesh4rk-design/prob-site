@@ -140,6 +140,7 @@
         <div class="input-group"><label>Senha</label><input type="password" id="adm-senha" placeholder="••••••••"></div>
         <button class="btn-primary" id="btn-adm-login">Entrar</button>
         <p class="err" id="err-adm">Acesso negado.</p>
+        <p style="margin-top:.6rem;text-align:center"><a href="#" id="adm-esqueci-senha" style="font-size:.8rem;color:var(--blue)">Esqueci minha senha</a></p>
     </div>
 </div>
 
@@ -539,15 +540,44 @@ onAuthStateChanged(auth,async user=>{
         await carregarCfg();
         await carregarBarbeiros();
     } else if(user){
+        // Logado com outra conta (ex: entrou como barbeiro neste navegador antes)
+        const emailOutro=user.email||'outra conta';
         await signOut(auth);
-        $('err-adm').style.display='block';
+        mostrarErroAdm(`Acesso negado: você estava entrando como ${emailOutro}, que não é a conta de administrador. Digite o e-mail e a senha do administrador.`);
     }
+});
+
+// Mostra o motivo real do erro (antes aparecia só "Acesso negado." pra tudo)
+function mostrarErroAdm(texto){
+    const el=$('err-adm');
+    el.textContent=texto;
+    el.style.display='block';
+}
+function motivoErroLogin(e){
+    const c=(e&&e.code)||'';
+    if(c==='auth/invalid-credential'||c==='auth/wrong-password'||c==='auth/invalid-login-credentials') return 'E-mail ou senha incorretos. Confira os dois (letras maiúsculas contam) ou use "esqueci a senha".';
+    if(c==='auth/user-not-found') return 'Não existe conta com esse e-mail.';
+    if(c==='auth/invalid-email') return 'E-mail em formato inválido.';
+    if(c==='auth/too-many-requests') return 'Muitas tentativas seguidas. O Firebase bloqueou por alguns minutos — espere um pouco e tente de novo (ou redefina a senha).';
+    if(c==='auth/network-request-failed') return 'Sem conexão com a internet (ou a rede bloqueou o Firebase). Tente de novo.';
+    if(c==='auth/user-disabled') return 'Essa conta foi desativada no Firebase.';
+    return 'Acesso negado ('+(c||e.message||'erro desconhecido')+').';
+}
+
+$('adm-esqueci-senha').addEventListener('click',async e=>{
+    e.preventDefault();
+    const email=$('adm-email').value.trim();
+    if(!email){ mostrarErroAdm('Digite o e-mail de administrador no campo acima e toque em "Esqueci minha senha" de novo.'); return; }
+    try{
+        await sendPasswordResetEmail(auth,email);
+        mostrarErroAdm('✓ Enviamos um e-mail para '+email+' com o link para criar uma senha nova (confira também o spam).');
+    }catch(err){ mostrarErroAdm(motivoErroLogin(err)); }
 });
 
 $('btn-adm-login').addEventListener('click',async()=>{
     $('err-adm').style.display='none';
     try{await signInWithEmailAndPassword(auth,$('adm-email').value.trim(),$('adm-senha').value);}
-    catch(e){$('err-adm').style.display='block';}
+    catch(e){console.error('login admin:',e); mostrarErroAdm(motivoErroLogin(e));}
 });
 $('btn-adm-logout').addEventListener('click',()=>signOut(auth).then(()=>{$('page-dash').style.display='none';$('page-login').style.display='flex';}));
 
