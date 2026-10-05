@@ -296,6 +296,11 @@ function initInsumos(){
     }, e=>console.error('movimentosInsumos:',e));
 
     $('btn-add-insumo').addEventListener('click', adicionarInsumo);
+    const btnApagarHist = $('btn-apagar-historico-insumos');
+    if(btnApagarHist && !btnApagarHist.dataset.ligado){
+        btnApagarHist.dataset.ligado = '1';
+        btnApagarHist.addEventListener('click', apagarHistoricoInsumos);
+    }
 
     // Mesmo padrão de Estoque/Promoções: formulário some até clicar em
     // "+ Adicionar Insumo".
@@ -828,6 +833,51 @@ function renderMovimentosEstoque(){
             <div style="font-family:'Courier New',monospace;font-weight:900;color:${cor};font-size:.95rem">${sinal}${m.quantidade}</div>
         </div>`;
     }).join('');
+}
+
+// Apaga TODO o histórico de insumos: as entradas/saídas (movimentosInsumos) e
+// os gastos com insumos (gastosInsumos), que são o que soma nas despesas e
+// no lucro da Gestão. Os insumos em si e o estoque atual NÃO são mexidos.
+async function apagarHistoricoInsumos(){
+    const base = ['barbeiros', barbeiroData.uid];
+    const btn = $('btn-apagar-historico-insumos');
+    let qtdMov = 0, qtdGastos = 0, totalGastos = 0;
+    try{
+        const [m, g] = await Promise.all([
+            getDocs(collection(db,...base,'movimentosInsumos')),
+            getDocs(collection(db,...base,'gastosInsumos'))
+        ]);
+        qtdMov = m.size; qtdGastos = g.size;
+        g.forEach(d=>{ totalGastos += Number(d.data().custoTotal||0); });
+    }catch(e){ toast('Erro ao consultar o histórico: '+e.message,'var(--red)'); return; }
+    if(!qtdMov && !qtdGastos){ toast('O histórico de insumos já está vazio'); return; }
+
+    const resumo = `${qtdMov} movimentação(ões) e ${qtdGastos} gasto(s) com insumo (R$${totalGastos.toFixed(2).replace('.',',')})`;
+    if(!(await perguntarSimNao(`Apagar todo o histórico de insumos?\n\n${resumo}\n\nOs gastos saem da Gestão, do lucro e dos relatórios. Os insumos cadastrados e o estoque continuam. Não dá pra desfazer.`))) return;
+    if(!(await perguntarSimNao('Confirma mesmo? Vou apagar de vez todo o histórico de insumos.'))) return;
+
+    btn.disabled = true;
+    try{
+        // Rede de segurança: baixa um backup antes, se não estiver desativado
+        if(barbeiroData.backupAutomatico !== false && typeof baixarBackup==='function'){
+            btn.textContent = 'Fazendo backup de segurança...';
+            const ok = await baixarBackup(true);
+            if(ok) toast('📥 Backup de segurança baixado antes de apagar','var(--green)',4000);
+        }
+        btn.textContent = 'Apagando...';
+        await apagarPorLotes(collection(db,...base,'movimentosInsumos'));
+        await apagarPorLotes(collection(db,...base,'gastosInsumos'));
+        movimentosInsumosCache = [];
+        renderMovimentosInsumos();
+        renderInsumos();
+        toast('🗑 Histórico de insumos apagado e removido dos gastos');
+        if(typeof carregarResumoGestao==='function') carregarResumoGestao();
+        if(typeof carregarFaturamento==='function') carregarFaturamento();
+    }catch(e){
+        toast('Erro ao apagar: '+e.message,'var(--red)');
+    }
+    btn.disabled = false;
+    btn.textContent = '🗑 Apagar todo o histórico de insumos';
 }
 
 // Mesma coisa, só que pro histórico de insumos (café, copo descartável,

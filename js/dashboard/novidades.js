@@ -19,6 +19,16 @@ const NOVIDADES_MAX_VISIVEIS = 8;
 
 const NOVIDADES = [
     {
+        id: '2026-10-05-02',
+        data: '05/10/2026',
+        titulo: 'Apagar o histórico de insumos',
+        itens: [
+            'Controle de Insumos → "Apagar todo o histórico de insumos": apaga as entradas e saídas e também os gastos com insumos.',
+            'Os gastos apagados saem da Gestão, do lucro e dos relatórios. Os insumos cadastrados e o estoque atual continuam.',
+            'O sistema pergunta duas vezes e baixa um backup de segurança antes de apagar.'
+        ]
+    },
+    {
         id: '2026-10-05-01',
         data: '05/10/2026',
         titulo: 'Guia de primeiros passos',
