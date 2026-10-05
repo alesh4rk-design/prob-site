@@ -262,6 +262,8 @@ let unsubInsumos = null;
 // Histórico de entrada e saída de insumos — mesmo padrão do histórico de
 // produtos (movimentosEstoque), só que numa subcoleção separada.
 let movimentosInsumosCache = [];
+let gastosInsumosCache = [];
+let unsubGastosInsumos = null;
 let unsubMovimentosInsumos = null;
 
 async function registrarMovimentoInsumo(insumoId, insumoNome, tipo, quantidade, motivo, dataMovimento){
@@ -294,6 +296,14 @@ function initInsumos(){
         renderMovimentosInsumos();
         renderInsumos();
     }, e=>console.error('movimentosInsumos:',e));
+
+    if(unsubGastosInsumos) unsubGastosInsumos();
+    unsubGastosInsumos = onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'gastosInsumos'), snap=>{
+        gastosInsumosCache = [];
+        snap.forEach(d=>gastosInsumosCache.push({id:d.id,...d.data()}));
+        gastosInsumosCache.sort((a,b)=>((b.data||'')+(b.criadoEm||'')).localeCompare((a.data||'')+(a.criadoEm||'')));
+        renderGastosInsumos();
+    }, e=>console.error('gastosInsumos:',e));
 
     $('btn-add-insumo').addEventListener('click', adicionarInsumo);
     const btnApagarHist = $('btn-apagar-historico-insumos');
@@ -835,6 +845,54 @@ function renderMovimentosEstoque(){
     }).join('');
 }
 
+// Lista os gastos com insumos (o que soma na Gestão) com opção de apagar um a um
+function renderGastosInsumos(){
+    const cont = $('lista-gastos-insumos');
+    if(!cont) return;
+    const total = gastosInsumosCache.reduce((s,g)=>s+Number(g.custoTotal||0),0);
+    const elTotal = $('gastos-insumos-total');
+    if(elTotal) elTotal.textContent = gastosInsumosCache.length ? `Total: R$${total.toFixed(2).replace('.',',')}` : '';
+    if(!gastosInsumosCache.length){
+        cont.innerHTML = '<div class="empty-state"><div class="icon">💸</div>Nenhum gasto com insumo registrado.</div>';
+        return;
+    }
+    cont.innerHTML = gastosInsumosCache.slice(0,60).map(g=>`
+        <div class="service-item" style="flex-wrap:wrap">
+            <div style="flex:1;min-width:140px">
+                <div class="service-name" style="padding-right:0">${escapeHtml(g.insumoNome||'—')}</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">${fmtDataMovimento(g.data)}${g.quantidade?` · ${g.quantidade} un.`:''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem">
+                <div style="font-family:'Courier New',monospace;font-weight:900;color:var(--red);font-size:.95rem">R$${Number(g.custoTotal||0).toFixed(2).replace('.',',')}</div>
+                <button type="button" class="btn-del" data-apagar-gasto-insumo="${g.id}" style="padding:.3rem .55rem;font-size:.7rem">🗑 Apagar</button>
+            </div>
+        </div>`).join('') + (gastosInsumosCache.length>60 ? `<div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:.5rem">Mostrando os 60 mais recentes de ${gastosInsumosCache.length}. Use "Apagar todo o histórico" abaixo para limpar tudo.</div>` : '');
+    cont.querySelectorAll('[data-apagar-gasto-insumo]').forEach(btn=>btn.addEventListener('click',()=>apagarGastoInsumo(btn.dataset.apagarGastoInsumo)));
+}
+
+async function apagarGastoInsumo(id){
+    const g = gastosInsumosCache.find(x=>x.id===id);
+    if(!g) return;
+    const resumo = `${g.insumoNome||'Insumo'} · ${fmtDataMovimento(g.data)} · R$${Number(g.custoTotal||0).toFixed(2).replace('.',',')}`;
+    if(!(await perguntarSimNao(`Apagar este gasto?\n\n${resumo}\n\nEle sai dos gastos, do lucro e dos relatórios da Gestão. O estoque do insumo não muda.`))) return;
+    try{
+        await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'gastosInsumos',id));
+        toast('🗑 Gasto apagado e removido da Gestão');
+        if(typeof carregarResumoGestao==='function') carregarResumoGestao();
+    }catch(e){ toast('Erro ao apagar: '+e.message,'var(--red)'); }
+}
+
+async function apagarMovimentoInsumo(id){
+    const m = movimentosInsumosCache.find(x=>x.id===id);
+    if(!m) return;
+    const resumo = `${m.insumoNome||'Insumo'} · ${fmtDataMovimento(m.data)} · ${m.tipo==='entrada'?'entrada':'saída'} de ${m.quantidade}`;
+    if(!(await perguntarSimNao(`Apagar esta linha do histórico?\n\n${resumo}\n\nSó a linha some: o estoque e os gastos não mudam.`))) return;
+    try{
+        await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'movimentosInsumos',id));
+        toast('🗑 Linha apagada do histórico');
+    }catch(e){ toast('Erro ao apagar: '+e.message,'var(--red)'); }
+}
+
 // Apaga TODO o histórico de insumos: as entradas/saídas (movimentosInsumos) e
 // os gastos com insumos (gastosInsumos), que são o que soma nas despesas e
 // no lucro da Gestão. Os insumos em si e o estoque atual NÃO são mexidos.
@@ -868,7 +926,9 @@ async function apagarHistoricoInsumos(){
         await apagarPorLotes(collection(db,...base,'movimentosInsumos'));
         await apagarPorLotes(collection(db,...base,'gastosInsumos'));
         movimentosInsumosCache = [];
+        gastosInsumosCache = [];
         renderMovimentosInsumos();
+        renderGastosInsumos();
         renderInsumos();
         toast('🗑 Histórico de insumos apagado e removido dos gastos');
         if(typeof carregarResumoGestao==='function') carregarResumoGestao();
@@ -898,9 +958,13 @@ function renderMovimentosInsumos(){
                 <div class="service-name" style="padding-right:0">${escapeHtml(m.insumoNome||'—')}</div>
                 <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">${fmtDataMovimento(m.data)}${m.motivo?' · '+escapeHtml(m.motivo):''}</div>
             </div>
-            <div style="font-family:'Courier New',monospace;font-weight:900;color:${cor};font-size:.95rem">${sinal}${m.quantidade}</div>
+            <div style="display:flex;align-items:center;gap:.6rem">
+                <div style="font-family:'Courier New',monospace;font-weight:900;color:${cor};font-size:.95rem">${sinal}${m.quantidade}</div>
+                <button type="button" class="btn-del" data-apagar-mov-insumo="${m.id}" style="padding:.3rem .55rem;font-size:.7rem">🗑</button>
+            </div>
         </div>`;
     }).join('');
+    cont.querySelectorAll('[data-apagar-mov-insumo]').forEach(btn=>btn.addEventListener('click',()=>apagarMovimentoInsumo(btn.dataset.apagarMovInsumo)));
 }
 
 // Leitor de código de barras pela câmera do celular (bônus para quem não

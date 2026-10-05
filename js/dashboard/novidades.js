@@ -23,7 +23,9 @@ const NOVIDADES = [
         data: '05/10/2026',
         titulo: 'Apagar o histórico de insumos',
         itens: [
-            'Controle de Insumos → "Apagar todo o histórico de insumos": apaga as entradas e saídas e também os gastos com insumos.',
+            'Controle de Insumos ganhou a lista "Gastos com Insumos": cada compra com valor aparece ali e dá pra apagar uma por uma (compra errada ou teste) — ela sai na hora dos gastos, do lucro e dos relatórios da Gestão.',
+            'Cada linha do histórico de entrada e saída também tem o 🗑 pra apagar.',
+            'E tem o botão "Apagar todo o histórico de insumos": apaga as entradas e saídas e também os gastos com insumos.',
             'Os gastos apagados saem da Gestão, do lucro e dos relatórios. Os insumos cadastrados e o estoque atual continuam.',
             'O sistema pergunta duas vezes e baixa um backup de segurança antes de apagar.'
         ]

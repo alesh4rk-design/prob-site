@@ -1247,8 +1247,12 @@
         <div class="section-title">Insumos Cadastrados</div>
         <div id="lista-insumos"><div class="empty-state"><div class="icon">🧴</div>Nenhum insumo cadastrado ainda.</div></div>
 
+        <div class="section-title" style="margin-top:1.5rem">💸 Gastos com Insumos <span id="gastos-insumos-total" style="font-size:.72rem;font-weight:700;color:var(--red);margin-left:.4rem"></span></div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Cada compra com valor informado entra aqui e soma nos gastos da Gestão. Comprou por engano ou foi um teste? Apague a linha: ela sai dos gastos, do lucro e dos relatórios na hora.</div>
+        <div id="lista-gastos-insumos"><div class="empty-state"><div class="icon">💸</div>Nenhum gasto com insumo registrado.</div></div>
+
         <div class="section-title" style="margin-top:1.5rem">📜 Histórico de Entrada e Saída de Insumos</div>
-        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Toda entrada (cadastro, reposição) e saída (uso, baixa) de insumo fica registrada aqui, com a data.</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Toda entrada (cadastro, reposição) e saída (uso, baixa) de insumo fica registrada aqui, com a data. Apagar uma linha não muda o estoque nem os gastos (os gastos são apagados na lista acima).</div>
         <div id="lista-movimentos-insumos"><div class="empty-state"><div class="icon">📜</div>Nenhuma movimentação registrada ainda.</div></div>
         <button type="button" id="btn-apagar-historico-insumos" style="width:100%;margin-top:1rem;padding:.7rem;background:rgba(255,75,43,.08);border:1.5px solid var(--red);border-radius:8px;color:var(--red);font-size:.82rem;font-weight:700;cursor:pointer">🗑 Apagar todo o histórico de insumos</button>
         <p style="font-size:.7rem;color:var(--muted);margin:.4rem 0 0">Apaga as entradas e saídas e também os gastos com insumos (que somam na Gestão). Os insumos cadastrados e as quantidades em estoque continuam.</p>
@@ -3286,9 +3290,9 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20261005a"></script>
+<script defer src="js/dashboard/estoque.js?v=20261005c"></script>
 <script defer src="js/dashboard/backup.js?v=20261003c"></script>
-<script defer src="js/dashboard/novidades.js?v=20261005b"></script>
+<script defer src="js/dashboard/novidades.js?v=20261005c"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003g"></script>
 <script defer src="js/dashboard/guia.js?v=20261005b"></script>
 <script defer src="js/dashboard/tour.js?v=20261005b"></script>
