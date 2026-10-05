@@ -2,7 +2,7 @@
 // PRIMEIROS PASSOS — guia de configuração para quem acabou de chegar.
 // Cada passo se marca sozinho olhando os dados de verdade (serviços
 // cadastrados, horário salvo, WhatsApp preenchido...). Aparece numa janela
-// de boas-vindas no primeiro acesso (logo depois do tour) e num cartão no
+// de boas-vindas no primeiro acesso e num cartão no
 // topo da aba Agendamentos até tudo ficar pronto. "Não mostrar mais" fica
 // guardado neste aparelho. Só para o dono (funcionário e recepcionista não veem).
 // Script comum (não módulo): usa barbeiroData, $, ultimaListaAppts...
@@ -99,8 +99,8 @@ function fecharGuiaProb(){
     marcarGuia('visto');
 }
 
-// Primeiro acesso: abre a janela uma vez, depois do tour (se o tour estiver
-// rodando, espera ele terminar).
+// Primeiro acesso: abre a janela uma vez (se o tour tiver sido aberto pelo
+// botão de ajuda e estiver rodando, espera ele terminar).
 function abrirGuiaPrimeiroAcesso(){
     if(window.__funcionarioMode || window.__recepcionista) return;
     if(__guiaModalAbertoNestaSessao || lerGuia('visto') || lerGuia('dispensado')) return;

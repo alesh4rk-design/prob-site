@@ -103,14 +103,10 @@ function initAjudaETour(){
     verificarPrimeiroAcesso();
 }
 
-function verificarPrimeiroAcesso(){
-    try{
-        if(window.__recepcionista) return; // tour é só para o dono, por enquanto
-        if(!localStorage.getItem('probTourFeito')){
-            setTimeout(iniciarTour, 900);
-        }
-    }catch(e){}
-}
+// O tour não abre mais sozinho no primeiro acesso — quem chega vê só o guia
+// de Primeiros passos (guia.js). O tour continua no botão de ajuda (?) →
+// "Refazer tour", pra quem quiser conhecer o menu.
+function verificarPrimeiroAcesso(){}
 
 function iniciarTour(){
     tourPassoAtual = 0;
