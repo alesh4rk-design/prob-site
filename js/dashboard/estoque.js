@@ -212,6 +212,15 @@ function initEstoque(){
         renderProdutos();
     }, e=>console.error('movimentosEstoque:',e));
 
+    if(unsubVendasProdutos) unsubVendasProdutos();
+    unsubVendasProdutos = onSnapshot(collection(db,'barbeiros',barbeiroData.uid,'vendas'), snap=>{
+        vendasProdutosCache = [];
+        snap.forEach(d=>vendasProdutosCache.push({id:d.id,...d.data()}));
+        vendasProdutosCache.sort((a,b)=>((b.data||'')+(b.criadoEm||'')).localeCompare((a.data||'')+(a.criadoEm||'')));
+        renderVendasProdutos();
+        carregarVendasHoje();
+    }, e=>console.error('vendas:',e));
+
     carregarVendasHoje();
 
     // Campo de código de barras — Enter (leitor manda Enter sozinho) ou digitação manual
@@ -261,6 +270,8 @@ let unsubInsumos = null;
 
 // Histórico de entrada e saída de insumos — mesmo padrão do histórico de
 // produtos (movimentosEstoque), só que numa subcoleção separada.
+let vendasProdutosCache = [];
+let unsubVendasProdutos = null;
 let movimentosInsumosCache = [];
 let gastosInsumosCache = [];
 let unsubGastosInsumos = null;
@@ -676,6 +687,55 @@ async function confirmarVenda(){
         carregarVendasHoje();
     }catch(e){ toast('Erro ao registrar venda: '+e.message,'var(--red)'); }
     btn.disabled=false;
+}
+
+// Lista as vendas de produtos (o que soma na receita da Gestão), com opção de
+// apagar uma a uma — pra tirar teste ou lançamento errado.
+function renderVendasProdutos(){
+    const cont = $('lista-vendas-produtos');
+    if(!cont) return;
+    const total = vendasProdutosCache.reduce((s,v)=>s+Number(v.total||0),0);
+    const elTotal = $('vendas-lista-total');
+    if(elTotal) elTotal.textContent = vendasProdutosCache.length ? `Total: R$${total.toFixed(2).replace('.',',')}` : '';
+    if(!vendasProdutosCache.length){
+        cont.innerHTML = '<div class="empty-state"><div class="icon">🛒</div>Nenhuma venda registrada ainda.</div>';
+        return;
+    }
+    cont.innerHTML = vendasProdutosCache.slice(0,60).map(v=>`
+        <div class="service-item" style="flex-wrap:wrap">
+            <div style="flex:1;min-width:140px">
+                <div class="service-name" style="padding-right:0">${escapeHtml(v.produtoNome||'—')} <span style="color:var(--muted);font-size:.75rem">× ${v.quantidade||1}</span></div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">${fmtDataMovimento(v.data)}${v.clienteNome?' · '+escapeHtml(v.clienteNome):''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem">
+                <div style="font-family:'Courier New',monospace;font-weight:900;color:var(--green);font-size:.95rem">R$${Number(v.total||0).toFixed(2).replace('.',',')}</div>
+                <button type="button" class="btn-del" data-apagar-venda="${v.id}" style="padding:.3rem .55rem;font-size:.7rem">🗑 Apagar</button>
+            </div>
+        </div>`).join('');
+    cont.querySelectorAll('[data-apagar-venda]').forEach(btn=>btn.addEventListener('click',()=>apagarVendaProduto(btn.dataset.apagarVenda)));
+}
+
+async function apagarVendaProduto(id){
+    const v = vendasProdutosCache.find(x=>x.id===id);
+    if(!v) return;
+    const resumo = `${v.produtoNome||'Produto'} × ${v.quantidade||1} · ${fmtDataMovimento(v.data)} · R$${Number(v.total||0).toFixed(2).replace('.',',')}`;
+    if(!(await perguntarSimNao(`Apagar esta venda?\n\n${resumo}\n\nEla sai da receita, do lucro e dos relatórios da Gestão. Não dá pra desfazer.`))) return;
+    // O produto ainda existe? Então pergunta se os itens voltam pro estoque
+    const produto = produtosCache.find(p=>p.id===v.produtoId);
+    let devolver = false;
+    if(produto && Number(v.quantidade)>0){
+        devolver = await perguntarSimNao(`Devolver ${v.quantidade} unidade(s) de "${produto.nome}" ao estoque?\n\nSim = a venda foi desfeita (ou era teste) e o produto voltou pra prateleira.\nNão = o produto realmente saiu.`);
+    }
+    try{
+        await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'vendas',id));
+        if(devolver){
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',produto.id),{estoque:increment(Number(v.quantidade))});
+            await registrarMovimentoEstoque(produto.id, produto.nome, 'entrada', Number(v.quantidade), 'Venda apagada — devolvido ao estoque');
+        }
+        toast(devolver ? '🗑 Venda apagada e itens devolvidos ao estoque' : '🗑 Venda apagada e removida da Gestão');
+        if(typeof carregarResumoGestao==='function') carregarResumoGestao();
+        if(typeof carregarFaturamento==='function') carregarFaturamento();
+    }catch(e){ toast('Erro ao apagar: '+e.message,'var(--red)'); }
 }
 
 async function carregarVendasHoje(){

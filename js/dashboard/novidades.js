@@ -19,6 +19,16 @@ const NOVIDADES_MAX_VISIVEIS = 8;
 
 const NOVIDADES = [
     {
+        id: '2026-10-05-03',
+        data: '05/10/2026',
+        titulo: 'Apagar vendas de produtos',
+        itens: [
+            'Estoque → "Vendas de Produtos": lista as vendas registradas, com total, e um botão 🗑 Apagar em cada uma.',
+            'Apagou uma venda de teste ou lançada errado? Ela sai na hora da receita, do lucro e dos relatórios da Gestão.',
+            'O sistema pergunta se os itens voltam pro estoque (sim = a venda foi desfeita; não = o produto realmente saiu).'
+        ]
+    },
+    {
         id: '2026-10-05-02',
         data: '05/10/2026',
         titulo: 'Apagar o histórico de insumos',

@@ -1192,6 +1192,10 @@
         <div class="section-title">Produtos Cadastrados</div>
         <div id="lista-produtos"><div class="empty-state"><div class="icon">📦</div>Nenhum produto cadastrado ainda.</div></div>
 
+        <div class="section-title" style="margin-top:1.5rem">🛒 Vendas de Produtos <span id="vendas-lista-total" style="font-size:.72rem;font-weight:700;color:var(--green);margin-left:.4rem"></span></div>
+        <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Cada venda registrada soma na receita da Gestão. Foi um teste ou lançou errado? Apague a venda: ela sai da receita, do lucro e dos relatórios na hora, e você escolhe se devolve os itens ao estoque. Mostrando as 60 mais recentes.</p>
+        <div id="lista-vendas-produtos"><div class="empty-state"><div class="icon">🛒</div>Nenhuma venda registrada ainda.</div></div>
+
         <div class="section-title" style="margin-top:1.5rem">📜 Histórico de Entrada e Saída</div>
         <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Toda entrada (cadastro, reposição) e saída (venda, baixa manual) fica registrada aqui com a data — mostrando os 40 movimentos mais recentes.</p>
         <div id="lista-movimentos-estoque"><div class="empty-state"><div class="icon">📜</div>Nenhuma movimentação registrada ainda.</div></div>
@@ -3290,9 +3294,9 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20261005c"></script>
+<script defer src="js/dashboard/estoque.js?v=20261005d"></script>
 <script defer src="js/dashboard/backup.js?v=20261003c"></script>
-<script defer src="js/dashboard/novidades.js?v=20261005c"></script>
+<script defer src="js/dashboard/novidades.js?v=20261005d"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003g"></script>
 <script defer src="js/dashboard/guia.js?v=20261005b"></script>
 <script defer src="js/dashboard/tour.js?v=20261005b"></script>
