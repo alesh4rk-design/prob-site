@@ -19,6 +19,16 @@ const NOVIDADES_MAX_VISIVEIS = 8;
 
 const NOVIDADES = [
     {
+        id: '2026-10-05-01',
+        data: '05/10/2026',
+        titulo: 'Guia de primeiros passos',
+        itens: [
+            'Quem acabou de chegar vê um guia com o que configurar: dados da barbearia, como atende, horário, serviços, equipe, tela do cliente e envio do link.',
+            'Cada passo se marca sozinho quando é feito, com o botão "Fazer agora" levando direto pra tela certa.',
+            'O guia fica no topo da aba Agendamentos até tudo ficar pronto e pode ser aberto de novo pelo botão de ajuda (?) → Primeiros passos.'
+        ]
+    },
+    {
         id: '2026-10-03-08',
         data: '03/10/2026',
         titulo: 'Nova aba: Histórico de Cortes',

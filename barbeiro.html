@@ -379,7 +379,27 @@
     <!-- ══ Menu do botão de ajuda ══ -->
     <div id="ajuda-menu" style="display:none;position:fixed;top:56px;right:16px;z-index:400;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:.5rem;box-shadow:0 10px 30px rgba(0,0,0,.4);min-width:220px">
         <button id="btn-refazer-tour" style="width:100%;text-align:left;padding:.65rem .8rem;background:transparent;border:none;color:var(--text);font-size:.85rem;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:.5rem">🎬 Fazer tour guiado</button>
+        <button id="btn-abrir-guia" style="width:100%;text-align:left;padding:.65rem .8rem;background:transparent;border:none;color:var(--text);font-size:.85rem;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:.5rem">🚀 Primeiros passos</button>
         <button id="btn-central-ajuda" style="width:100%;text-align:left;padding:.65rem .8rem;background:transparent;border:none;color:var(--text);font-size:.85rem;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:.5rem">📖 Central de Ajuda</button>
+    </div>
+
+    <!-- ══ Guia de primeiros passos (modal) ══ -->
+    <div id="modal-guia" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:1rem">
+        <div style="background:var(--card2);border:1.5px solid var(--blue);border-radius:14px;max-width:480px;width:100%;max-height:88vh;overflow-y:auto;padding:1.3rem">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem;margin-bottom:.6rem">
+                <div>
+                    <div style="font-size:1.1rem;font-weight:800">🚀 Bem-vindo(a) ao Pro'B!</div>
+                    <div id="guia-progresso-modal" style="font-size:.75rem;color:var(--blue);font-weight:700;margin-top:.15rem">0 de 7 prontos</div>
+                </div>
+                <button type="button" id="btn-fechar-guia" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
+            </div>
+            <p style="font-size:.8rem;color:var(--muted);line-height:1.5;margin:0 0 .6rem">Antes de mandar o link pros clientes, deixe estes itens prontos. Cada um é marcado sozinho quando você concluir. Este guia fica no topo da aba Agendamentos e também no botão de ajuda (?).</p>
+            <div id="guia-lista-modal"></div>
+            <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap">
+                <button type="button" id="btn-dispensar-guia" style="flex:1;padding:.7rem;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:.8rem;cursor:pointer">Não mostrar mais</button>
+                <button type="button" id="btn-entendi-guia" style="flex:1;padding:.7rem;background:var(--blue);border:none;border-radius:8px;color:#04140c;font-weight:800;font-size:.85rem;cursor:pointer">Entendi</button>
+            </div>
+        </div>
     </div>
 
     <!-- ══ Central de Ajuda (modal) ══ -->
@@ -537,6 +557,16 @@
                 </div>
                 <div id="avisos-1h-lista" style="display:flex;flex-direction:column;gap:.35rem"></div>
             </div>
+        </div>
+
+        <!-- Primeiros passos (guia de configuração — some quando tudo estiver pronto) -->
+        <div id="guia-card" style="display:none;margin-bottom:1rem;background:var(--card);border:1.5px solid rgba(0,212,255,.35);border-radius:12px;padding:.9rem 1rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.5rem">
+                <div style="font-size:.92rem;font-weight:800">🚀 Primeiros passos <span id="guia-progresso" style="font-size:.72rem;font-weight:700;color:var(--blue);background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);border-radius:20px;padding:.1rem .5rem;margin-left:.3rem">0/7</span></div>
+                <button type="button" id="btn-dispensar-guia-card" style="background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:.7rem;padding:.3rem .6rem;cursor:pointer">Dispensar</button>
+            </div>
+            <div style="height:6px;background:var(--card2);border-radius:4px;overflow:hidden;margin-bottom:.4rem"><div id="guia-barra" style="height:100%;width:0;background:var(--blue);transition:width .3s"></div></div>
+            <div id="guia-lista-card"></div>
         </div>
 
         <div class="stats-row">
@@ -3022,6 +3052,7 @@ async function carregarBarbeiro(user){
 
     // Load funcionamento
     const fSnap=await getDoc(doc(db,'barbeiros',user.uid,'config','funcionamento'));
+    window.__funcionamentoConfigurado=fSnap.exists(); // usado no guia de primeiros passos
     if(fSnap.exists()){
         const fData=fSnap.data();
         funcData={...DEFAULT_FUNC,...fData};
@@ -3132,6 +3163,7 @@ async function initDash(){
         }
         // Atualiza preview visual em tempo real
         if(typeof atualizarPreview==='function') atualizarPreview();
+        if(typeof atualizarGuiaProb==='function') atualizarGuiaProb();
     },e=>console.error('Erro barbeiro listener:',e));
 
     carregarAgendamentos();
@@ -3151,6 +3183,7 @@ async function initDash(){
     initEstoque();
     if(typeof initNovidades==='function') initNovidades();
     if(typeof initCentralAvisos==='function') initCentralAvisos();
+    if(!window.__recepcionista && typeof initGuia==='function') initGuia();
 
     const btnExp=document.getElementById('btn-exportar-excel');
     if(btnExp && !btnExp.dataset.bound){
@@ -3253,17 +3286,18 @@ async function initDash(){
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
 <script defer src="js/dashboard/estoque.js?v=20261003a"></script>
 <script defer src="js/dashboard/backup.js?v=20261003c"></script>
-<script defer src="js/dashboard/novidades.js?v=20261003a"></script>
+<script defer src="js/dashboard/novidades.js?v=20261005a"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003g"></script>
+<script defer src="js/dashboard/guia.js?v=20261005a"></script>
 <script defer src="js/dashboard/tour.js?v=20260727o"></script>
 <script defer src="js/dashboard/equipe.js?v=20261003k"></script>
 <script defer src="js/dashboard/promocoes.js?v=20261003c"></script>
 <script defer src="js/dashboard/clientes.js?v=20261004a"></script>
 <script defer src="js/dashboard/publico.js?v=20261003b"></script>
 <script defer src="js/dashboard/historico.js?v=20261004a"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20261004a"></script>
-<script defer src="js/dashboard/horarios.js?v=20261003k"></script>
-<script defer src="js/dashboard/financeiro.js?v=20261003n"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20261005a"></script>
+<script defer src="js/dashboard/horarios.js?v=20261005a"></script>
+<script defer src="js/dashboard/financeiro.js?v=20261005a"></script>
 <script defer src="js/dashboard/auth.js?v=20261003f"></script>
 <script defer src="js/dashboard/visual.js?v=20260727o"></script>
 

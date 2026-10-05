@@ -62,6 +62,8 @@ $('btn-salvar-func').addEventListener('click',async()=>{
     novo.intervalo=intervaloMin;
     funcData=novo;
     await setDoc(doc(db,'barbeiros',barbeiroData.uid,'config','funcionamento'),novo);
+    window.__funcionamentoConfigurado=true;
+    if(typeof atualizarGuiaProb==='function') atualizarGuiaProb();
     toast('Horário de funcionamento salvo!');
     renderFuncGrid();
     renderHours();

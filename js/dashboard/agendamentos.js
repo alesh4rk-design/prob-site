@@ -808,6 +808,7 @@ function carregarAgendamentos(){
         if(typeof sincronizarHorariosPublicos==='function') sincronizarHorariosPublicos(todos);
         // Aba Histórico de Cortes acompanha as mudanças (só se já foi aberta)
         if(window.__historicoBound && typeof renderHistoricoCortes==='function') renderHistoricoCortes();
+        if(typeof atualizarGuiaProb==='function') atualizarGuiaProb();
 
         $('stat-hoje').textContent=deHoje.filter(a=>a.status!=='cancelado').length;
         $('stat-semana').textContent=todos.filter(a=>a.data>=hoje&&a.status!=='cancelado').length;

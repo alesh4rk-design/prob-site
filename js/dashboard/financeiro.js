@@ -162,6 +162,7 @@ function initPerfil(){
             const selecionado=document.querySelector('input[name="modo-atend"]:checked').value;
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{modoAtendimento:selecionado});
             barbeiroData.modoAtendimento=selecionado;
+            if(typeof atualizarGuiaProb==='function') atualizarGuiaProb();
             aplicarVisibilidadeAbaFila(selecionado);
             toast('✓ Modo de atendimento salvo!');
         });
