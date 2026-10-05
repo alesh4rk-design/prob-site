@@ -137,7 +137,12 @@
     <div class="login-box">
         <div class="admin-logo"><h1>PRO'B</h1><p>Painel Administrativo</p></div>
         <div class="input-group"><label>E-mail</label><input type="email" id="adm-email" placeholder="seu@email.com"></div>
-        <div class="input-group"><label>Senha</label><input type="password" id="adm-senha" placeholder="••••••••"></div>
+        <div class="input-group"><label>Senha</label>
+            <div style="position:relative">
+                <input type="password" id="adm-senha" placeholder="••••••••" style="padding-right:3rem">
+                <button type="button" id="adm-ver-senha" title="Mostrar senha" aria-label="Mostrar senha" style="position:absolute;right:.4rem;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:.3rem">👁️</button>
+            </div>
+        </div>
         <button class="btn-primary" id="btn-adm-login">Entrar</button>
         <p class="err" id="err-adm">Acesso negado.</p>
         <p style="margin-top:.6rem;text-align:center"><a href="#" id="adm-esqueci-senha" style="font-size:.8rem;color:var(--blue)">Esqueci minha senha</a></p>
@@ -563,6 +568,15 @@ function motivoErroLogin(e){
     if(c==='auth/user-disabled') return 'Essa conta foi desativada no Firebase.';
     return 'Acesso negado ('+(c||e.message||'erro desconhecido')+').';
 }
+
+$('adm-ver-senha').addEventListener('click',()=>{
+    const inp=$('adm-senha'), btn=$('adm-ver-senha');
+    const mostrar=inp.type==='password';
+    inp.type=mostrar?'text':'password';
+    btn.textContent=mostrar?'🙈':'👁️';
+    btn.title=btn.ariaLabel=mostrar?'Esconder senha':'Mostrar senha';
+});
+$('adm-senha').addEventListener('keydown',e=>{ if(e.key==='Enter') $('btn-adm-login').click(); });
 
 $('adm-esqueci-senha').addEventListener('click',async e=>{
     e.preventDefault();
