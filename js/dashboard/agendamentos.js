@@ -1316,8 +1316,8 @@ function initAcoesClienteExtras(){
             const cad = acClienteAtual.clienteId ? {id:acClienteAtual.clienteId}
                 : lista.find(c=>(wppLimpo && (c.wpp||'').replace(/\D/g,'')===wppLimpo) || (!wppLimpo && (c.nome||'').toLowerCase()===atual.toLowerCase()));
             if(cad) await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'clientes',cad.id),{nome:novo});
-            if(acClienteAtual.agendamentoId) await updateDoc(doc(db,'agendamentos',acClienteAtual.agendamentoId),{clienteNome:novo});
-            if(acClienteAtual.filaId) await updateDoc(doc(db,'fila',acClienteAtual.filaId),{clienteNome:novo});
+            if(acClienteAtual.agendamentoId) await updateDoc(doc(db,'agendamentos',acClienteAtual.agendamentoId),{clienteNome:novo}).catch(e=>console.error('nome agendamento:',e));
+            if(acClienteAtual.filaId) await updateDoc(doc(db,'fila',acClienteAtual.filaId),{clienteNome:novo}).catch(e=>console.error('nome fila:',e));
             acClienteAtual.nome = novo;
             $('ac-nome-cliente').textContent = novo;
             toast('✓ Nome atualizado');

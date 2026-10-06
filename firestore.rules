@@ -231,7 +231,7 @@ service cloud.firestore {
                         && (resource.data.get('clienteUid', '') == '' || (request.auth != null && resource.data.clienteUid == request.auth.uid)))
                     || (isStaff(resource.data.barbeiroId)
                     && request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['status','formaPagamento','avisoEnviado','preco','precoOriginal','canceladoPor','canceladoEm','publicoId'])
+                        .hasOnly(['status','formaPagamento','avisoEnviado','preco','precoOriginal','canceladoPor','canceladoEm','publicoId','clienteNome'])
                     && request.resource.data.status in ['pendente','concluido','cancelado']
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['formaPagamento'])
                         || request.resource.data.formaPagamento in ['dinheiro','pix','debito','credito','pendente'])
@@ -262,7 +262,7 @@ service cloud.firestore {
       allow update: if isOwner(resource.data.barbeiroId) || isAdmin()
                     || (isStaff(resource.data.barbeiroId)
                     && request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['status','atendidoEm','formaPagamento','preco','precoOriginal','publicoId'])
+                        .hasOnly(['status','atendidoEm','formaPagamento','preco','precoOriginal','publicoId','clienteNome'])
                     && request.resource.data.status in ['aguardando','atendido','removido']
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['formaPagamento'])
                         || request.resource.data.formaPagamento in ['dinheiro','pix','debito','credito','pendente'])
