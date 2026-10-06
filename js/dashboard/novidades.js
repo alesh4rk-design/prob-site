@@ -19,6 +19,22 @@ const NOVIDADES_MAX_VISIVEIS = 8;
 
 const NOVIDADES = [
     {
+        id: '2026-10-07-01',
+        data: '07/10/2026',
+        titulo: 'Estoque de Vendas, clientes e vários serviços',
+        itens: [
+            'A aba Estoque agora se chama "Estoque de Vendas". Cada produto tem o botão "🛒 Vender" e a Venda Rápida ganhou o botão "Venda manual" (sem código de barras).',
+            'Ao vender um produto: escolha quem comprou e como pagou (Pix, dinheiro, débito, crédito). A venda soma na Gestão e aparece no histórico do cliente.',
+            'Cliente ainda não pagou? Escolha "Ainda não pagou": o produto sai do estoque e a venda vai pra aba Cobrança até ser paga.',
+            'Baixa manual de produto: sem pedir justificativa. O sistema só pergunta se foi uma venda (aí abre a tela de venda) ou perda/uso.',
+            'Forma de pagamento de uma venda de produto pode ser trocada depois de lançada (ex: disse Pix, pagou no crédito), na lista "Vendas de Produtos".',
+            'Corte esquecido e Fila de espera: agora dá pra escolher um cliente já cadastrado na lista, pra não cadastrar a mesma pessoa duas vezes.',
+            'Novo botão "✏️ Editar nome do cliente" na janela do cliente, pra completar o nome (clientes costumam colocar só o primeiro).',
+            'O cliente agora pode escolher mais de um serviço da mesma categoria (ex: corte + pintura). Dá pra desligar na aba Cortes.',
+            'Ao tocar no cliente, aparecem os serviços com o valor de cada um e, se ele comprou produto no mesmo dia, o total somado.'
+        ]
+    },
+    {
         id: '2026-10-06-01',
         data: '06/10/2026',
         titulo: 'Editar insumos cadastrados',
