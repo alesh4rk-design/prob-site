@@ -1945,7 +1945,9 @@ async function carregarCortes() {
                 // Só permite um serviço selecionado por categoria — escolher
                 // um novo da mesma categoria desmarca o anterior sozinho.
                 const sessaoDoNovo = cortes[idx].sessao || 'Geral';
-                const outroDaMesmaCategoria = servicosEscolhidos.find(s => (cortes[s._idx].sessao || 'Geral') === sessaoDoNovo);
+                // (a menos que o barbeiro tenha liberado vários por categoria — padrão)
+                const outroDaMesmaCategoria = barbeiroInfo.variosServicosPorCategoria !== false ? null
+                    : servicosEscolhidos.find(s => (cortes[s._idx].sessao || 'Geral') === sessaoDoNovo);
                 if (outroDaMesmaCategoria) {
                     servicosEscolhidos = servicosEscolhidos.filter(s => s._idx !== outroDaMesmaCategoria._idx);
                     const cardAntigo = grid.querySelector(`.service-card[data-idx="${outroDaMesmaCategoria._idx}"]`);

@@ -501,6 +501,22 @@ function renderEquipe(){
 // companhia já estão prontos. Ver chamada de initEquipeExtras() no
 // barbeiro.html.
 function initEquipeExtras(){
+    // Cliente poder escolher vários serviços da mesma categoria (padrão: sim)
+    const chkVarios=document.getElementById('chk-varios-por-categoria');
+    if(chkVarios&&!chkVarios.dataset.bound){
+        chkVarios.dataset.bound='1';
+        chkVarios.checked=barbeiroData.variosServicosPorCategoria!==false;
+        chkVarios.addEventListener('change',async()=>{
+            try{
+                await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{variosServicosPorCategoria:chkVarios.checked});
+                barbeiroData.variosServicosPorCategoria=chkVarios.checked;
+                toast(chkVarios.checked?'✓ Cliente pode escolher vários serviços':'Cliente escolhe um serviço por categoria');
+            }catch(e){
+                toast('Erro ao salvar: '+e.message,'var(--red)');
+                chkVarios.checked=!chkVarios.checked;
+            }
+        });
+    }
 $('eq-tipo').addEventListener('change',function(){
     const ehRecep = this.value==='recepcionista';
     const ehAluguel = this.value==='aluguel';
