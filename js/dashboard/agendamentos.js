@@ -118,7 +118,25 @@ function initFila(){
         btnAdd.dataset.bound='1';
         btnAdd.addEventListener('click',adicionarNaFila);
         document.getElementById('fila-nome').addEventListener('keypress',e=>{if(e.key==='Enter')adicionarNaFila();});
+        // Escolher cliente já cadastrado preenche nome e WhatsApp (sem duplicar)
+        const selCad=document.getElementById('fila-cliente-cad');
+        selCad.addEventListener('change',function(){
+            const c=(todosClientes||[]).find(x=>x.id===this.value);
+            if(!c)return;
+            document.getElementById('fila-nome').value=c.nome||'';
+            document.getElementById('fila-wpp').value=c.wpp||'';
+        });
+        // A lista de clientes pode ter carregado depois da tela: atualiza ao tocar
+        ['focus','mousedown','touchstart'].forEach(ev=>selCad.addEventListener(ev,popularClientesFila));
+        document.getElementById('fila-nome').addEventListener('change',function(){
+            const wppEl=document.getElementById('fila-wpp');
+            if(wppEl.value.trim())return;
+            const nome=this.value.trim().toLowerCase();
+            const c=(todosClientes||[]).find(x=>(x.nome||'').trim().toLowerCase()===nome&&x.wpp);
+            if(c)wppEl.value=c.wpp;
+        });
     }
+    popularClientesFila();
 
     // Link do painel de chamada (monitor/TV)
     const isLocalFila = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
@@ -141,6 +159,17 @@ function initFila(){
     carregarFila();
 }
 
+function popularClientesFila(){
+    const sel=document.getElementById('fila-cliente-cad');
+    if(!sel)return;
+    const lista=[...(todosClientes||[])].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'));
+    if(sel.options.length-1===lista.length)return; // já está atualizada
+    const atual=sel.value;
+    sel.innerHTML='<option value="">— Selecionar da lista (evita duplicar) —</option>'+
+        lista.map(c=>`<option value="${escAttr(c.id)}">${escapeHtml(c.nome||'—')}${c.wpp?' · '+escapeHtml(c.wpp):''}</option>`).join('');
+    sel.value=atual;
+}
+
 async function adicionarNaFila(){ return umaVezSo('fila', adicionarNaFilaReal); }
 async function adicionarNaFilaReal(){
     const nome=document.getElementById('fila-nome').value.trim();
@@ -150,7 +179,12 @@ async function adicionarNaFilaReal(){
     if(!selecao){toast('Marque ao menos um serviço antes de adicionar na fila','var(--red)');return;}
 
     const wppInput=document.getElementById('fila-wpp');
-    const wpp=wppInput?wppInput.value.replace(/\D/g,''):'';
+    let wpp=wppInput?wppInput.value.replace(/\D/g,''):'';
+    // Mesmo nome de cliente cadastrado e sem WhatsApp digitado: usa o do cadastro
+    if(!wpp){
+        const igual=(todosClientes||[]).find(x=>(x.nome||'').trim().toLowerCase()===nome.toLowerCase()&&x.wpp);
+        if(igual)wpp=String(igual.wpp).replace(/\D/g,'');
+    }
 
     const equipe=barbeiroData.equipe||[];
     const barbeiroNome=equipe.length>0?document.getElementById('fila-select-barbeiro').value:'';
@@ -171,6 +205,7 @@ async function adicionarNaFilaReal(){
             origem:'painel'
         });
         document.getElementById('fila-nome').value='';
+        const selCadFila=document.getElementById('fila-cliente-cad'); if(selCadFila)selCadFila.value='';
         if(wppInput)wppInput.value='';
         document.querySelectorAll('#fila-corte-lista .checklist-corte:checked').forEach(chk=>chk.checked=false);
         atualizarTotalChecklist('fila-corte-lista','fila-corte-total');

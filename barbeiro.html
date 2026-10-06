@@ -790,8 +790,14 @@
                 <select id="fila-select-barbeiro" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;"></select>
             </div>
 
+            <div class="input-group" style="margin-bottom:.6rem">
+                <label>Cliente já cadastrado</label>
+                <select id="fila-cliente-cad" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
+                    <option value="">— Selecionar da lista (evita duplicar) —</option>
+                </select>
+            </div>
             <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem">
-                <input type="text" id="fila-nome" placeholder="Nome do cliente" style="flex:2;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
+                <input type="text" id="fila-nome" list="lista-clientes-datalist" autocomplete="off" placeholder="Nome do cliente (ou digite um novo)" style="flex:2;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
                 <input type="tel" id="fila-wpp" placeholder="WhatsApp (opcional)" style="flex:1;min-width:140px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;outline:none;">
             </div>
             <div class="input-group" style="margin-bottom:.6rem">
@@ -3379,7 +3385,7 @@ async function initDash(){
 <script defer src="js/dashboard/clientes.js?v=20261004a"></script>
 <script defer src="js/dashboard/publico.js?v=20261003b"></script>
 <script defer src="js/dashboard/historico.js?v=20261004a"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20261007c"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20261007d"></script>
 <script defer src="js/dashboard/horarios.js?v=20261005a"></script>
 <script defer src="js/dashboard/financeiro.js?v=20261006d"></script>
 <script defer src="js/dashboard/auth.js?v=20261003f"></script>
