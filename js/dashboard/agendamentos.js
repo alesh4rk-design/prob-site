@@ -524,6 +524,13 @@ function abrirModalEsquecido(editarId){
     esqEditandoId=ag?ag.id:null;
 
     renderChecklistCortes('esq-corte-lista','esq-corte-total');
+    const selCad=document.getElementById('esq-cliente-cad');
+    if(selCad){
+        const lista=[...(todosClientes||[])].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'));
+        selCad.innerHTML='<option value="">— Selecionar da lista (evita duplicar) —</option>'+
+            lista.map(c=>`<option value="${escAttr(c.id)}">${escapeHtml(c.nome||'—')}${c.wpp?' · '+escapeHtml(c.wpp):''}</option>`).join('');
+        selCad.value='';
+    }
     const hoje=fmtHoje();
     const dataEl=document.getElementById('esq-data');
     dataEl.max=ag&&ag.data>hoje?ag.data:hoje; // não faz sentido lançar um esquecido "do futuro"
@@ -572,12 +579,34 @@ function initEsquecido(){
         ligarUmaVez(document.getElementById(id),'click',()=>abrirModalEsquecido(null));
     });
     ligarUmaVez(document.getElementById('btn-confirmar-esquecido'),'click',confirmarEsquecido);
+    // Escolher um cliente já cadastrado preenche nome e WhatsApp — o lançamento
+    // cai no mesmo cadastro, sem criar o cliente duas vezes.
+    ligarUmaVez(document.getElementById('esq-cliente-cad'),'change',function(){
+        const c=(todosClientes||[]).find(x=>x.id===this.value);
+        if(!c)return;
+        document.getElementById('esq-nome').value=c.nome||'';
+        document.getElementById('esq-wpp').value=c.wpp||'';
+    });
+    // Digitou um nome igual ao de um cliente cadastrado: já traz o WhatsApp dele
+    ligarUmaVez(document.getElementById('esq-nome'),'change',function(){
+        const wppEl=document.getElementById('esq-wpp');
+        if(wppEl.value.trim())return;
+        const nome=this.value.trim().toLowerCase();
+        const c=(todosClientes||[]).find(x=>(x.nome||'').trim().toLowerCase()===nome&&x.wpp);
+        if(c)wppEl.value=c.wpp;
+    });
 }
 
 async function confirmarEsquecido(){ return umaVezSo('esquecido', confirmarEsquecidoReal); }
 async function confirmarEsquecidoReal(){
     const nome=document.getElementById('esq-nome').value.trim();
-    const wpp=document.getElementById('esq-wpp').value.replace(/\D/g,'');
+    let wpp=document.getElementById('esq-wpp').value.replace(/\D/g,'');
+    // Mesmo nome de um cliente já cadastrado e sem WhatsApp digitado: usa o dele,
+    // pra não criar um segundo cadastro da mesma pessoa.
+    if(!wpp){
+        const igual=(todosClientes||[]).find(x=>(x.nome||'').trim().toLowerCase()===nome.toLowerCase()&&x.wpp);
+        if(igual)wpp=String(igual.wpp).replace(/\D/g,'');
+    }
     const selecaoMarcada=getSelecaoCortes('esq-corte-lista');
     const agEditando=esqEditandoId?ultimaListaAppts.find(a=>a.id===esqEditandoId):null;
     // Na edição, se nenhum serviço do cadastro foi marcado (ex: serviço antigo
