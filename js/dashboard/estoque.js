@@ -317,6 +317,9 @@ function initInsumos(){
     }, e=>console.error('gastosInsumos:',e));
 
     $('btn-add-insumo').addEventListener('click', adicionarInsumo);
+    $('btn-salvar-editar-insumo').addEventListener('click', ()=>umaVezSo('editar-insumo', salvarEditarInsumo));
+    $('btn-fechar-editar-insumo').addEventListener('click', ()=>{ $('modal-editar-insumo').style.display='none'; });
+    $('modal-editar-insumo').addEventListener('click', e=>{ if(e.target.id==='modal-editar-insumo') $('modal-editar-insumo').style.display='none'; });
     const btnApagarHist = $('btn-apagar-historico-insumos');
     if(btnApagarHist && !btnApagarHist.dataset.ligado){
         btnApagarHist.dataset.ligado = '1';
@@ -440,6 +443,7 @@ function renderInsumos(){
                 ${datasHtml?`<div style="font-size:.68rem;margin-top:.2rem">${datasHtml}</div>`:''}
             </div>
             <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
+                <button class="btn-edit" data-editar-insumo="${i.id}">✏️ Editar</button>
                 <button class="btn-del" data-baixa-insumo="${i.id}" style="border-color:rgba(245,166,35,.4);color:var(--yellow)">− Dar baixa</button>
                 <button class="btn-edit" data-add-insumo="${i.id}">+ Repor</button>
                 <button class="btn-del" data-del-insumo="${i.id}">Remover</button>
@@ -447,6 +451,9 @@ function renderInsumos(){
         </div>`;
     }).join('');
 
+    cont.querySelectorAll('[data-editar-insumo]').forEach(btn=>{
+        btn.addEventListener('click', ()=>abrirEditarInsumo(btn.dataset.editarInsumo));
+    });
     cont.querySelectorAll('[data-add-insumo]').forEach(btn=>{
         btn.addEventListener('click', async()=>{
             const item = insumosCache.find(i=>i.id===btn.dataset.addInsumo);
@@ -903,6 +910,65 @@ function renderMovimentosEstoque(){
             <div style="font-family:'Courier New',monospace;font-weight:900;color:${cor};font-size:.95rem">${sinal}${m.quantidade}</div>
         </div>`;
     }).join('');
+}
+
+// ── Editar insumo cadastrado ──
+function abrirEditarInsumo(id){
+    const i = insumosCache.find(x=>x.id===id);
+    if(!i) return;
+    $('ei-id').value = id;
+    $('ei-nome').value = i.nome || '';
+    $('ei-unidade').value = i.unidade || 'unidade';
+    $('ei-qtd').value = i.quantidade ?? 0;
+    $('ei-qtd-min').value = i.quantidadeMinima ?? '';
+    $('modal-editar-insumo').style.display = 'flex';
+}
+
+async function salvarEditarInsumo(){
+    const id = $('ei-id').value;
+    const atual = insumosCache.find(x=>x.id===id);
+    if(!atual) return;
+    const nome = $('ei-nome').value.trim();
+    const unidade = $('ei-unidade').value;
+    const qtd = parseFloat($('ei-qtd').value);
+    const minStr = $('ei-qtd-min').value;
+    const qtdMin = minStr!=='' ? parseFloat(minStr) : null;
+    if(!nome){ toast('Digite o nome do insumo','var(--red)'); return; }
+    if(isNaN(qtd) || qtd<0){ toast('Informe a quantidade em estoque (0 ou mais)','var(--red)'); return; }
+    if(qtdMin!==null && (isNaN(qtdMin) || qtdMin<0)){ toast('O aviso de estoque baixo deve ser 0 ou mais','var(--red)'); return; }
+    if(insumosCache.some(x=>x.id!==id && (x.nome||'').trim().toLowerCase()===nome.toLowerCase())){
+        toast('Já existe outro insumo com esse nome','var(--red)'); return;
+    }
+    const btn = $('btn-salvar-editar-insumo');
+    btn.disabled = true;
+    try{
+        const dados = { nome, unidade, quantidade: qtd, quantidadeMinima: qtdMin };
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',id), dados);
+
+        // Quantidade mudou: fica registrado como ajuste manual (não gera gasto)
+        const antes = Number(atual.quantidade||0);
+        if(qtd !== antes){
+            await registrarMovimentoInsumo(id, nome, qtd>antes?'entrada':'saida', Math.abs(qtd-antes), 'Ajuste manual');
+        }
+
+        // Nome mudou: o histórico e os gastos guardam o nome — acompanha pra
+        // não ficar o nome velho nas listas e no ranking de gastos
+        if(nome !== atual.nome){
+            const alvos = [
+                ...movimentosInsumosCache.filter(m=>m.insumoId===id).map(m=>doc(db,'barbeiros',barbeiroData.uid,'movimentosInsumos',m.id)),
+                ...gastosInsumosCache.filter(g=>g.insumoId===id).map(g=>doc(db,'barbeiros',barbeiroData.uid,'gastosInsumos',g.id))
+            ];
+            for(let k=0;k<alvos.length;k+=400){
+                const lote = writeBatch(db);
+                alvos.slice(k,k+400).forEach(ref=>lote.update(ref,{insumoNome:nome}));
+                await lote.commit();
+            }
+            if(alvos.length && typeof carregarResumoGestao==='function') carregarResumoGestao();
+        }
+        $('modal-editar-insumo').style.display = 'none';
+        toast('✓ Insumo atualizado');
+    }catch(e){ toast('Erro ao salvar: '+e.message,'var(--red)'); }
+    btn.disabled = false;
 }
 
 // Lista os gastos com insumos (o que soma na Gestão) com opção de apagar um a um

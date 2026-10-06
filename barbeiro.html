@@ -402,6 +402,29 @@
         </div>
     </div>
 
+    <!-- ══ Editar insumo (modal) ══ -->
+    <div id="modal-editar-insumo" style="display:none;position:fixed;inset:0;z-index:520;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:1rem">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.4rem;width:100%;max-width:400px;max-height:90vh;overflow-y:auto">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                <div style="font-size:1rem;font-weight:800;color:var(--blue)">✏️ Editar insumo</div>
+                <button type="button" id="btn-fechar-editar-insumo" style="background:transparent;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
+            </div>
+            <input type="hidden" id="ei-id">
+            <div class="input-group" style="margin-bottom:.85rem"><label>Nome do insumo</label><input type="text" id="ei-nome" placeholder="Ex: Água oxigenada"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.85rem">
+                <div class="input-group" style="margin-bottom:0"><label>Unidade</label>
+                    <select id="ei-unidade" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-size:.9rem;outline:none">
+                        <option value="unidade">Unidade</option><option value="pacote">Pacote</option><option value="caixa">Caixa</option><option value="litro">Litro</option>
+                        <option value="ml">Mililitro (ml)</option><option value="kg">Quilo (kg)</option><option value="g">Grama (g)</option><option value="rolo">Rolo</option>
+                    </select></div>
+                <div class="input-group" style="margin-bottom:0"><label>Quantidade em estoque</label><input type="number" id="ei-qtd" min="0" step="0.5" placeholder="0"></div>
+            </div>
+            <div class="input-group" style="margin-bottom:.4rem"><label>Avisar quando chegar em (opcional)</label><input type="number" id="ei-qtd-min" min="0" step="0.5" placeholder="Ex: 5"></div>
+            <p id="ei-aviso" style="font-size:.7rem;color:var(--muted);margin:.4rem 0 1rem">Mudar a quantidade registra um "ajuste manual" no histórico. Mudar o nome atualiza também o histórico e os gastos desse insumo.</p>
+            <button type="button" id="btn-salvar-editar-insumo" style="width:100%;padding:.85rem;background:rgba(0,255,136,.1);border:2px solid var(--green);border-radius:8px;color:var(--green);font-weight:800;cursor:pointer;font-size:.9rem">Salvar alterações</button>
+        </div>
+    </div>
+
     <!-- ══ Central de Ajuda (modal) ══ -->
     <div id="modal-ajuda" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:1.2rem">
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:14px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:1.3rem">
@@ -3294,9 +3317,9 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20261005d"></script>
+<script defer src="js/dashboard/estoque.js?v=20261006a"></script>
 <script defer src="js/dashboard/backup.js?v=20261003c"></script>
-<script defer src="js/dashboard/novidades.js?v=20261005d"></script>
+<script defer src="js/dashboard/novidades.js?v=20261006a"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003g"></script>
 <script defer src="js/dashboard/guia.js?v=20261005b"></script>
 <script defer src="js/dashboard/tour.js?v=20261005b"></script>

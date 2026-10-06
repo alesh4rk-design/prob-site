@@ -19,6 +19,16 @@ const NOVIDADES_MAX_VISIVEIS = 8;
 
 const NOVIDADES = [
     {
+        id: '2026-10-06-01',
+        data: '06/10/2026',
+        titulo: 'Editar insumos cadastrados',
+        itens: [
+            'Controle de Insumos: cada insumo ganhou o botão "✏️ Editar" pra corrigir o nome, a unidade, a quantidade em estoque e o aviso de estoque baixo.',
+            'Mudou a quantidade? Fica registrado como "ajuste manual" no histórico, sem gerar gasto.',
+            'Mudou o nome? O histórico e os gastos desse insumo acompanham o nome novo.'
+        ]
+    },
+    {
         id: '2026-10-05-03',
         data: '05/10/2026',
         titulo: 'Apagar vendas de produtos',
