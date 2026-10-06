@@ -1007,6 +1007,7 @@ function getCorteEscolhido() {
     }
     return {
         nome: servicosEscolhidos.map(s => s.nome).join(' + '),
+        servicos: servicosEscolhidos.map(s => ({ nome: s.nome, preco: Number(s.preco || 0) })),
         preco: precoFinal,
         precoOriginal,
         temDesconto: !!promoAplicada && precoFinal < precoOriginal,
@@ -2194,6 +2195,7 @@ async function entrarNaFila() {
             clienteEmail: clienteEmail || '',
             barbeiro: barbeiroCortador || '',
             corte: corteEscolhido.nome,
+            servicos: corteEscolhido.servicos,
             preco: corteEscolhido.preco,
             status: 'aguardando',
             criadoEm: criadoEmFila,
@@ -2278,6 +2280,7 @@ async function confirmarAgendamento() {
             clienteUid: clienteUid || '',
             clienteEmail: clienteEmail || '',
             corte:  corteEscolhido.nome,
+            servicos: corteEscolhido.servicos,
             preco:  corteEscolhido.preco,
             barbeiro: barbeiroCortador || '',
             data:   dataEscolhida,

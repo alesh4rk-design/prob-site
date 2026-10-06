@@ -486,6 +486,7 @@ function renderFilaFuncionario(lista,bId){
                 clienteNome:item.clienteNome,
                 clienteWhatsapp:item.clienteWhatsapp||'',
                 corte:item.corte||'Corte (fila)',
+                ...(item.servicos?{servicos:item.servicos}:{}),
                 preco:item.preco||0,
                 ...(item.precoOriginal!=null?{precoOriginal:item.precoOriginal}:{}),
                 barbeiro:funcNome,

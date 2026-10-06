@@ -94,6 +94,7 @@ function getSelecaoCortes(containerId){
     const selecionados = marcados.map(chk=>cortes[Number(chk.dataset.idx)]).filter(Boolean);
     return {
         nome: selecionados.map(c=>c.nome).join(' + '),
+        servicos: selecionados.map(c=>({nome:c.nome, preco:Number(c.preco||0)})),
         preco: selecionados.reduce((s,c)=>s+Number(c.preco||0),0),
         duracao: selecionados.reduce((s,c)=>s+Number(c.duracao||30),0)
     };
@@ -199,6 +200,7 @@ async function adicionarNaFilaReal(){
             clienteWhatsapp:wpp,
             barbeiro:barbeiroNome,
             corte:selecao.nome,
+            servicos:selecao.servicos||null,
             preco:selecao.preco,
             status:'aguardando',
             criadoEm:new Date().toISOString(),
@@ -273,6 +275,7 @@ async function atenderFilaReal(filaId){
         clienteNome:item.clienteNome,
         clienteWhatsapp:item.clienteWhatsapp||'',
         corte:item.corte||'Corte (fila)',
+        ...(item.servicos?{servicos:item.servicos}:{}),
         preco:item.preco||0,
         ...(item.precoOriginal!=null?{precoOriginal:item.precoOriginal}:{}),
         barbeiro:item.barbeiro||'',
@@ -509,6 +512,7 @@ async function confirmarPresencialReal(){
             clienteNome:nome,
             clienteWhatsapp:wpp||'',
             corte:selecao.nome,
+            servicos:selecao.servicos||null,
             preco:selecao.preco,
             barbeiro:barbeiroNome,
             data,hora,
@@ -675,6 +679,7 @@ async function confirmarEsquecidoReal(){
                 clienteNome:nome,
                 clienteWhatsapp:wpp||'',
                 corte:selecao.nome,
+                ...(selecaoMarcada?{servicos:selecaoMarcada.servicos}:{}),
                 preco:selecao.preco,
                 barbeiro:barbeiroNome,
                 data,hora,
@@ -691,6 +696,7 @@ async function confirmarEsquecidoReal(){
                 clienteNome:nome,
                 clienteWhatsapp:wpp||'',
                 corte:selecao.nome,
+                servicos:selecaoMarcada?selecaoMarcada.servicos:null,
                 preco:selecao.preco,
                 barbeiro:barbeiroNome,
                 data,hora,
@@ -1142,6 +1148,29 @@ const MENSAGENS_PRONTAS = {
     atraso: (c) => `Olá, ${c.nome}! Pedimos desculpas, mas haverá um pequeno atraso no seu atendimento hoje. Agradecemos a compreensão!`,
 };
 
+// Mostra cada serviço do atendimento com o seu valor ("Corte R$30 + Pintura R$60").
+// Atendimentos novos guardam a lista; os antigos só têm o nome combinado
+// ("Corte + Pintura"), então procuramos o preço no cadastro de serviços e só
+// mostramos os valores se a soma bater com o total cobrado.
+function renderServicosDoAtendimento(a){
+    const el=$('ac-servicos-lista');
+    if(!el)return;
+    let itens=Array.isArray(a.servicos)&&a.servicos.length?a.servicos.map(x=>({nome:x.nome,preco:Number(x.preco||0)})):null;
+    if(!itens){
+        const nomes=(a.corte||'').split(' + ').map(n=>n.trim()).filter(Boolean);
+        const cad=barbeiroData.cortes||[];
+        const achados=nomes.map(n=>{const c=cad.find(x=>x.nome===n);return {nome:n,preco:c?Number(c.preco||0):null};});
+        const soma=achados.reduce((s,x)=>s+(x.preco||0),0);
+        const tudoAchado=achados.every(x=>x.preco!=null);
+        itens=achados.map(x=>({nome:x.nome,preco:(tudoAchado&&Math.abs(soma-Number(a.preco||0))<0.01)?x.preco:null}));
+    }
+    if(itens.length<2){ el.innerHTML=''; return; }
+    const fmt=v=>'R$'+Number(v).toFixed(2).replace('.',',');
+    el.innerHTML=itens.map(x=>`<div style="display:flex;justify-content:space-between;gap:.5rem;font-size:.8rem;padding:.2rem 0;border-top:1px solid rgba(0,212,255,.15)">
+            <span>${escapeHtml(x.nome)}</span><span style="color:var(--green);font-weight:700">${x.preco!=null?fmt(x.preco):''}</span></div>`).join('')+
+        `<div style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:800;padding-top:.3rem;border-top:1px solid rgba(0,212,255,.3)"><span>Total</span><span style="color:var(--green)">${fmt(a.preco||0)}</span></div>`;
+}
+
 window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status, filaId, clienteId){
     acClienteAtual = {nome, wpp, agendamentoId, data, hora, status: status||'pendente', filaId: filaId||null, clienteId: clienteId||null};
     $('ac-nome-cliente').textContent = nome || 'Cliente';
@@ -1158,10 +1187,12 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
     // Serviço desse agendamento específico — o card na lista já mostra o
     // barbeiro/horário, mas não qual corte foi marcado.
     const corteWrap = $('ac-corte-atual-wrap');
-    const agendamentoAtual = agendamentoId ? ultimaListaAppts.find(a=>a.id===agendamentoId) : null;
+    const agendamentoAtual = agendamentoId ? ultimaListaAppts.find(a=>a.id===agendamentoId)
+        : (filaId ? ultimaListaFila.find(f=>f.id===filaId) : null);
     if(agendamentoAtual?.corte){
         corteWrap.style.display = 'block';
         $('ac-corte-atual').textContent = agendamentoAtual.corte;
+        renderServicosDoAtendimento(agendamentoAtual);
     } else {
         corteWrap.style.display = 'none';
     }
