@@ -500,7 +500,7 @@ function renderInsumos(){
 let vcProdutoSelecionado = null;
 let vcQtdAtual = 1;
 
-window.abrirModalVendaCliente = function(clienteNome, clienteWpp){
+window.abrirModalVendaCliente = function(clienteNome, clienteWpp, produtoId, qtd){
     const sel = $('vc-produto-select');
     sel.innerHTML = '<option value="">Selecione um produto...</option>' +
         produtosCache.filter(p=>p.estoque>0).map((p,i)=>
@@ -514,7 +514,16 @@ window.abrirModalVendaCliente = function(clienteNome, clienteWpp){
     vcQtdAtual = 1;
     $('btn-confirmar-venda-cliente').disabled = true;
     $('btn-confirmar-venda-cliente').style.opacity = '.5';
+    $('vc-forma-pagamento').value = '';
     $('modal-venda-cliente').style.display = 'flex';
+    // Veio do botão "Vender" de um produto: já deixa ele selecionado
+    const p = produtoId ? produtosCache.find(x=>x.id===produtoId) : null;
+    if(p && p.estoque>0){
+        sel.value = p.id;
+        vcProdutoSelecionado = p;
+        vcQtdAtual = Math.min(Math.max(1, qtd||1), p.estoque);
+        atualizarResumoVendaCliente();
+    }
 };
 
 function initModalVendaCliente(){
@@ -555,6 +564,8 @@ function atualizarResumoVendaCliente(){
 async function confirmarVendaCliente(){
     if(!vcProdutoSelecionado) return;
     if(vcQtdAtual>vcProdutoSelecionado.estoque){ toast('Quantidade maior que o estoque','var(--red)'); return; }
+    const formaPagamento = $('vc-forma-pagamento').value;
+    if(!formaPagamento){ toast('Escolha como o cliente pagou','var(--red)'); return; }
     const btn = $('btn-confirmar-venda-cliente');
     btn.disabled = true;
     try{
@@ -577,6 +588,7 @@ async function confirmarVendaCliente(){
             total,
             clienteNome: cliente.nome,
             clienteWhatsapp: cliente.wpp || null,
+            formaPagamento,
             data: fmtHoje(),
             criadoEm: new Date().toISOString()
         });
@@ -669,6 +681,8 @@ async function resolverClienteDaVenda(nomeDigitado){
 async function confirmarVenda(){
     if(!vendaProdutoSelecionado) return;
     if(vendaQtdAtual>vendaProdutoSelecionado.estoque){ toast('Quantidade maior que o estoque','var(--red)'); return; }
+    const formaPagamento = $('venda-forma-pagamento').value;
+    if(!formaPagamento){ toast('Escolha como o cliente pagou','var(--red)'); return; }
     const btn = $('btn-confirmar-venda');
     btn.disabled=true;
     try{
@@ -685,12 +699,14 @@ async function confirmarVenda(){
             total,
             clienteNome: cliente.nome,
             clienteWhatsapp: cliente.wpp || null,
+            formaPagamento,
             data: fmtHoje(),
             criadoEm: new Date().toISOString()
         });
         toast(`✓ Venda registrada: ${vendaQtdAtual}x ${vendaProdutoSelecionado.nome}${cliente.nome?' — '+cliente.nome:''}`);
         $('venda-codigo').value='';
         if($('venda-cliente-nome')) $('venda-cliente-nome').value='';
+        $('venda-forma-pagamento').value='';
         $('venda-produto-encontrado').style.display='none';
         vendaProdutoSelecionado=null; vendaQtdAtual=1;
         $('venda-codigo').focus();
@@ -841,6 +857,7 @@ function renderProdutos(){
             </div>
             <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
                 <button class="btn-edit" data-add-estoque="${p.id}">+ Estoque</button>
+                <button class="btn-edit" data-vender-produto="${p.id}" style="border-color:var(--green);color:var(--green)"${p.estoque>0?'':' disabled'}>🛒 Vender</button>
                 <button class="btn-edit" data-baixa-estoque="${p.id}" style="border-color:var(--yellow);color:var(--yellow)">− Baixa manual</button>
                 <button class="btn-del" data-del-produto="${p.id}">Remover</button>
             </div>
@@ -861,8 +878,13 @@ function renderProdutos(){
         });
     });
 
-    // Baixa manual — pra tirar do estoque sem ser por venda (perda, quebra,
-    // uso interno, doação etc.), coisa que "+ Estoque" (só soma) não cobria.
+    cont.querySelectorAll('[data-vender-produto]').forEach(btn=>{
+        btn.addEventListener('click', ()=> abrirModalVendaCliente('', '', btn.dataset.venderProduto, 1));
+    });
+
+    // Baixa manual — se foi venda, abre a tela de venda (cliente + pagamento,
+    // soma na Gestão). Se não foi (perda, quebra, uso), só tira do estoque,
+    // sem pedir justificativa.
     cont.querySelectorAll('[data-baixa-estoque]').forEach(btn=>{
         btn.addEventListener('click', async()=>{
             const produto = produtosCache.find(p=>p.id===btn.dataset.baixaEstoque);
@@ -871,10 +893,13 @@ function renderProdutos(){
             const n = parseInt(qtd);
             if(!qtd || isNaN(n) || n<=0) return;
             if(n>produto.estoque){ toast('Não tem tanto em estoque assim','var(--red)'); return; }
-            const motivo = prompt('Motivo da baixa (opcional, ex: perda, quebra, uso interno):','') || '';
+            if(await perguntarSimNao(`Essa saída foi uma VENDA?\n\nSim: escolhe quem comprou e como pagou, e soma na Gestão.\nNão: só tira do estoque (perda, quebra, uso).`)){
+                abrirModalVendaCliente('', '', produto.id, n);
+                return;
+            }
             await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',produto.id),{estoque:increment(-n)});
-            await registrarMovimentoEstoque(produto.id, produto.nome, 'saida', n, motivo||'Baixa manual');
-            toast(`✓ Baixa de ${n} unidade(s) de "${produto.nome}" registrada${motivo?': '+motivo:''}`);
+            await registrarMovimentoEstoque(produto.id, produto.nome, 'saida', n, 'Baixa manual');
+            toast(`✓ Baixa de ${n} unidade(s) de "${produto.nome}" registrada`);
         });
     });
     cont.querySelectorAll('[data-del-produto]').forEach(btn=>{

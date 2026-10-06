@@ -1102,7 +1102,7 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
         corteWrap.style.display = 'none';
     }
 
-    carregarHistoricoCortes(wpp);
+    carregarHistoricoCortes(wpp, nome);
 
     const temAgendamento = !!agendamentoId;
     const temFila = !!filaId;
@@ -1175,10 +1175,10 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
 // já que nem todo agendamento antigo tem clienteId salvo) e conta quantas
 // vezes cada corte apareceu — dá pra ver de cara qual o corte de sempre
 // dessa pessoa, sem precisar abrir cada agendamento passado um por um.
-async function carregarHistoricoCortes(wpp){
+async function carregarHistoricoCortes(wpp, nome){
     const wrap = $('ac-historico-cortes-wrap');
     const cont = $('ac-historico-cortes');
-    if(!wpp){ wrap.style.display='none'; return; }
+    if(!wpp && !nome){ wrap.style.display='none'; return; }
     wrap.style.display = 'block';
     // Lista some por padrão — só abre quando o dono clica no botão. Fica
     // guardado já pronto assim que carrega, pra não ter que esperar de
@@ -1187,15 +1187,14 @@ async function carregarHistoricoCortes(wpp){
     $('ac-historico-cortes-seta').textContent = '▾';
     cont.innerHTML = '<p style="font-size:.78rem;color:var(--muted);margin:0">Carregando...</p>';
     try{
-        const q = query(
+        const contagem = {};
+        let total = 0;
+        const snap = wpp ? await getDocs(query(
             collection(db,'agendamentos'),
             where('barbeiroId','==',barbeiroData.uid),
             where('clienteWhatsapp','==',wpp),
             where('status','==','concluido')
-        );
-        const snap = await getDocs(q);
-        const contagem = {};
-        let total = 0;
+        )) : {forEach(){}};
         snap.forEach(d=>{
             const corte = d.data().corte;
             if(!corte) return;
@@ -1207,8 +1206,25 @@ async function carregarHistoricoCortes(wpp){
                 total++;
             });
         });
+        // Produtos que o cliente comprou (Estoque de Vendas)
+        let compras = [];
+        try{
+            const nomeLower = (nome||'').trim().toLowerCase();
+            const snapV = await getDocs(collection(db,'barbeiros',barbeiroData.uid,'vendas'));
+            snapV.forEach(d=>{
+                const v = d.data();
+                if((wpp && v.clienteWhatsapp===wpp) || (nomeLower && (v.clienteNome||'').trim().toLowerCase()===nomeLower)) compras.push(v);
+            });
+            compras.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+        }catch(e){ compras = []; }
+        const LBL_PAG = {dinheiro:'💵 Dinheiro',pix:'📱 Pix',debito:'💳 Débito',credito:'💳 Crédito'};
+        const comprasHtml = compras.length ? '<div style="font-size:.72rem;color:var(--muted);margin:.5rem 0 .2rem">🛒 Produtos comprados</div>' + compras.map(v=>
+            `<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.4rem .7rem;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:.8rem">
+                <span>${v.quantidade||1}x ${escapeHtml(v.produtoNome||'Produto')} <span style="color:var(--muted);font-size:.7rem">${v.data?v.data.split('-').reverse().join('/'):''}${v.formaPagamento?' · '+(LBL_PAG[v.formaPagamento]||v.formaPagamento):''}</span></span>
+                <span style="color:var(--green);font-weight:700">R$${Number(v.total||0).toFixed(2)}</span>
+            </div>`).join('') : '';
         if(!total){
-            cont.innerHTML = '<p style="font-size:.78rem;color:var(--muted);margin:0">Nenhum atendimento concluído registrado ainda.</p>';
+            cont.innerHTML = (compras.length ? '' : '<p style="font-size:.78rem;color:var(--muted);margin:0">Nenhum atendimento concluído registrado ainda.</p>') + comprasHtml;
             return;
         }
         const ordenado = Object.entries(contagem).sort((a,b)=>b[1]-a[1]);
@@ -1217,7 +1233,7 @@ async function carregarHistoricoCortes(wpp){
                 <span>${escapeHtml(nome)}</span>
                 <span style="color:var(--green);font-weight:700">${qtd}x</span>
             </div>`
-        ).join('');
+        ).join('') + comprasHtml;
     }catch(e){
         cont.innerHTML = '<p style="font-size:.78rem;color:var(--red);margin:0">Erro ao carregar histórico.</p>';
     }

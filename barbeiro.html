@@ -341,7 +341,7 @@
         <div class="tab" data-tab="promocoes">🎁 Promoções</div>
         <div class="tab" data-tab="acordos">🤝 Acordos com Cliente</div>
         <div class="tab" data-tab="horarios">🕐 Horários</div>
-        <div class="tab" data-tab="estoque">📦 Estoque</div>
+        <div class="tab" data-tab="estoque">📦 Estoque de Vendas</div>
         <div class="tab" data-tab="insumos">🧴 Controle de Insumos</div>
 
         <div style="padding:.9rem 1.25rem .3rem;font-size:.66rem;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:.3rem">Pessoas</div>
@@ -478,8 +478,18 @@
         <div style="background:var(--card2);border:1.5px solid rgba(0,255,136,.4);border-radius:14px;max-width:400px;width:100%;padding:1.3rem">
             <div style="font-size:1.05rem;font-weight:800;color:var(--green);margin-bottom:1rem">🛒 Vender Produto</div>
             <div class="input-group">
-                <label>Cliente</label>
+                <label>Quem comprou</label>
                 <input type="text" id="vc-cliente-nome" placeholder="Nome do cliente (opcional)" list="lista-clientes-datalist">
+            </div>
+            <div class="input-group">
+                <label>Como pagou</label>
+                <select id="vc-forma-pagamento" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
+                    <option value="">Selecione...</option>
+                    <option value="pix">📱 Pix</option>
+                    <option value="dinheiro">💵 Dinheiro</option>
+                    <option value="debito">💳 Débito</option>
+                    <option value="credito">💳 Crédito</option>
+                </select>
             </div>
             <div class="input-group">
                 <label>Produto</label>
@@ -547,7 +557,7 @@
             </div>
             <div id="ac-historico-cortes-wrap" style="display:none;margin-bottom:1.3rem">
                 <button type="button" id="btn-toggle-historico-cortes" style="width:100%;text-align:left;padding:.6rem .8rem;background:var(--card);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-                    <span>✂️ Histórico de cortes desse cliente</span>
+                    <span>✂️ Histórico do cliente (cortes e compras)</span>
                     <span id="ac-historico-cortes-seta">▾</span>
                 </button>
                 <div id="ac-historico-cortes" style="display:none;flex-direction:column;gap:.3rem;margin-top:.5rem"></div>
@@ -1166,7 +1176,7 @@
 
     <!-- TAB Estoque -->
     <div class="tab-content" id="tab-estoque">
-        <div class="section-title">💰 Venda Rápida</div>
+        <div class="section-title">💰 Venda Rápida — Estoque de Vendas</div>
         <div class="card" style="margin-bottom:1.2rem;border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.04)">
             <p style="font-size:.75rem;color:var(--muted);margin-bottom:.7rem">Passe o leitor de código de barras (USB/Bluetooth) com esse campo selecionado — ele "digita" sozinho. Sem leitor? Usa a câmera do celular.</p>
             <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
@@ -1190,6 +1200,16 @@
                     <label style="font-size:.7rem">Cliente (opcional)</label>
                     <input type="text" id="venda-cliente-nome" placeholder="Nome do cliente" list="lista-clientes-datalist" style="font-size:.85rem;padding:.55rem .75rem">
                 </div>
+                <div class="input-group" style="margin:.6rem 0 0">
+                <label>Como pagou</label>
+                <select id="venda-forma-pagamento" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem;color:var(--text);font-size:.85rem;outline:none;width:100%">
+                    <option value="">Selecione...</option>
+                    <option value="pix">📱 Pix</option>
+                    <option value="dinheiro">💵 Dinheiro</option>
+                    <option value="debito">💳 Débito</option>
+                    <option value="credito">💳 Crédito</option>
+                </select>
+            </div>
                 <button class="btn-add" id="btn-confirmar-venda" style="width:100%;margin-top:.6rem">✓ Confirmar Venda — <span id="venda-total">R$0,00</span></button>
             </div>
             <datalist id="lista-clientes-datalist"></datalist>
@@ -3338,7 +3358,7 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20261006c"></script>
+<script defer src="js/dashboard/estoque.js?v=20261006d"></script>
 <script defer src="js/dashboard/backup.js?v=20261003c"></script>
 <script defer src="js/dashboard/novidades.js?v=20261006c"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003g"></script>
@@ -3349,9 +3369,9 @@ async function initDash(){
 <script defer src="js/dashboard/clientes.js?v=20261004a"></script>
 <script defer src="js/dashboard/publico.js?v=20261003b"></script>
 <script defer src="js/dashboard/historico.js?v=20261004a"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20261005a"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20261006d"></script>
 <script defer src="js/dashboard/horarios.js?v=20261005a"></script>
-<script defer src="js/dashboard/financeiro.js?v=20261005a"></script>
+<script defer src="js/dashboard/financeiro.js?v=20261006d"></script>
 <script defer src="js/dashboard/auth.js?v=20261003f"></script>
 <script defer src="js/dashboard/visual.js?v=20260727o"></script>
 

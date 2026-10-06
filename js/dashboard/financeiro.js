@@ -1456,6 +1456,14 @@ async function carregarResumoGestao(){
         contagemPagamento[fp].total += Number(a.preco||0);
         contagemPagamento[fp].qtd += 1;
     });
+    // Vendas de produtos também entram, pela forma de pagamento escolhida na venda
+    vendasMes.forEach(v=>{
+        const fp = v.formaPagamento;
+        if(!fp) return;
+        if(!contagemPagamento[fp]) contagemPagamento[fp]={total:0,qtd:0};
+        contagemPagamento[fp].total += Number(v.total||0);
+        contagemPagamento[fp].qtd += 1;
+    });
     const rankingPagamento = Object.entries(contagemPagamento).sort((a,b)=>b[1].total-a[1].total);
     const elRankPagamento = document.getElementById('ranking-formas-pagamento');
     if(elRankPagamento){
