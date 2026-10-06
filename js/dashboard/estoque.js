@@ -924,7 +924,18 @@ function abrirEditarInsumo(id){
     $('ei-unidade').value = i.unidade || 'unidade';
     $('ei-qtd').value = i.quantidade ?? 0;
     $('ei-qtd-min').value = i.quantidadeMinima ?? '';
+    // Preço = valor pago na compra mais recente desse insumo (fica em gastosInsumos)
+    const g = ultimoGastoDoInsumo(id);
+    $('ei-preco').value = g ? Number(g.custoTotal||0).toFixed(2) : '';
+    $('ei-preco-info').textContent = g
+        ? `Compra de ${fmtDataMovimento(g.data)}${g.quantidade?` (${g.quantidade} un.` + (g.custoTotal>0&&g.quantidade>0?` · R$${(g.custoTotal/g.quantidade).toFixed(2).replace('.',',')} cada`:'') + ')':''}. Corrigir aqui muda esse gasto na Gestão.`
+        : 'Nenhuma compra com valor registrada ainda. Se informar um valor, ele entra nos gastos da Gestão com a data de hoje.';
     $('modal-editar-insumo').style.display = 'flex';
+}
+
+// Gasto (compra com valor) mais recente de um insumo
+function ultimoGastoDoInsumo(insumoId){
+    return gastosInsumosCache.find(g=>g.insumoId===insumoId) || null; // lista já vem do mais recente pro mais antigo
 }
 
 async function salvarEditarInsumo(){
@@ -935,10 +946,13 @@ async function salvarEditarInsumo(){
     const unidade = $('ei-unidade').value;
     const qtd = parseFloat($('ei-qtd').value);
     const minStr = $('ei-qtd-min').value;
+    const precoStr = $('ei-preco').value;
+    const preco = precoStr!=='' ? parseFloat(precoStr) : null;
     const qtdMin = minStr!=='' ? parseFloat(minStr) : null;
     if(!nome){ toast('Digite o nome do insumo','var(--red)'); return; }
     if(isNaN(qtd) || qtd<0){ toast('Informe a quantidade em estoque (0 ou mais)','var(--red)'); return; }
     if(qtdMin!==null && (isNaN(qtdMin) || qtdMin<0)){ toast('O aviso de estoque baixo deve ser 0 ou mais','var(--red)'); return; }
+    if(preco!==null && (isNaN(preco) || preco<=0)){ toast('O preço deve ser maior que zero (ou deixe em branco)','var(--red)'); return; }
     if(insumosCache.some(x=>x.id!==id && (x.nome||'').trim().toLowerCase()===nome.toLowerCase())){
         toast('Já existe outro insumo com esse nome','var(--red)'); return;
     }
@@ -947,6 +961,20 @@ async function salvarEditarInsumo(){
     try{
         const dados = { nome, unidade, quantidade: qtd, quantidadeMinima: qtdMin };
         await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',id), dados);
+
+        // Preço: corrige o gasto da última compra (ou cria um, se ainda não tinha)
+        if(precoStr!==''){
+            const gUlt = ultimoGastoDoInsumo(id);
+            if(gUlt){
+                if(Number(gUlt.custoTotal)!==preco) await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'gastosInsumos',gUlt.id), { custoTotal: preco });
+            } else {
+                await registrarGastoInsumo(id, nome, qtd, preco, fmtHoje());
+            }
+        } else if(ultimoGastoDoInsumo(id) && !(await perguntarSimNao('O preço ficou em branco. Apagar o gasto da última compra (R$'+Number(ultimoGastoDoInsumo(id).custoTotal||0).toFixed(2).replace('.',',')+') da Gestão?\n\nSim = apaga o gasto. Não = mantém o valor que já estava.'))) {
+            // mantém
+        } else if(ultimoGastoDoInsumo(id)){
+            await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'gastosInsumos',ultimoGastoDoInsumo(id).id));
+        }
 
         // Quantidade mudou: fica registrado como ajuste manual (não gera gasto)
         const antes = Number(atual.quantidade||0);

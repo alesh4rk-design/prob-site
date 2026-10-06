@@ -419,8 +419,10 @@
                     </select></div>
                 <div class="input-group" style="margin-bottom:0"><label>Quantidade em estoque</label><input type="number" id="ei-qtd" min="0" step="0.5" placeholder="0"></div>
             </div>
-            <div class="input-group" style="margin-bottom:.4rem"><label>Avisar quando chegar em (opcional)</label><input type="number" id="ei-qtd-min" min="0" step="0.5" placeholder="Ex: 5"></div>
-            <p id="ei-aviso" style="font-size:.7rem;color:var(--muted);margin:.4rem 0 1rem">Mudar a quantidade registra um "ajuste manual" no histórico. Mudar o nome atualiza também o histórico e os gastos desse insumo.</p>
+            <div class="input-group" style="margin-bottom:.85rem"><label>Avisar quando chegar em (opcional)</label><input type="number" id="ei-qtd-min" min="0" step="0.5" placeholder="Ex: 5"></div>
+            <div class="input-group" style="margin-bottom:.4rem"><label>💲 Preço pago na última compra (R$)</label><input type="number" id="ei-preco" min="0" step="0.01" placeholder="Deixe em branco se não quiser registrar"></div>
+            <div id="ei-preco-info" style="font-size:.7rem;color:var(--muted);margin-bottom:.4rem"></div>
+            <p id="ei-aviso" style="font-size:.7rem;color:var(--muted);margin:.4rem 0 1rem">Mudar a quantidade registra um "ajuste manual" no histórico. Mudar o nome atualiza também o histórico e os gastos desse insumo. Mudar o preço corrige o gasto da última compra e recalcula a Gestão.</p>
             <button type="button" id="btn-salvar-editar-insumo" style="width:100%;padding:.85rem;background:rgba(0,255,136,.1);border:2px solid var(--green);border-radius:8px;color:var(--green);font-weight:800;cursor:pointer;font-size:.9rem">Salvar alterações</button>
         </div>
     </div>
@@ -3336,9 +3338,9 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20261006b"></script>
+<script defer src="js/dashboard/estoque.js?v=20261006c"></script>
 <script defer src="js/dashboard/backup.js?v=20261003c"></script>
-<script defer src="js/dashboard/novidades.js?v=20261006b"></script>
+<script defer src="js/dashboard/novidades.js?v=20261006c"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003g"></script>
 <script defer src="js/dashboard/guia.js?v=20261005b"></script>
 <script defer src="js/dashboard/tour.js?v=20261005b"></script>
