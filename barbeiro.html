@@ -1212,6 +1212,7 @@
             </div>
                 <button class="btn-add" id="btn-confirmar-venda" style="width:100%;margin-top:.6rem">✓ Confirmar Venda — <span id="venda-total">R$0,00</span></button>
             </div>
+            <button type="button" class="btn-add" onclick="if(typeof abrirModalVendaCliente==='function')abrirModalVendaCliente('','')" style="width:100%;margin-top:.4rem;background:transparent;border:1.5px solid var(--green);color:var(--green)">🛒 Venda manual (sem código de barras)</button>
             <datalist id="lista-clientes-datalist"></datalist>
             <div id="venda-nao-encontrado" style="display:none;font-size:.8rem;color:var(--yellow);padding:.6rem 0">⚠️ Nenhum produto com esse código. Cadastre ele aqui embaixo primeiro.</div>
         </div>
