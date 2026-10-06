@@ -761,10 +761,22 @@ function renderVendasProdutos(){
             </div>
             <div style="display:flex;align-items:center;gap:.6rem">
                 <div style="font-family:'Courier New',monospace;font-weight:900;color:var(--green);font-size:.95rem">R$${Number(v.total||0).toFixed(2).replace('.',',')}</div>
+                <select data-pag-venda="${v.id}" title="Forma de pagamento" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:.3rem;color:var(--text);font-size:.72rem">
+                    ${[['','Sem forma'],['pix','📱 Pix'],['dinheiro','💵 Dinheiro'],['debito','💳 Débito'],['credito','💳 Crédito']].map(([k,l])=>`<option value="${k}"${(v.formaPagamento||'')===k?' selected':''}>${l}</option>`).join('')}
+                </select>
                 <button type="button" class="btn-del" data-apagar-venda="${v.id}" style="padding:.3rem .55rem;font-size:.7rem">🗑 Apagar</button>
             </div>
         </div>`).join('');
     cont.querySelectorAll('[data-apagar-venda]').forEach(btn=>btn.addEventListener('click',()=>apagarVendaProduto(btn.dataset.apagarVenda)));
+    // Trocar a forma de pagamento depois de lançada (ex: disse Pix, pagou no crédito)
+    cont.querySelectorAll('[data-pag-venda]').forEach(sel=>sel.addEventListener('change', async()=>{
+        if(!sel.value){ toast('Escolha uma forma de pagamento','var(--red)'); return; }
+        try{
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'vendas',sel.dataset.pagVenda),{formaPagamento:sel.value});
+            toast('✓ Forma de pagamento alterada');
+            if(typeof carregarResumoGestao==='function') carregarResumoGestao();
+        }catch(e){ toast('Erro ao alterar: '+e.message,'var(--red)'); }
+    }));
 }
 
 async function apagarVendaProduto(id){
