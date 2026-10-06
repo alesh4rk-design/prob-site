@@ -515,6 +515,7 @@ window.abrirModalVendaCliente = function(clienteNome, clienteWpp, produtoId, qtd
     $('btn-confirmar-venda-cliente').disabled = true;
     $('btn-confirmar-venda-cliente').style.opacity = '.5';
     $('vc-forma-pagamento').value = '';
+    $('vc-total').textContent = 'R$0,00';
     $('modal-venda-cliente').style.display = 'flex';
     // Veio do botão "Vender" de um produto: já deixa ele selecionado
     const p = produtoId ? produtosCache.find(x=>x.id===produtoId) : null;
