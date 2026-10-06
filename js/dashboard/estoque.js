@@ -562,6 +562,27 @@ function atualizarResumoVendaCliente(){
     btn.disabled = false; btn.style.opacity = '1';
 }
 
+// Venda "ainda não pagou": vira uma cobrança (aparece na aba Cobrança e em
+// Aguardando Pagamento). Quando o pagamento for registrado lá, soma na Gestão.
+async function registrarVendaFiado(produto, qtd, total, cliente){
+    await addDoc(collection(db,'agendamentos'), {
+        barbeiroId: barbeiroData.uid,
+        clienteNome: cliente.nome,
+        clienteWhatsapp: cliente.wpp || '',
+        corte: `Produto: ${qtd}x ${produto.nome}`,
+        preco: total,
+        barbeiro: '',
+        data: fmtHoje(),
+        hora: new Date().toTimeString().slice(0,5),
+        status: 'concluido',
+        formaPagamento: 'pendente',
+        origem: 'venda-produto',
+        produtoId: produto.id,
+        quantidade: qtd,
+        criadoEm: new Date().toISOString()
+    });
+}
+
 async function confirmarVendaCliente(){
     if(!vcProdutoSelecionado) return;
     if(vcQtdAtual>vcProdutoSelecionado.estoque){ toast('Quantidade maior que o estoque','var(--red)'); return; }
@@ -579,9 +600,11 @@ async function confirmarVendaCliente(){
         const cliente = wppJaVinculado
             ? {nome:nomeDigitado, wpp:wppJaVinculado}
             : await resolverClienteDaVenda(nomeDigitado);
+        if(formaPagamento==='pendente' && !cliente.nome){ toast('Pra vender sem pagamento, informe quem comprou','var(--red)'); btn.disabled=false; return; }
         await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vcProdutoSelecionado.id),{estoque:increment(-vcQtdAtual)});
         await registrarMovimentoEstoque(vcProdutoSelecionado.id, vcProdutoSelecionado.nome, 'saida', vcQtdAtual, cliente.nome?`Venda — ${cliente.nome}`:'Venda');
-        await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
+        if(formaPagamento==='pendente') await registrarVendaFiado(vcProdutoSelecionado, vcQtdAtual, total, cliente);
+        else await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
             produtoId: vcProdutoSelecionado.id,
             produtoNome: vcProdutoSelecionado.nome,
             quantidade: vcQtdAtual,
@@ -690,9 +713,11 @@ async function confirmarVenda(){
         const total = vendaProdutoSelecionado.preco*vendaQtdAtual;
         const nomeDigitado = $('venda-cliente-nome') ? $('venda-cliente-nome').value.trim() : '';
         const cliente = await resolverClienteDaVenda(nomeDigitado);
+        if(formaPagamento==='pendente' && !cliente.nome){ toast('Pra vender sem pagamento, informe quem comprou','var(--red)'); btn.disabled=false; return; }
         await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'produtos',vendaProdutoSelecionado.id),{estoque:increment(-vendaQtdAtual)});
         await registrarMovimentoEstoque(vendaProdutoSelecionado.id, vendaProdutoSelecionado.nome, 'saida', vendaQtdAtual, cliente.nome?`Venda — ${cliente.nome}`:'Venda');
-        await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
+        if(formaPagamento==='pendente') await registrarVendaFiado(vendaProdutoSelecionado, vendaQtdAtual, total, cliente);
+        else await addDoc(collection(db,'barbeiros',barbeiroData.uid,'vendas'),{
             produtoId: vendaProdutoSelecionado.id,
             produtoNome: vendaProdutoSelecionado.nome,
             quantidade: vendaQtdAtual,
