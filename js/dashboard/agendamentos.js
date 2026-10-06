@@ -1160,9 +1160,11 @@ const MENSAGENS_PRONTAS = {
 // Atendimentos novos guardam a lista; os antigos só têm o nome combinado
 // ("Corte + Pintura"), então procuramos o preço no cadastro de serviços e só
 // mostramos os valores se a soma bater com o total cobrado.
-function renderServicosDoAtendimento(a){
+let __servicosToken=0;
+async function renderServicosDoAtendimento(a){
     const el=$('ac-servicos-lista');
     if(!el)return;
+    const meuToken=++__servicosToken;
     let itens=Array.isArray(a.servicos)&&a.servicos.length?a.servicos.map(x=>({nome:x.nome,preco:Number(x.preco||0)})):null;
     if(!itens){
         const nomes=(a.corte||'').split(' + ').map(n=>n.trim()).filter(Boolean);
@@ -1172,11 +1174,35 @@ function renderServicosDoAtendimento(a){
         const tudoAchado=achados.every(x=>x.preco!=null);
         itens=achados.map(x=>({nome:x.nome,preco:(tudoAchado&&Math.abs(soma-Number(a.preco||0))<0.01)?x.preco:null}));
     }
-    if(itens.length<2){ el.innerHTML=''; return; }
     const fmt=v=>'R$'+Number(v).toFixed(2).replace('.',',');
-    el.innerHTML=itens.map(x=>`<div style="display:flex;justify-content:space-between;gap:.5rem;font-size:.8rem;padding:.2rem 0;border-top:1px solid rgba(0,212,255,.15)">
-            <span>${escapeHtml(x.nome)}</span><span style="color:var(--green);font-weight:700">${x.preco!=null?fmt(x.preco):''}</span></div>`).join('')+
-        `<div style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:800;padding-top:.3rem;border-top:1px solid rgba(0,212,255,.3)"><span>Total</span><span style="color:var(--green)">${fmt(a.preco||0)}</span></div>`;
+    const desenhar=(produtos)=>{
+        if(itens.length<2&&!produtos.length){ el.innerHTML=''; return; }
+        const linhaServ=itens.map(x=>`<div style="display:flex;justify-content:space-between;gap:.5rem;font-size:.8rem;padding:.2rem 0;border-top:1px solid rgba(0,212,255,.15)">
+            <span>✂️ ${escapeHtml(x.nome)}</span><span style="color:var(--green);font-weight:700">${x.preco!=null?fmt(x.preco):''}</span></div>`).join('');
+        // Com desconto (soma dos serviços não bate), mostra o valor cobrado dos serviços
+        const subServ=itens.length>1||!produtos.length?'':`<div style="display:flex;justify-content:space-between;font-size:.8rem;padding:.2rem 0;border-top:1px solid rgba(0,212,255,.15)"><span>Serviços</span><span style="color:var(--green);font-weight:700">${fmt(a.preco||0)}</span></div>`;
+        const linhaProd=produtos.map(v=>`<div style="display:flex;justify-content:space-between;gap:.5rem;font-size:.8rem;padding:.2rem 0;border-top:1px solid rgba(0,212,255,.15)">
+            <span>🛒 ${v.quantidade||1}x ${escapeHtml(v.produtoNome||'Produto')}</span><span style="color:var(--green);font-weight:700">${fmt(v.total||0)}</span></div>`).join('');
+        const total=Number(a.preco||0)+produtos.reduce((s,v)=>s+Number(v.total||0),0);
+        el.innerHTML=(itens.length>1?linhaServ:subServ)+linhaProd+
+            `<div style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:800;padding-top:.3rem;border-top:1px solid rgba(0,212,255,.3)"><span>Total${produtos.length?' (serviços + produtos)':''}</span><span style="color:var(--green)">${fmt(total)}</span></div>`;
+    };
+    desenhar([]);
+    // Produtos que o cliente comprou no mesmo dia também entram na soma
+    try{
+        const dia=a.data||fmtHoje();
+        const snap=await getDocs(query(collection(db,'barbeiros',barbeiroData.uid,'vendas'),where('data','==',dia)));
+        if(meuToken!==__servicosToken)return;
+        const wpp=(a.clienteWhatsapp||'').replace(/\D/g,'');
+        const nome=(a.clienteNome||'').trim().toLowerCase();
+        const produtos=[];
+        snap.forEach(d=>{
+            const v=d.data();
+            const vw=(v.clienteWhatsapp||'').replace(/\D/g,'');
+            if((wpp&&vw===wpp)||(nome&&(v.clienteNome||'').trim().toLowerCase()===nome))produtos.push(v);
+        });
+        if(produtos.length)desenhar(produtos);
+    }catch(e){ /* equipe sem acesso às vendas: mostra só os serviços */ }
 }
 
 window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status, filaId, clienteId){
