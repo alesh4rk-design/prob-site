@@ -133,7 +133,7 @@ function initFila(){
             const wppEl=document.getElementById('fila-wpp');
             if(wppEl.value.trim())return;
             const nome=this.value.trim().toLowerCase();
-            const c=(todosClientes||[]).find(x=>(x.nome||'').trim().toLowerCase()===nome&&x.wpp);
+            const c=clienteUnicoComNome(nome);
             if(c)wppEl.value=c.wpp;
         });
     }
@@ -160,11 +160,19 @@ function initFila(){
     carregarFila();
 }
 
+// Cliente cadastrado com exatamente esse nome (e WhatsApp). Se houver dois com o
+// mesmo nome, não escolhe nenhum — evita juntar duas pessoas diferentes.
+function clienteUnicoComNome(nome){
+    const n=(nome||'').trim().toLowerCase();
+    if(!n)return null;
+    const iguais=(typeof todosClientes!=='undefined'&&todosClientes||[]).filter(x=>(x.nome||'').trim().toLowerCase()===n&&x.wpp);
+    return iguais.length===1?iguais[0]:null;
+}
+
 function popularClientesFila(){
     const sel=document.getElementById('fila-cliente-cad');
     if(!sel)return;
     const lista=[...(todosClientes||[])].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'));
-    if(sel.options.length-1===lista.length)return; // já está atualizada
     const atual=sel.value;
     sel.innerHTML='<option value="">— Selecionar da lista (evita duplicar) —</option>'+
         lista.map(c=>`<option value="${escAttr(c.id)}">${escapeHtml(c.nome||'—')}${c.wpp?' · '+escapeHtml(c.wpp):''}</option>`).join('');
@@ -183,7 +191,7 @@ async function adicionarNaFilaReal(){
     let wpp=wppInput?wppInput.value.replace(/\D/g,''):'';
     // Mesmo nome de cliente cadastrado e sem WhatsApp digitado: usa o do cadastro
     if(!wpp){
-        const igual=(todosClientes||[]).find(x=>(x.nome||'').trim().toLowerCase()===nome.toLowerCase()&&x.wpp);
+        const igual=clienteUnicoComNome(nome);
         if(igual)wpp=String(igual.wpp).replace(/\D/g,'');
     }
 
@@ -631,7 +639,7 @@ function initEsquecido(){
         const wppEl=document.getElementById('esq-wpp');
         if(wppEl.value.trim())return;
         const nome=this.value.trim().toLowerCase();
-        const c=(todosClientes||[]).find(x=>(x.nome||'').trim().toLowerCase()===nome&&x.wpp);
+        const c=clienteUnicoComNome(nome);
         if(c)wppEl.value=c.wpp;
     });
 }
@@ -643,7 +651,7 @@ async function confirmarEsquecidoReal(){
     // Mesmo nome de um cliente já cadastrado e sem WhatsApp digitado: usa o dele,
     // pra não criar um segundo cadastro da mesma pessoa.
     if(!wpp){
-        const igual=(todosClientes||[]).find(x=>(x.nome||'').trim().toLowerCase()===nome.toLowerCase()&&x.wpp);
+        const igual=clienteUnicoComNome(nome);
         if(igual)wpp=String(igual.wpp).replace(/\D/g,'');
     }
     const selecaoMarcada=getSelecaoCortes('esq-corte-lista');
