@@ -1303,6 +1303,32 @@ function initAcoesClienteExtras(){
         criarPromoParaCliente(acClienteAtual.nome, acClienteAtual.wpp);
     });
 
+    // Editar nome: corrige no cadastro do cliente e no atendimento/fila aberto
+    $('ac-btn-editar-nome-cliente').addEventListener('click', async()=>{
+        const atual = acClienteAtual.nome || '';
+        const novo = (prompt('Novo nome do cliente:', atual) || '').trim();
+        if(!novo || novo===atual) return;
+        const btn = $('ac-btn-editar-nome-cliente');
+        btn.disabled = true;
+        try{
+            const wppLimpo = (acClienteAtual.wpp||'').replace(/\D/g,'');
+            const lista = (typeof todosClientes!=='undefined' && todosClientes) || [];
+            const cad = acClienteAtual.clienteId ? {id:acClienteAtual.clienteId}
+                : lista.find(c=>(wppLimpo && (c.wpp||'').replace(/\D/g,'')===wppLimpo) || (!wppLimpo && (c.nome||'').toLowerCase()===atual.toLowerCase()));
+            if(cad) await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'clientes',cad.id),{nome:novo});
+            if(acClienteAtual.agendamentoId) await updateDoc(doc(db,'agendamentos',acClienteAtual.agendamentoId),{clienteNome:novo});
+            if(acClienteAtual.filaId) await updateDoc(doc(db,'fila',acClienteAtual.filaId),{clienteNome:novo});
+            acClienteAtual.nome = novo;
+            $('ac-nome-cliente').textContent = novo;
+            toast('✓ Nome atualizado');
+            if(typeof carregarClientes==='function') carregarClientes();
+        }catch(e){
+            console.error('editarNomeCliente:',e);
+            toast('Erro ao editar nome: '+e.message,'var(--red)');
+        }
+        btn.disabled = false;
+    });
+
     $('ac-btn-excluir-cliente').addEventListener('click', async()=>{
         if(!acClienteAtual.clienteId) return;
         if(!confirm(`Apagar ${acClienteAtual.nome||'esse cliente'} da sua base de clientes?\n\nIsso não apaga agendamentos ou histórico já feitos, só remove o cadastro dele. Não tem como desfazer.`)) return;
