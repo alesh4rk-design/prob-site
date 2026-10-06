@@ -318,6 +318,9 @@ function initInsumos(){
 
     $('btn-add-insumo').addEventListener('click', adicionarInsumo);
     $('btn-salvar-editar-insumo').addEventListener('click', ()=>umaVezSo('editar-insumo', salvarEditarInsumo));
+    $('btn-salvar-editar-gasto-insumo').addEventListener('click', ()=>umaVezSo('editar-gasto-insumo', salvarEditarGastoInsumo));
+    $('btn-fechar-editar-gasto-insumo').addEventListener('click', ()=>{ $('modal-editar-gasto-insumo').style.display='none'; });
+    $('modal-editar-gasto-insumo').addEventListener('click', e=>{ if(e.target.id==='modal-editar-gasto-insumo') $('modal-editar-gasto-insumo').style.display='none'; });
     $('btn-fechar-editar-insumo').addEventListener('click', ()=>{ $('modal-editar-insumo').style.display='none'; });
     $('modal-editar-insumo').addEventListener('click', e=>{ if(e.target.id==='modal-editar-insumo') $('modal-editar-insumo').style.display='none'; });
     const btnApagarHist = $('btn-apagar-historico-insumos');
@@ -963,10 +966,10 @@ async function salvarEditarInsumo(){
                 alvos.slice(k,k+400).forEach(ref=>lote.update(ref,{insumoNome:nome}));
                 await lote.commit();
             }
-            if(alvos.length && typeof carregarResumoGestao==='function') carregarResumoGestao();
         }
         $('modal-editar-insumo').style.display = 'none';
         toast('✓ Insumo atualizado');
+        atualizarContagensDeGastos();
     }catch(e){ toast('Erro ao salvar: '+e.message,'var(--red)'); }
     btn.disabled = false;
 }
@@ -990,10 +993,68 @@ function renderGastosInsumos(){
             </div>
             <div style="display:flex;align-items:center;gap:.6rem">
                 <div style="font-family:'Courier New',monospace;font-weight:900;color:var(--red);font-size:.95rem">R$${Number(g.custoTotal||0).toFixed(2).replace('.',',')}</div>
+                <button type="button" class="btn-edit" data-editar-gasto-insumo="${g.id}" style="padding:.3rem .55rem;font-size:.7rem">✏️</button>
                 <button type="button" class="btn-del" data-apagar-gasto-insumo="${g.id}" style="padding:.3rem .55rem;font-size:.7rem">🗑 Apagar</button>
             </div>
         </div>`).join('') + (gastosInsumosCache.length>60 ? `<div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:.5rem">Mostrando os 60 mais recentes de ${gastosInsumosCache.length}. Use "Apagar todo o histórico" abaixo para limpar tudo.</div>` : '');
     cont.querySelectorAll('[data-apagar-gasto-insumo]').forEach(btn=>btn.addEventListener('click',()=>apagarGastoInsumo(btn.dataset.apagarGastoInsumo)));
+    cont.querySelectorAll('[data-editar-gasto-insumo]').forEach(btn=>btn.addEventListener('click',()=>abrirEditarGastoInsumo(btn.dataset.editarGastoInsumo)));
+}
+
+// Atualiza tudo que soma gastos depois de mexer em insumo/gasto: Gestão
+// (cards, lucro, gráfico, ranking), faturamento e avisos
+function atualizarContagensDeGastos(){
+    if(typeof carregarResumoGestao==='function') carregarResumoGestao();
+    if(typeof carregarFaturamento==='function') carregarFaturamento();
+    if(typeof atualizarCentralAvisos==='function') atualizarCentralAvisos();
+}
+
+// Entrada do histórico que corresponde a esse gasto (mesmo insumo, quantidade
+// e data; se houver mais de uma, a de horário mais próximo)
+function movimentoDoGasto(g){
+    const alvo = new Date(g.criadoEm||0).getTime();
+    return movimentosInsumosCache
+        .filter(m=>m.insumoId===g.insumoId && m.tipo==='entrada' && Number(m.quantidade)===Number(g.quantidade) && m.data===g.data)
+        .sort((a,b)=>Math.abs(new Date(a.criadoEm||0)-alvo)-Math.abs(new Date(b.criadoEm||0)-alvo))[0] || null;
+}
+
+function abrirEditarGastoInsumo(id){
+    const g = gastosInsumosCache.find(x=>x.id===id);
+    if(!g) return;
+    $('egi-id').value = id;
+    $('egi-titulo').textContent = g.insumoNome || 'Insumo';
+    $('egi-valor').value = Number(g.custoTotal||0).toFixed(2);
+    $('egi-data').value = g.data || '';
+    $('egi-qtd').value = g.quantidade ?? '';
+    $('modal-editar-gasto-insumo').style.display = 'flex';
+}
+
+async function salvarEditarGastoInsumo(){
+    const id = $('egi-id').value;
+    const g = gastosInsumosCache.find(x=>x.id===id);
+    if(!g) return;
+    const valor = parseFloat($('egi-valor').value);
+    const data = $('egi-data').value;
+    const qtd = parseFloat($('egi-qtd').value);
+    if(isNaN(valor) || valor<=0){ toast('Informe o valor pago (maior que zero)','var(--red)'); return; }
+    if(!data){ toast('Informe a data da compra','var(--red)'); return; }
+    if(isNaN(qtd) || qtd<0){ toast('Informe a quantidade comprada','var(--red)'); return; }
+    const btn = $('btn-salvar-editar-gasto-insumo');
+    btn.disabled = true;
+    try{
+        const mov = movimentoDoGasto(g); // acha antes de mudar o gasto
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'gastosInsumos',id), { custoTotal: valor, data, quantidade: qtd });
+        if(mov) await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'movimentosInsumos',mov.id), { data, quantidade: qtd });
+        // Estoque: a entrada mudou de quantidade → o estoque acompanha a diferença
+        const dif = qtd - Number(g.quantidade||0);
+        if(mov && dif!==0 && g.insumoId && insumosCache.some(i=>i.id===g.insumoId)){
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid,'insumos',g.insumoId), { quantidade: increment(dif) });
+        }
+        $('modal-editar-gasto-insumo').style.display = 'none';
+        toast('✓ Gasto atualizado e recalculado na Gestão');
+        atualizarContagensDeGastos();
+    }catch(e){ toast('Erro ao salvar: '+e.message,'var(--red)'); }
+    btn.disabled = false;
 }
 
 async function apagarGastoInsumo(id){
@@ -1004,7 +1065,7 @@ async function apagarGastoInsumo(id){
     try{
         await deleteDoc(doc(db,'barbeiros',barbeiroData.uid,'gastosInsumos',id));
         toast('🗑 Gasto apagado e removido da Gestão');
-        if(typeof carregarResumoGestao==='function') carregarResumoGestao();
+        atualizarContagensDeGastos();
     }catch(e){ toast('Erro ao apagar: '+e.message,'var(--red)'); }
 }
 

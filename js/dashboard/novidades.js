@@ -25,7 +25,8 @@ const NOVIDADES = [
         itens: [
             'Controle de Insumos: cada insumo ganhou o botão "✏️ Editar" pra corrigir o nome, a unidade, a quantidade em estoque e o aviso de estoque baixo.',
             'Mudou a quantidade? Fica registrado como "ajuste manual" no histórico, sem gerar gasto.',
-            'Mudou o nome? O histórico e os gastos desse insumo acompanham o nome novo.'
+            'Mudou o nome? O histórico e os gastos desse insumo acompanham o nome novo.',
+            'Em "Gastos com Insumos" cada compra tem o ✏️ pra corrigir o valor pago, a data e a quantidade. Ao salvar, a Gestão (gastos, lucro, gráfico e ranking) e os relatórios se recalculam na hora.'
         ]
     },
     {
