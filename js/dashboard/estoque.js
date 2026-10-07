@@ -422,6 +422,7 @@ function renderInsumos(){
     const cont = $('lista-insumos');
     if(!cont) return;
 
+    atualizarResumoInsumos();
     $('insumo-kpi-total').textContent = insumosCache.length;
     $('insumo-kpi-baixo').textContent = insumosCache.filter(i=>i.quantidadeMinima!=null && i.quantidade<=i.quantidadeMinima).length;
 
@@ -441,7 +442,7 @@ function renderInsumos(){
             <div style="flex:1;min-width:140px">
                 <div class="service-name" style="padding-right:0">${escapeHtml(i.nome)}${baixo?'<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">⚠️ Acabando</span>':''}</div>
                 <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">
-                    Quantidade: <span style="color:${baixo?'var(--red)':'var(--text)'};font-weight:700">${i.quantidade}</span> ${un}
+                    Quantidade: <span style="color:${baixo?'var(--red)':'var(--text)'};font-weight:700">${i.quantidade}</span> ${un}${(()=>{const g=gastosInsumosCache.find(x=>x.insumoId===i.id&&Number(x.custoTotal)>0&&Number(x.quantidade)>0);return g?` · valor em estoque <b style="color:var(--green)">${fmtReais((Number(i.quantidade)||0)*(Number(g.custoTotal)/Number(g.quantidade)))}</b>`:'';})()}
                 </div>
                 ${datasHtml?`<div style="font-size:.68rem;margin-top:.2rem">${datasHtml}</div>`:''}
             </div>
@@ -814,7 +815,54 @@ async function carregarVendasHoje(){
     }catch(e){ console.error('carregarVendasHoje:',e); }
 }
 
+const fmtReais = v => 'R$' + Number(v||0).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+
+// Valor total dos produtos em estoque: quanto foi investido (custo), quanto
+// vale a preço de venda e o lucro previsto se tudo for vendido.
+function atualizarResumoEstoque(){
+    const el = $('estoque-valor-custo');
+    if(!el) return;
+    let custo=0, venda=0, unidades=0, semCusto=0;
+    produtosCache.forEach(p=>{
+        const q = Number(p.estoque)||0;
+        if(q<=0) return;
+        unidades += q;
+        venda += q*(Number(p.preco)||0);
+        if(p.custo!=null && p.custo!=='') custo += q*Number(p.custo);
+        else semCusto++;
+    });
+    const lucro = venda - custo;
+    const pct = venda>0 && custo>0 ? Math.round((lucro/venda)*100) : null;
+    el.textContent = fmtReais(custo);
+    $('estoque-valor-venda').textContent = fmtReais(venda);
+    $('estoque-valor-lucro').textContent = fmtReais(lucro);
+    $('estoque-valor-lucro-pct').textContent = pct!=null ? `(${pct}%)` : '';
+    $('estoque-valor-unidades').textContent = unidades;
+    const av = $('estoque-valor-aviso');
+    if(semCusto){ av.style.display='block'; av.textContent = `⚠️ ${semCusto} produto(s) sem custo cadastrado — o lucro previsto considera custo zero para eles.`; }
+    else av.style.display='none';
+}
+
+// Valor dos insumos em estoque: quantidade × preço unitário da última compra.
+function atualizarResumoInsumos(){
+    const el = $('insumo-valor-total');
+    if(!el) return;
+    let total=0, semPreco=0;
+    insumosCache.forEach(i=>{
+        const q = Number(i.quantidade)||0;
+        if(q<=0) return;
+        const g = gastosInsumosCache.find(x=>x.insumoId===i.id && Number(x.custoTotal)>0 && Number(x.quantidade)>0);
+        if(g) total += q*(Number(g.custoTotal)/Number(g.quantidade));
+        else semPreco++;
+    });
+    el.textContent = fmtReais(total);
+    const av = $('insumo-valor-aviso');
+    if(semPreco){ av.style.display='block'; av.textContent = `⚠️ ${semPreco} item(ns) sem preço de compra registrado não entram na soma.`; }
+    else av.style.display='none';
+}
+
 function atualizarKpiEstoqueBaixo(){
+    atualizarResumoEstoque();
     const n = produtosCache.filter(p=>p.estoqueMinimo && p.estoque<=p.estoqueMinimo).length;
     const el = $('estoque-kpi-baixo');
     if(el) el.textContent = n;
@@ -867,6 +915,7 @@ async function adicionarProduto(){
 function renderProdutos(){
     const cont = $('lista-produtos');
     if(!cont) return;
+    atualizarResumoEstoque();
     if(!produtosCache.length){ cont.innerHTML = '<div class="empty-state"><div class="icon">📦</div>Nenhum produto cadastrado ainda.</div>'; return; }
     cont.innerHTML = produtosCache.map(p=>{
         const baixo = p.estoqueMinimo && p.estoque<=p.estoqueMinimo;
@@ -890,6 +939,7 @@ function renderProdutos(){
                 <div class="service-name" style="padding-right:0">${escapeHtml(p.nome)}${baixo?'<span style="font-size:.65rem;background:rgba(255,75,43,.12);color:var(--red);border-radius:20px;padding:.1rem .5rem;margin-left:.4rem">⚠️ Estoque baixo</span>':''}</div>
                 <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">
                     ${p.codigoBarras?`Código: ${escapeHtml(p.codigoBarras)} · `:''}Estoque: <span style="color:${baixo?'var(--red)':'var(--text)'};font-weight:700">${p.estoque}</span> · R$${Number(p.preco).toFixed(2)}${margemHtml}
+                    <br>Valor em estoque: <b style="color:var(--green)">${fmtReais((Number(p.estoque)||0)*(Number(p.preco)||0))}</b>${p.custo!=null?` · custo ${fmtReais((Number(p.estoque)||0)*Number(p.custo))}`:''}
                 </div>
                 ${datasHtml?`<div style="font-size:.68rem;margin-top:.25rem">${datasHtml}</div>`:''}
             </div>
@@ -1067,6 +1117,7 @@ async function salvarEditarInsumo(){
 
 // Lista os gastos com insumos (o que soma na Gestão) com opção de apagar um a um
 function renderGastosInsumos(){
+    atualizarResumoInsumos();
     const cont = $('lista-gastos-insumos');
     if(!cont) return;
     const total = gastosInsumosCache.reduce((s,g)=>s+Number(g.custoTotal||0),0);

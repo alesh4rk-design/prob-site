@@ -19,6 +19,16 @@ const NOVIDADES_MAX_VISIVEIS = 8;
 
 const NOVIDADES = [
     {
+        id: '2026-10-08-01',
+        data: '08/10/2026',
+        titulo: 'Valor total do estoque e editar WhatsApp do cliente',
+        itens: [
+            'Estoque de Vendas: novo quadro com o valor total dos produtos em estoque — quanto foi investido (custo), o valor de venda e o lucro previsto com a porcentagem. Cada produto também mostra o valor dele em estoque.',
+            'Insumos: novo quadro com o valor total dos insumos em estoque (quantidade × preço da última compra), e o valor de cada item na lista.',
+            'Janela do cliente: novo botão "📱 Editar WhatsApp do cliente". O número novo vale para o cadastro, a carteirinha de fidelidade, os atendimentos, a fila e os acordos desse cliente.'
+        ]
+    },
+    {
         id: '2026-10-07-01',
         data: '07/10/2026',
         titulo: 'Estoque de Vendas, clientes e vários serviços',

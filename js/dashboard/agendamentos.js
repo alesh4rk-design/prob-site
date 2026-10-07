@@ -1211,6 +1211,7 @@ window.abrirAcoesCliente = function(nome, wpp, agendamentoId, data, hora, status
     $('ac-wpp-cliente').textContent = wpp ? formatarWppExibicao(wpp) : 'WhatsApp não informado';
     $('ac-copiar-wpp').style.display = wpp ? 'inline' : 'none';
     $('ac-btn-excluir-cliente').style.display = clienteId ? 'block' : 'none';
+    $('ac-btn-editar-wpp-cliente').style.display = (!window.__funcionarioMode && !window.__recepcionista) ? 'block' : 'none';
     // Vender produto/criar promoção são decisões estratégicas do dono —
     // funcionário só vê pagamento, concluir/cancelar, WhatsApp e histórico.
     if(window.__funcionarioMode){
@@ -1433,6 +1434,72 @@ function initAcoesClienteExtras(){
     });
 
     // Editar nome: corrige no cadastro do cliente e no atendimento/fila aberto
+    // Editar WhatsApp: o número é também o "id" do cadastro do cliente, então o
+    // cadastro é movido pro número novo — junto com a fidelidade, os
+    // atendimentos, a fila e os acordos, pra nada ficar para trás.
+    $('ac-btn-editar-wpp-cliente').addEventListener('click', ()=>umaVezSo('editarWpp', async()=>{
+        const atualBruto = (acClienteAtual.wpp||'');
+        const atual = atualBruto.replace(/\D/g,'');
+        const digitado = prompt('Novo WhatsApp do cliente (com DDD, só números):', atual);
+        if(digitado===null) return;
+        const novo = digitado.replace(/\D/g,'');
+        if(novo.length<10 || novo.length>13){ toast('Número inválido — informe DDD + número','var(--red)'); return; }
+        if(novo===atual) return;
+        const uid = barbeiroData.uid;
+        const lista = (typeof todosClientes!=='undefined' && todosClientes) || [];
+        if(lista.some(c=>c.id===novo)){
+            toast('Já existe outro cliente com esse WhatsApp. Edite ou apague um dos dois.','var(--red)'); return;
+        }
+        const btn = $('ac-btn-editar-wpp-cliente');
+        btn.disabled = true;
+        try{
+            // 1) Cadastro do cliente
+            const cad = acClienteAtual.clienteId ? {id:acClienteAtual.clienteId}
+                : lista.find(c=>(atual && (c.wpp||'').replace(/\D/g,'')===atual) || (!atual && (c.nome||'').toLowerCase()===(acClienteAtual.nome||'').toLowerCase()));
+            if(cad){
+                const refAntigo = doc(db,'barbeiros',uid,'clientes',cad.id);
+                const snap = await getDoc(refAntigo);
+                const dados = snap.exists() ? snap.data() : {nome:acClienteAtual.nome||'Cliente', totalCortes:0};
+                await setDoc(doc(db,'barbeiros',uid,'clientes',novo),{...dados, wpp:novo});
+                await deleteDoc(refAntigo);
+            } else {
+                await setDoc(doc(db,'barbeiros',uid,'clientes',novo),{nome:acClienteAtual.nome||'Cliente', wpp:novo, totalCortes:0},{merge:true});
+            }
+            // 2) Carteirinha de fidelidade (o id é o WhatsApp)
+            if(atual){
+                const refFid = doc(db,'barbeiros',uid,'fidelidade',atual);
+                const fid = await getDoc(refFid);
+                if(fid.exists()){ await setDoc(doc(db,'barbeiros',uid,'fidelidade',novo),fid.data()); await deleteDoc(refFid); }
+            }
+            // 3) Atendimentos, fila, acordos e promoções do mesmo número
+            let atualizados = 0;
+            const trocar = async(q, campo)=>{
+                const snap = await getDocs(q);
+                for(const d of snap.docs){ await updateDoc(d.ref,{[campo]:novo}); atualizados++; }
+            };
+            if(atual){
+                const variantes = [...new Set([atual, atualBruto].filter(Boolean))];
+                for(const v of variantes){
+                    await trocar(query(collection(db,'agendamentos'),where('barbeiroId','==',uid),where('clienteWhatsapp','==',v)),'clienteWhatsapp').catch(e=>console.error('wpp agendamentos:',e));
+                    await trocar(query(collection(db,'fila'),where('barbeiroId','==',uid),where('clienteWhatsapp','==',v)),'clienteWhatsapp').catch(e=>console.error('wpp fila:',e));
+                }
+                await trocar(query(collection(db,'barbeiros',uid,'acordosCliente'),where('clienteWhatsapp','==',atual)),'clienteWhatsapp').catch(e=>console.error('wpp acordos:',e));
+                await trocar(query(collection(db,'barbeiros',uid,'promocoes'),where('clienteWpp','==',atual)),'clienteWpp').catch(e=>console.error('wpp promocoes:',e));
+                await trocar(query(collection(db,'barbeiros',uid,'vendas'),where('clienteWhatsapp','==',atual)),'clienteWhatsapp').catch(e=>console.error('wpp vendas:',e));
+            }
+            acClienteAtual.wpp = novo;
+            acClienteAtual.clienteId = novo;
+            $('ac-wpp-cliente').textContent = typeof formatarWppExibicao==='function' ? formatarWppExibicao(novo) : novo;
+            toast(`✓ WhatsApp atualizado${atualizados?` (${atualizados} registro(s) ajustado(s))`:''}`);
+            if(typeof carregarClientes==='function') carregarClientes();
+            if(typeof carregarCachePromoCliente==='function') carregarCachePromoCliente();
+        }catch(e){
+            console.error('editarWppCliente:',e);
+            toast('Erro ao editar WhatsApp: '+e.message,'var(--red)');
+        }
+        btn.disabled = false;
+    }));
+
     $('ac-btn-editar-nome-cliente').addEventListener('click', async()=>{
         const atual = acClienteAtual.nome || '';
         const novo = (prompt('Novo nome do cliente:', atual) || '').trim();

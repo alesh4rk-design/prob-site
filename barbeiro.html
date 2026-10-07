@@ -574,6 +574,7 @@
             </div>
             <button id="ac-btn-promocao" style="width:100%;padding:.6rem .3rem;background:var(--card);border:1.5px solid #a855f7;border-radius:8px;color:#a855f7;font-size:.78rem;cursor:pointer;text-align:center;margin-bottom:1.3rem">🎯 Criar promoção individual pra esse cliente</button>
             <button id="ac-btn-editar-atendimento" style="display:none;width:100%;padding:.6rem .3rem;background:rgba(245,166,35,.08);border:1.5px solid var(--yellow);border-radius:8px;color:var(--yellow);font-size:.78rem;cursor:pointer;text-align:center;margin-bottom:.5rem">✏️ Editar este atendimento (serviço, valor, data, pagamento)</button>
+            <button id="ac-btn-editar-wpp-cliente" style="display:none;width:100%;padding:.6rem .3rem;background:transparent;border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-size:.78rem;cursor:pointer;text-align:center;margin-bottom:.6rem">📱 Editar WhatsApp do cliente</button>
             <button id="ac-btn-editar-nome-cliente" style="width:100%;padding:.6rem .3rem;background:transparent;border:1.5px solid var(--blue);border-radius:8px;color:var(--blue);font-size:.78rem;cursor:pointer;text-align:center;margin-bottom:.6rem">✏️ Editar nome do cliente</button>
             <button id="ac-btn-excluir-cliente" style="display:none;width:100%;padding:.6rem .3rem;background:rgba(255,75,43,.08);border:1.5px solid var(--red);border-radius:8px;color:var(--red);font-size:.78rem;cursor:pointer;text-align:center;margin-bottom:1.3rem">🗑️ Excluir cliente da base</button>
 
@@ -1248,6 +1249,17 @@
             </div>
         </div>
 
+        <div class="card" id="estoque-resumo-valor" style="margin-bottom:1.2rem;border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04)">
+            <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">💰 Valor dos produtos em estoque</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem">
+                <div><div style="font-family:'Courier New',monospace;font-size:1.15rem;font-weight:900;color:var(--blue)" id="estoque-valor-custo">R$0,00</div><div style="font-size:.64rem;color:var(--muted);text-transform:uppercase">Investido (custo)</div></div>
+                <div><div style="font-family:'Courier New',monospace;font-size:1.15rem;font-weight:900;color:var(--green)" id="estoque-valor-venda">R$0,00</div><div style="font-size:.64rem;color:var(--muted);text-transform:uppercase">Valor de venda</div></div>
+                <div><div style="font-family:'Courier New',monospace;font-size:1.15rem;font-weight:900;color:var(--yellow)" id="estoque-valor-lucro">R$0,00</div><div style="font-size:.64rem;color:var(--muted);text-transform:uppercase">Lucro previsto <span id="estoque-valor-lucro-pct"></span></div></div>
+                <div><div style="font-family:'Courier New',monospace;font-size:1.15rem;font-weight:900" id="estoque-valor-unidades">0</div><div style="font-size:.64rem;color:var(--muted);text-transform:uppercase">Unidades em estoque</div></div>
+            </div>
+            <div id="estoque-valor-aviso" style="display:none;font-size:.68rem;color:var(--yellow);margin-top:.5rem"></div>
+        </div>
+
         <div class="section-title">Cadastrar Produto</div>
         <div class="card" style="margin-bottom:1.2rem" id="prod-card-intro">
             <button class="btn-add" style="width:100%" id="btn-mostrar-form-produto">+ Adicionar Produto</button>
@@ -1301,6 +1313,13 @@
                 <div style="font-family:'Courier New',monospace;font-size:1.3rem;font-weight:900;color:var(--red)" id="insumo-kpi-baixo">0</div>
                 <div style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem">Acabando</div>
             </div>
+        </div>
+
+        <div class="card" style="margin-bottom:1.2rem;border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04)">
+            <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem">💰 Valor dos insumos em estoque</div>
+            <div style="font-family:'Courier New',monospace;font-size:1.3rem;font-weight:900;color:var(--blue)" id="insumo-valor-total">R$0,00</div>
+            <div style="font-size:.66rem;color:var(--muted);margin-top:.2rem">Quantidade em estoque × preço da última compra de cada item</div>
+            <div id="insumo-valor-aviso" style="display:none;font-size:.68rem;color:var(--yellow);margin-top:.4rem"></div>
         </div>
 
         <div class="section-title">Cadastrar Insumo</div>
@@ -3379,9 +3398,9 @@ async function initDash(){
 </script>
 
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
-<script defer src="js/dashboard/estoque.js?v=20261007c"></script>
+<script defer src="js/dashboard/estoque.js?v=20261008a"></script>
 <script defer src="js/dashboard/backup.js?v=20261003c"></script>
-<script defer src="js/dashboard/novidades.js?v=20261007a"></script>
+<script defer src="js/dashboard/novidades.js?v=20261008a"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003g"></script>
 <script defer src="js/dashboard/guia.js?v=20261005b"></script>
 <script defer src="js/dashboard/tour.js?v=20261005b"></script>
@@ -3390,7 +3409,7 @@ async function initDash(){
 <script defer src="js/dashboard/clientes.js?v=20261004a"></script>
 <script defer src="js/dashboard/publico.js?v=20261003b"></script>
 <script defer src="js/dashboard/historico.js?v=20261004a"></script>
-<script defer src="js/dashboard/agendamentos.js?v=20261007f"></script>
+<script defer src="js/dashboard/agendamentos.js?v=20261008a"></script>
 <script defer src="js/dashboard/horarios.js?v=20261005a"></script>
 <script defer src="js/dashboard/financeiro.js?v=20261006d"></script>
 <script defer src="js/dashboard/auth.js?v=20261003f"></script>
