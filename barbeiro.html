@@ -1859,6 +1859,22 @@
         <div class="gestao-grupo">
             <div class="gestao-grupo-titulo">📊 Resumo do Mês</div>
 
+            <div class="card" id="prolabore-card" style="margin-bottom:1.2rem;border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04)">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap">
+                    <div style="font-weight:800;font-size:.95rem">💼 Pró-labore (sua retirada)</div>
+                    <label class="toggle-switch" title="Ligar ou desligar o pró-labore"><input type="checkbox" id="prolabore-ativo"><span class="slider"></span></label>
+                </div>
+                <p style="font-size:.74rem;color:var(--muted);margin:.5rem 0 .8rem">Todo dia 1º do mês o valor é lançado como despesa da barbearia e <b>abatido do lucro líquido</b>, como se você recebesse um salário. Fica fora do caixa da barbearia: é a sua parte.</p>
+                <div style="display:flex;gap:.6rem;align-items:flex-end;flex-wrap:wrap">
+                    <div class="input-group" style="margin:0;flex:1;min-width:150px">
+                        <label>Valor mensal (R$)</label>
+                        <input type="number" id="prolabore-valor" min="0" step="0.01" placeholder="Ex: 3000">
+                    </div>
+                    <button class="btn-add" id="btn-salvar-prolabore" style="padding:.75rem 1.1rem">💾 Salvar</button>
+                </div>
+                <div id="prolabore-status" style="font-size:.72rem;color:var(--muted);margin-top:.6rem"></div>
+            </div>
+
             <div class="section-title">Visão Geral Financeira</div>
             <div class="fat-kpis" id="fat-kpis">
                 <div class="fat-kpi"><div class="fat-kpi-val" id="fat-semana">R$0</div><div class="fat-kpi-lbl">Esta semana</div></div>
@@ -1876,6 +1892,7 @@
                 <div class="fat-kpi green" style="display:none"><div class="fat-kpi-val" id="gest-aluguel-cadeiras">R$0</div><div class="fat-kpi-lbl">🪑 Aluguel de cadeiras</div></div>
                 <div class="fat-kpi red"><div class="fat-kpi-val" id="gest-despesas">R$0</div><div class="fat-kpi-lbl">Despesas fixas</div></div>
                 <div class="fat-kpi red"><div class="fat-kpi-val" id="gest-gastos-insumos">R$0</div><div class="fat-kpi-lbl">🧴 Gastos com Insumos</div></div>
+                <div class="fat-kpi" style="display:none;border-color:rgba(0,212,255,.3)"><div class="fat-kpi-val" id="gest-prolabore" style="color:var(--blue)">R$0</div><div class="fat-kpi-lbl">💼 Pró-labore (dono)</div></div>
                 <div class="fat-kpi green"><div class="fat-kpi-val" id="fat-liquido">R$0</div><div class="fat-kpi-lbl">Líquido dono (s/ despesas)</div></div>
             </div>
 
@@ -3400,7 +3417,7 @@ async function initDash(){
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
 <script defer src="js/dashboard/estoque.js?v=20261008a"></script>
 <script defer src="js/dashboard/backup.js?v=20261003c"></script>
-<script defer src="js/dashboard/novidades.js?v=20261008a"></script>
+<script defer src="js/dashboard/novidades.js?v=20261008b"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003g"></script>
 <script defer src="js/dashboard/guia.js?v=20261005b"></script>
 <script defer src="js/dashboard/tour.js?v=20261005b"></script>
@@ -3411,7 +3428,7 @@ async function initDash(){
 <script defer src="js/dashboard/historico.js?v=20261004a"></script>
 <script defer src="js/dashboard/agendamentos.js?v=20261008a"></script>
 <script defer src="js/dashboard/horarios.js?v=20261005a"></script>
-<script defer src="js/dashboard/financeiro.js?v=20261006d"></script>
+<script defer src="js/dashboard/financeiro.js?v=20261008a"></script>
 <script defer src="js/dashboard/auth.js?v=20261003f"></script>
 <script defer src="js/dashboard/visual.js?v=20260727o"></script>
 

@@ -202,6 +202,7 @@ function initPerfil(){
 
     initZonaPerigo();
     if(typeof initBackup==='function') initBackup();
+    initProLabore();
 }
 
 // Esconde a aba que não faz sentido pro modo de atendimento escolhido —
@@ -511,7 +512,7 @@ async function exportarPDF(){
             return s+(Number(a.preco||0)*(b?.pct||0)/100);
         },0);
         const despesasFixas=totalGastosFixos();
-        const lucroLiquido=totalFaturado-comissoesPeriodo-despesasFixas+(typeof aluguelCadeirasNoMes==='function'?aluguelCadeirasNoMes(dataLocal(new Date()).slice(0,7)):0);
+        const lucroLiquido=totalFaturado-comissoesPeriodo-despesasFixas-proLaboreNoMes(dataLocal(new Date()).slice(0,7))+(typeof aluguelCadeirasNoMes==='function'?aluguelCadeirasNoMes(dataLocal(new Date()).slice(0,7)):0);
 
         // Últimos 7 dias (sempre relativo a hoje, igual ao painel)
         const hoje=new Date();
@@ -534,7 +535,7 @@ async function exportarPDF(){
             concTodos.filter(a=>a.data&&a.data.startsWith(m)).reduce((s,a)=>s+Number(a.preco||0),0)
             + vendasPdf.filter(v=>v.data&&v.data.startsWith(m)).reduce((s,v)=>s+Number(v.total||0),0)
         );
-        const despesasM=meses6.map(m=>totalGastosNoMes(m));
+        const despesasM=meses6.map(m=>totalGastosNoMes(m)+proLaboreNoMes(m));
 
         // Ranking de cortes
         const porCorte={};
@@ -1107,6 +1108,57 @@ function valorGastoNoMes(g,mesStr){
     return v;
 }
 
+// ── Pró-labore do dono ──
+// Retirada mensal do dono, abatida do lucro como uma despesa da barbearia.
+// Guarda um histórico (desde qual mês vale qual valor) pra mudar o valor
+// hoje sem alterar os meses que já passaram. Desligar grava valor 0.
+function proLaboreNoMes(mesStr){
+    const hist=((barbeiroData.proLabore&&barbeiroData.proLabore.historico)||[]).filter(h=>h&&h.desde&&h.desde<=mesStr);
+    if(!hist.length)return 0;
+    hist.sort((a,b)=>a.desde.localeCompare(b.desde));
+    return Number(hist[hist.length-1].valor)||0;
+}
+function initProLabore(){
+    const chk=document.getElementById('prolabore-ativo');
+    const inp=document.getElementById('prolabore-valor');
+    const btn=document.getElementById('btn-salvar-prolabore');
+    if(!chk||!inp||!btn)return;
+    const atualizarTela=()=>{
+        const v=proLaboreNoMes(mesLocal());
+        chk.checked=v>0;
+        if(v>0)inp.value=v;
+        const st=document.getElementById('prolabore-status');
+        if(st)st.textContent=v>0?`✓ Ligado: R$${v.toFixed(2).replace('.',',')} por mês, descontado do lucro desde o dia 1º.`:'Desligado — nada é descontado do lucro.';
+    };
+    atualizarTela();
+    if(btn.dataset.bound)return;
+    btn.dataset.bound='1';
+    const salvar=async(valor)=>{
+        const mes=mesLocal();
+        const antigo=(barbeiroData.proLabore&&barbeiroData.proLabore.historico)||[];
+        // um registro por mês: o mais novo substitui o do mesmo mês
+        const historico=[...antigo.filter(h=>h.desde!==mes),{desde:mes,valor}].sort((a,b)=>a.desde.localeCompare(b.desde));
+        await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{proLabore:{historico}});
+        barbeiroData.proLabore={historico};
+        atualizarTela();
+        carregarResumoGestao();
+        toast(valor>0?'✓ Pró-labore salvo':'✓ Pró-labore desligado');
+    };
+    btn.addEventListener('click',()=>umaVezSo('prolabore',async()=>{
+        const v=parseFloat(inp.value);
+        if(chk.checked){
+            if(isNaN(v)||v<=0){toast('Informe o valor mensal do pró-labore','var(--red)');return;}
+            try{await salvar(v);}catch(e){toast('Erro ao salvar: '+e.message,'var(--red)');}
+        } else {
+            try{await salvar(0);}catch(e){toast('Erro ao salvar: '+e.message,'var(--red)');}
+        }
+    }));
+    chk.addEventListener('change',()=>{
+        if(!chk.checked){ umaVezSo('prolabore',async()=>{ try{await salvar(0);}catch(e){toast('Erro: '+e.message,'var(--red)');chk.checked=true;} }); }
+        else if(inp.value) btn.click();
+    });
+}
+
 // Total de gastos ATIVOS no mês atual
 function totalGastosFixos(){
     return totalGastosNoMes(mesLocal());
@@ -1359,7 +1411,13 @@ async function carregarResumoGestao(){
 
     // Aluguel de cadeira dos barbeiros que alugam (entra pro dono)
     const aluguelCadeiras=typeof aluguelCadeirasNoMes==='function'?aluguelCadeirasNoMes(mesAtual):0;
-    const lucroLiquido=receitaMes-comissoesMes+aluguelCadeiras-totalGastos-totalGastosInsumosMes;
+    const proLaboreMes=proLaboreNoMes(mesAtual);
+    const lucroLiquido=receitaMes-comissoesMes+aluguelCadeiras-totalGastos-totalGastosInsumosMes-proLaboreMes;
+    const elProLabore=document.getElementById('gest-prolabore');
+    if(elProLabore){
+        elProLabore.textContent='R$'+proLaboreMes.toFixed(0);
+        elProLabore.closest('.fat-kpi').style.display=proLaboreMes>0?'':'none';
+    }
     const elAluguel=document.getElementById('gest-aluguel-cadeiras');
     if(elAluguel){
         elAluguel.textContent='R$'+aluguelCadeiras.toFixed(0);
@@ -1507,7 +1565,7 @@ async function carregarResumoGestao(){
     // Despesas por mês: gastos fixos + parcelas ativas + gastos com insumos, tudo daquele mês
     const despesasPorMes=meses6.map(m=>{
         const insumosNoMes=todosGastosInsumos.filter(g=>g.data && g.data.startsWith(m)).reduce((s,g)=>s+Number(g.custoTotal||0),0);
-        return totalGastosNoMes(m)+insumosNoMes;
+        return totalGastosNoMes(m)+insumosNoMes+proLaboreNoMes(m);
     });
 
     const maxVal=Math.max(...receitasPorMes,...despesasPorMes,1);
@@ -1530,7 +1588,7 @@ async function carregarResumoGestao(){
 
     // ══ 1. PONTO DE EQUILÍBRIO ══
     const ticketMedioMes=concMes.length?receitaMes/concMes.length:50;
-    const custoFixoTotal=totalGastos+totalGastosInsumosMes;
+    const custoFixoTotal=totalGastos+totalGastosInsumosMes+proLaboreMes;
     const cortesNecessarios=ticketMedioMes>0?Math.ceil(custoFixoTotal/ticketMedioMes):0;
     const elBeCortesNec=document.getElementById('be-cortes-necessarios');
     const elBeCortesFeitos=document.getElementById('be-cortes-feitos');

@@ -19,6 +19,16 @@ const NOVIDADES_MAX_VISIVEIS = 8;
 
 const NOVIDADES = [
     {
+        id: '2026-10-08-02',
+        data: '08/10/2026',
+        titulo: 'Pró-labore do dono na Gestão',
+        itens: [
+            'Gestão → "💼 Pró-labore (sua retirada)": ligue, informe o valor mensal e salve. Todo mês o valor é lançado como despesa da barbearia e abatido do lucro líquido, como se fosse o seu salário.',
+            'Aparece também no detalhamento do mês e nos gráficos/relatórios de despesas. Mudar o valor só vale a partir do mês atual: os meses anteriores não mudam.',
+            'Pode desligar a qualquer momento: nada mais é descontado a partir do mês atual.'
+        ]
+    },
+    {
         id: '2026-10-08-01',
         data: '08/10/2026',
         titulo: 'Valor total do estoque e editar WhatsApp do cliente',
