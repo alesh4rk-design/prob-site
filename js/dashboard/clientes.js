@@ -141,6 +141,15 @@ function nivelAusencia(dias){
     return null;
 }
 
+// Dias desde a última visita. Cliente cadastrado que ainda não tem nenhum
+// corte registrado fica SEM contagem (antes aparecia "999 dias sem retornar").
+function diasSemVisita(c){
+    if(!c || !c.ultimaVisita) return null;
+    const t = new Date(c.ultimaVisita).getTime();
+    if(isNaN(t)) return null;
+    return Math.max(0, Math.floor((Date.now()-t)/(1000*60*60*24)));
+}
+
 function renderClientes(lista){
     // Datalist de autocomplete (usado na Venda Rápida do Estoque)
     const dl = document.getElementById('lista-clientes-datalist');
@@ -173,8 +182,8 @@ function renderClientes(lista){
     document.getElementById('cli-kpi-recorrentes').textContent = lista.filter(c=>c.totalCortes>1).length;
     document.getElementById('cli-kpi-cortes').textContent = lista.reduce((s,c)=>s+(c.totalCortes||0),0);
     document.getElementById('cli-kpi-atencao').textContent = lista.filter(c=>{
-        const d = c.ultimaVisita ? Math.floor((new Date()-new Date(c.ultimaVisita))/(1000*60*60*24)) : 999;
-        return d>=5;
+        const d = diasSemVisita(c);
+        return d!==null && d>=5;
     }).length;
 
     const cont = document.getElementById('lista-clientes-barb');
@@ -187,9 +196,10 @@ function renderClientes(lista){
         const favorito = Object.entries(favMapa).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—';
         const wppNum = (c.wpp||'').replace(/\D/g,'');
         const freq = c.totalCortes > 10 ? '🔥 VIP' : c.totalCortes > 5 ? '⭐ Frequente' : c.totalCortes > 1 ? '✅ Recorrente' : '🆕 Novo';
-        const diasDesde = c.ultimaVisita ? Math.floor((new Date()-new Date(c.ultimaVisita))/(1000*60*60*24)) : 999;
-        const ausencia = nivelAusencia(diasDesde);
-        const alertaSumiu = ausencia ? `<span style="color:rgb(${ausencia.cor});font-size:.68rem">${ausencia.label}</span>` : '';
+        const diasDesde = diasSemVisita(c);
+        const ausencia = diasDesde===null ? null : nivelAusencia(diasDesde);
+        const alertaSumiu = ausencia ? `<span style="color:rgb(${ausencia.cor});font-size:.68rem">${ausencia.label}</span>`
+            : (diasDesde===null ? '<span style="color:var(--blue);font-size:.68rem">· ainda sem corte registrado</span>' : '');
 
         // Cor do card: ausência tem prioridade sobre frequência; senão, novo vs recorrente
         let corBorda = 'var(--border)', corFundo = 'var(--card2)';
@@ -220,8 +230,8 @@ function aplicarFiltrosClientes(){
         const bateBusca = (c.nome||'').toLowerCase().includes(q) || (c.wpp||'').includes(q);
         if(!bateBusca) return false;
         if(filtroAusenciaMin===0) return true;
-        const dias = c.ultimaVisita ? Math.floor((new Date()-new Date(c.ultimaVisita))/(1000*60*60*24)) : 999;
-        return dias >= filtroAusenciaMin;
+        const dias = diasSemVisita(c);
+        return dias!==null && dias >= filtroAusenciaMin;
     });
     renderClientes(filtrado);
 }
