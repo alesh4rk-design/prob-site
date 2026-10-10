@@ -354,7 +354,6 @@ function renderPainel(lista){
 
     nextContent.innerHTML = `
         <div class="next-name">${escapeHtml(proximo.clienteNome)}</div>
-        ${proximo.corte ? `<div class="next-meta">${escapeHtml(proximo.corte)}</div>` : ''}
         ${origemTag(proximo)}
         ${proximo.barbeiro ? `<div class="next-barber">✂️ ${escapeHtml(proximo.barbeiro)}</div>` : ''}
     `;
@@ -371,7 +370,7 @@ function renderPainel(lista){
                 <div class="queue-pos">${i+2}º</div>
                 <div class="queue-info">
                     <div class="queue-name">${escapeHtml(item.clienteNome)}</div>
-                    <div class="queue-sub">${item.corte ? escapeHtml(item.corte)+' · ' : ''}${origemMini} · aguardando há ${tempoEspera(item.criadoEm)}</div>
+                    <div class="queue-sub">${origemMini} · aguardando há ${tempoEspera(item.criadoEm)}</div>
                 </div>
                 ${item.barbeiro ? `<div style="font-size:.85vw;color:rgba(0,212,255,.7);white-space:nowrap">✂️ ${escapeHtml(item.barbeiro)}</div>` : ''}
             </div>
