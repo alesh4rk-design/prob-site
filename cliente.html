@@ -858,7 +858,14 @@
 </div>
 
 <!-- Botão flutuante: Fale comigo (WhatsApp + PIX do barbeiro) -->
-<style>#fale-comigo-wrap{transition:bottom .2s} body.instalar-visivel #fale-comigo-wrap{bottom:5rem !important}</style>
+<style>
+/* Botões flutuantes empilhados no canto (Instalar App embaixo, depois o balão
+   de conversa, depois Meus Agendamentos) — sem um ficar em cima do outro. */
+#fale-comigo-wrap,#meus-agend-wrap,#painel-fale-comigo{transition:bottom .2s}
+body.instalar-visivel #fale-comigo-wrap{bottom:4.6rem !important}
+body.instalar-visivel #meus-agend-wrap{bottom:9rem !important}
+body.instalar-visivel #painel-fale-comigo{bottom:8.4rem !important}
+</style>
 <div id="fale-comigo-wrap" style="display:none;position:fixed;bottom:1.5rem;right:1rem;z-index:700;">
     <button type="button" id="btn-fale-comigo" style="width:56px;height:56px;border-radius:50%;background:var(--card);border:1.5px solid rgba(0,212,255,.4);box-shadow:0 0 16px rgba(0,212,255,.25);color:var(--blue);font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">💬</button>
     <div id="painel-fale-comigo" style="display:none;position:fixed;bottom:5rem;right:1rem;width:280px;max-width:calc(100vw - 1.5rem);background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:1rem;box-shadow:0 4px 24px rgba(0,0,0,.4);">
