@@ -19,6 +19,17 @@ const NOVIDADES_MAX_VISIVEIS = 8;
 
 const NOVIDADES = [
     {
+        id: '2026-10-10-01',
+        data: '10/10/2026',
+        titulo: 'Fila: de qualquer lugar ou só no local',
+        itens: [
+            'Perfil → Modo de Atendimento: ao escolher "Só Fila" ou "Os Dois", aparece a opção "📍 Quem pode entrar na fila pelo celular".',
+            '"De qualquer lugar": o cliente entra na fila mesmo estando longe (como era antes).',
+            '"Somente chegando ao local": o celular do cliente confirma pelo GPS que ele está na barbearia antes de entrar na fila. Você marca a localização uma vez (de dentro da barbearia, tocando em "Marcar a localização") e escolhe a distância máxima: 100, 200, 300 ou 500 metros.',
+            'O cliente precisa permitir a localização no navegador. Quem estiver longe vê o aviso de quantos metros/km faltam.'
+        ]
+    },
+    {
         id: '2026-10-08-02',
         data: '08/10/2026',
         titulo: 'Pró-labore do dono na Gestão',

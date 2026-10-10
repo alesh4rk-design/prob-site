@@ -2140,6 +2140,39 @@
                     </div>
                 </label>
             </div>
+            <div id="fila-local-wrap" style="display:none;margin-top:1.1rem;padding:.9rem;border:1.5px solid var(--border);border-radius:10px;background:var(--card2)">
+                <div style="font-weight:800;font-size:.88rem;margin-bottom:.2rem">📍 Quem pode entrar na fila pelo celular</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-bottom:.7rem">Escolha se o cliente pode entrar na fila de qualquer lugar ou só quando estiver no local.</div>
+                <div style="display:flex;flex-direction:column;gap:.5rem">
+                    <label class="modo-atend-opt">
+                        <input type="radio" name="fila-local" value="qualquer" checked>
+                        <div>
+                            <div style="font-weight:700;font-size:.85rem">🌎 De qualquer lugar</div>
+                            <div style="font-size:.7rem;color:var(--muted)">O cliente entra na fila pelo celular mesmo estando longe.</div>
+                        </div>
+                    </label>
+                    <label class="modo-atend-opt">
+                        <input type="radio" name="fila-local" value="presencial">
+                        <div>
+                            <div style="font-weight:700;font-size:.85rem">📍 Somente chegando ao local</div>
+                            <div style="font-size:.7rem;color:var(--muted)">O celular do cliente confirma pelo GPS que ele está na barbearia (ou muito perto) antes de entrar na fila.</div>
+                        </div>
+                    </label>
+                </div>
+                <div id="fila-local-config" style="display:none;margin-top:.8rem">
+                    <button class="btn-edit" id="btn-marcar-local" type="button" style="width:100%;padding:.65rem">📍 Marcar a localização da barbearia (estou aqui agora)</button>
+                    <div id="fila-local-status" style="font-size:.72rem;color:var(--muted);margin-top:.5rem"></div>
+                    <div class="input-group" style="margin:.7rem 0 0">
+                        <label>Distância máxima permitida</label>
+                        <select id="fila-local-raio" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:.65rem .85rem;color:var(--text);font-size:.85rem;outline:none">
+                            <option value="100">100 metros</option>
+                            <option value="200" selected>200 metros</option>
+                            <option value="300">300 metros</option>
+                            <option value="500">500 metros</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
             <button class="btn-save" id="btn-salvar-modo" style="margin-top:1rem">Salvar Modo de Atendimento</button>
         </div>
 
@@ -3417,7 +3450,7 @@ async function initDash(){
 <!-- Carregado depois do módulo principal — usa o que ele expõe em window.* -->
 <script defer src="js/dashboard/estoque.js?v=20261008a"></script>
 <script defer src="js/dashboard/backup.js?v=20261003c"></script>
-<script defer src="js/dashboard/novidades.js?v=20261008b"></script>
+<script defer src="js/dashboard/novidades.js?v=20261010a"></script>
 <script defer src="js/dashboard/central-avisos.js?v=20261003g"></script>
 <script defer src="js/dashboard/guia.js?v=20261005b"></script>
 <script defer src="js/dashboard/tour.js?v=20261005b"></script>
@@ -3428,7 +3461,7 @@ async function initDash(){
 <script defer src="js/dashboard/historico.js?v=20261004a"></script>
 <script defer src="js/dashboard/agendamentos.js?v=20261008a"></script>
 <script defer src="js/dashboard/horarios.js?v=20261005a"></script>
-<script defer src="js/dashboard/financeiro.js?v=20261008a"></script>
+<script defer src="js/dashboard/financeiro.js?v=20261010a"></script>
 <script defer src="js/dashboard/auth.js?v=20261003f"></script>
 <script defer src="js/dashboard/visual.js?v=20260727o"></script>
 

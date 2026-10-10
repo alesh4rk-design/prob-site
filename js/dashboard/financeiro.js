@@ -155,13 +155,58 @@ function initPerfil(){
     if(radio)radio.checked=true;
     aplicarVisibilidadeAbaFila(modoAtual);
 
+    // Fila pelo celular: de qualquer lugar ou só no local (GPS do cliente)
+    let localFila={lat:barbeiroData.filaLat??null,lng:barbeiroData.filaLng??null};
+    const wrapLocal=document.getElementById('fila-local-wrap');
+    const cfgLocal=document.getElementById('fila-local-config');
+    const statusLocal=document.getElementById('fila-local-status');
+    const atualizarBlocoLocal=()=>{
+        const modo=document.querySelector('input[name="modo-atend"]:checked')?.value||'agendamento';
+        if(wrapLocal)wrapLocal.style.display=(modo==='fila'||modo==='ambos')?'block':'none';
+        const presencial=document.querySelector('input[name="fila-local"]:checked')?.value==='presencial';
+        if(cfgLocal)cfgLocal.style.display=presencial?'block':'none';
+        if(statusLocal)statusLocal.textContent=localFila.lat!=null
+            ?`✓ Localização marcada (${Number(localFila.lat).toFixed(5)}, ${Number(localFila.lng).toFixed(5)}). Se mudar de endereço, marque de novo.`
+            :'⚠️ Ainda não marcou a localização — sem ela a fila fica liberada de qualquer lugar.';
+    };
+    const rdLocal=document.querySelector(`input[name="fila-local"][value="${barbeiroData.filaLocal==='presencial'?'presencial':'qualquer'}"]`);
+    if(rdLocal)rdLocal.checked=true;
+    const selRaio=document.getElementById('fila-local-raio');
+    if(selRaio)selRaio.value=String(barbeiroData.filaRaioM||200);
+    document.querySelectorAll('input[name="modo-atend"], input[name="fila-local"]').forEach(r=>{ if(!r.dataset.localBound){ r.dataset.localBound='1'; r.addEventListener('change',atualizarBlocoLocal); } });
+    const btnMarcar=document.getElementById('btn-marcar-local');
+    if(btnMarcar && !btnMarcar.dataset.bound){
+        btnMarcar.dataset.bound='1';
+        btnMarcar.addEventListener('click',()=>{
+            if(!navigator.geolocation){toast('Este aparelho não consegue informar a localização','var(--red)');return;}
+            btnMarcar.disabled=true; btnMarcar.textContent='📡 Buscando sua localização...';
+            navigator.geolocation.getCurrentPosition(pos=>{
+                localFila={lat:pos.coords.latitude,lng:pos.coords.longitude};
+                btnMarcar.disabled=false; btnMarcar.textContent='📍 Marcar a localização da barbearia (estou aqui agora)';
+                atualizarBlocoLocal();
+                toast('✓ Localização marcada — toque em "Salvar Modo de Atendimento"');
+            },err=>{
+                btnMarcar.disabled=false; btnMarcar.textContent='📍 Marcar a localização da barbearia (estou aqui agora)';
+                toast(err&&err.code===1?'Permita o acesso à localização no navegador e tente de novo':'Não foi possível obter a localização — tente de novo ao ar livre/perto da janela','var(--red)',5000);
+            },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+        });
+    }
+    atualizarBlocoLocal();
+
     const btnModo=document.getElementById('btn-salvar-modo');
     if(btnModo && !btnModo.dataset.bound){
         btnModo.dataset.bound='1';
         btnModo.addEventListener('click',async()=>{
             const selecionado=document.querySelector('input[name="modo-atend"]:checked').value;
-            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{modoAtendimento:selecionado});
+            const filaLocal=document.querySelector('input[name="fila-local"]:checked')?.value==='presencial'?'presencial':'qualquer';
+            if(filaLocal==='presencial' && (selecionado==='fila'||selecionado==='ambos') && localFila.lat==null){
+                toast('Marque a localização da barbearia antes de exigir presença no local','var(--red)',5000); return;
+            }
+            const raio=Number(document.getElementById('fila-local-raio')?.value)||200;
+            const extra={filaLocal,filaRaioM:raio,...(localFila.lat!=null?{filaLat:localFila.lat,filaLng:localFila.lng}:{})};
+            await updateDoc(doc(db,'barbeiros',barbeiroData.uid),{modoAtendimento:selecionado,...extra});
             barbeiroData.modoAtendimento=selecionado;
+            Object.assign(barbeiroData,extra);
             if(typeof atualizarGuiaProb==='function') atualizarGuiaProb();
             aplicarVisibilidadeAbaFila(selecionado);
             toast('✓ Modo de atendimento salvo!');

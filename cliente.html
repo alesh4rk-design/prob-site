@@ -2162,6 +2162,37 @@ $('btn-s2').addEventListener('click', confirmarAgendamento);
 $('back-s2').addEventListener('click', () => goStep(1));
 
 /* ── STEP 3: Confirmar e salvar ── */
+// Quando o barbeiro exige presença no local, confere pelo GPS do celular do
+// cliente se ele está dentro do raio. Retorna true se pode seguir.
+function distanciaMetros(lat1, lon1, lat2, lon2) {
+    const R = 6371000, rad = x => x * Math.PI / 180;
+    const dLat = rad(lat2 - lat1), dLon = rad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+}
+async function conferirPresencaNoLocal() {
+    if (barbeiroInfo.filaLocal !== 'presencial' || barbeiroInfo.filaLat == null || barbeiroInfo.filaLng == null) return true;
+    if (!navigator.geolocation) {
+        alert('Para entrar na fila você precisa estar no local, mas este aparelho não consegue informar a localização.');
+        return false;
+    }
+    const raio = Number(barbeiroInfo.filaRaioM) || 200;
+    toast('📍 Confirmando que você está no local...');
+    try {
+        const pos = await new Promise((ok, erro) => navigator.geolocation.getCurrentPosition(ok, erro, { enableHighAccuracy: true, timeout: 20000, maximumAge: 15000 }));
+        const dist = distanciaMetros(pos.coords.latitude, pos.coords.longitude, Number(barbeiroInfo.filaLat), Number(barbeiroInfo.filaLng));
+        // margem pela imprecisão do GPS do celular
+        if (dist <= raio + Math.min(pos.coords.accuracy || 0, 100)) return true;
+        alert(`Para entrar na fila você precisa estar no local da barbearia.\n\nVocê está a cerca de ${dist >= 1000 ? (dist / 1000).toFixed(1) + ' km' : Math.round(dist) + ' m'} daqui. Quando chegar, é só tentar de novo.`);
+        return false;
+    } catch (e) {
+        alert(e && e.code === 1
+            ? 'Para entrar na fila é preciso confirmar que você está no local. Permita o acesso à localização no navegador e tente de novo.'
+            : 'Não foi possível confirmar sua localização. Verifique se o GPS está ligado e tente de novo.');
+        return false;
+    }
+}
+
 async function entrarNaFila() {
     const corteEscolhido = getCorteEscolhido();
     if(!corteEscolhido){toast('Escolha ao menos um serviço primeiro');return;}
@@ -2170,6 +2201,8 @@ async function entrarNaFila() {
         alert('Escolha um barbeiro antes de entrar na fila.');
         return;
     }
+
+    if (!(await conferirPresencaNoLocal())) return;
 
     const btn = $('btn-entrar-fila');
     btn.textContent = 'Entrando na fila...';
